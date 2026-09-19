@@ -582,12 +582,26 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return DEFAULT_CHURCH_CONTENT;
   });
 
-  // Automatically save to localStorage on changes
+  const markLocalEdits = () => {
+    try {
+      localStorage.setItem('church_has_local_edits', 'true');
+      localStorage.setItem('church_last_edit_time', new Date().toISOString());
+    } catch {}
+  };
+
+  // Automatically save to localStorage on changes with quota safety
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
     } catch (e) {
-      console.error("Failed to save content to localStorage", e);
+      console.warn("Quota warning saving content, running cleanup...", e);
+      try {
+        localStorage.removeItem('grace_church_content_v2');
+        localStorage.removeItem('church_content_cache');
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
+      } catch (err) {
+        console.error("Failed to save content to localStorage", err);
+      }
     }
   }, [content]);
 
@@ -609,11 +623,14 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Background fetch latest content from server if available
+  // Background fetch latest content from server ONLY ONCE on initial app load
   useEffect(() => {
     let isCancelled = false;
 
     const fetchRemoteContent = async () => {
+      const hasLocalEdits = localStorage.getItem('church_has_local_edits') === 'true';
+      const hasSavedStorage = !!localStorage.getItem(STORAGE_KEY);
+
       // Try endpoints: api/content.php, api/content, and data/church_content.json with anti-cache timestamp
       const endpoints = [
         `/api/content.php?_t=${Date.now()}`,
@@ -638,25 +655,29 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
               if (isCancelled) break;
 
               const remoteJson = normalizeChurchContent(remoteRaw);
-              const currentAuth = localStorage.getItem(ADMIN_AUTH_KEY) === 'true';
               
-              if (!currentAuth) {
-                // For viewers / other browsers: server data is authoritative
-                setContent(remoteJson);
+              setContent((prev) => {
+                // If the user has local edits or saved storage in this browser, preserve their work
+                if (hasLocalEdits || hasSavedStorage) {
+                  if (prev.lastUpdated && remoteJson.lastUpdated) {
+                    const localTime = new Date(prev.lastUpdated).getTime();
+                    const remoteTime = new Date(remoteJson.lastUpdated).getTime();
+                    // Only adopt remote if remote is STRICTLY newer than local edits
+                    if (remoteTime <= localTime) {
+                      return prev;
+                    }
+                  } else {
+                    return prev;
+                  }
+                }
+
+                // If no local edits or remote is strictly newer, adopt remote
                 try {
                   localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteJson));
                 } catch {}
-                break;
-              } else {
-                // For admin: adopt if remote is newer or equal, or if local is default
-                setContent((prev) => {
-                  if (prev.lastUpdated && remoteJson.lastUpdated && remoteJson.lastUpdated < prev.lastUpdated) {
-                    return prev;
-                  }
-                  return normalizeChurchContent({ ...prev, ...remoteJson });
-                });
-                break;
-              }
+                return remoteJson;
+              });
+              break;
             }
           }
         } catch {
@@ -667,116 +688,163 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     fetchRemoteContent();
 
-    // Auto-refresh when browser tab gains focus or visibility
-    const handleFocus = () => {
-      fetchRemoteContent();
-    };
-    window.addEventListener('focus', handleFocus);
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        fetchRemoteContent();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
+    // Note: Deliberately DO NOT re-fetch on window focus or visibilitychange.
+    // Re-fetching when returning from the OS file picker was causing newly chosen photos to be overwritten!
 
     return () => {
       isCancelled = true;
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 
   const updateInfo = (data: Partial<ChurchGeneralInfo>) => {
-    setContent((prev) => ({ ...prev, info: { ...prev.info, ...data } }));
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      info: { ...prev.info, ...data },
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const updateHero = (data: Partial<ChurchHeroContent>) => {
-    setContent((prev) => ({ ...prev, hero: { ...prev.hero, ...data } }));
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      hero: { ...prev.hero, ...data },
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const updateAbout = (data: Partial<ChurchAboutContent>) => {
-    setContent((prev) => ({ ...prev, about: { ...prev.about, ...data } }));
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      about: { ...prev.about, ...data },
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const updateServices = (services: ChurchServiceItem[]) => {
-    setContent((prev) => ({ ...prev, services }));
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      services,
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const addService = (item: Omit<ChurchServiceItem, 'id'>) => {
+    markLocalEdits();
     const newItem: ChurchServiceItem = {
       ...item,
       id: `srv-${Date.now()}`,
     };
-    setContent((prev) => ({ ...prev, services: [...prev.services, newItem] }));
+    setContent((prev) => ({
+      ...prev,
+      services: [...prev.services, newItem],
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const deleteService = (id: string) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       services: prev.services.filter((s) => s.id !== id),
+      lastUpdated: new Date().toISOString(),
     }));
   };
 
   const updateServiceItem = (id: string, updated: Partial<ChurchServiceItem>) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       services: prev.services.map((s) => (s.id === id ? { ...s, ...updated } : s)),
+      lastUpdated: new Date().toISOString(),
     }));
   };
 
   const updateMinistries = (ministries: ChurchMinistryItem[]) => {
-    setContent((prev) => ({ ...prev, ministries }));
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      ministries,
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const addMinistry = (item: Omit<ChurchMinistryItem, 'id'>) => {
+    markLocalEdits();
     const newItem: ChurchMinistryItem = {
       ...item,
       id: `min-${Date.now()}`,
     };
-    setContent((prev) => ({ ...prev, ministries: [...prev.ministries, newItem] }));
+    setContent((prev) => ({
+      ...prev,
+      ministries: [...prev.ministries, newItem],
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const deleteMinistry = (id: string) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       ministries: prev.ministries.filter((m) => m.id !== id),
+      lastUpdated: new Date().toISOString(),
     }));
   };
 
   const updateMinistryItem = (id: string, updated: Partial<ChurchMinistryItem>) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       ministries: prev.ministries.map((m) => (m.id === id ? { ...m, ...updated } : m)),
+      lastUpdated: new Date().toISOString(),
     }));
   };
 
   const updateEvents = (events: ChurchEventItem[]) => {
-    setContent((prev) => ({ ...prev, events }));
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      events,
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const addEvent = (item: Omit<ChurchEventItem, 'id'>) => {
+    markLocalEdits();
     const newItem: ChurchEventItem = {
       ...item,
       id: `evt-${Date.now()}`,
     };
-    setContent((prev) => ({ ...prev, events: [newItem, ...prev.events] }));
+    setContent((prev) => ({
+      ...prev,
+      events: [newItem, ...prev.events],
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const deleteEvent = (id: string) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       events: prev.events.filter((e) => e.id !== id),
+      lastUpdated: new Date().toISOString(),
     }));
   };
 
   const updateEventItem = (id: string, updated: Partial<ChurchEventItem>) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       events: prev.events.map((e) => (e.id === id ? { ...e, ...updated } : e)),
+      lastUpdated: new Date().toISOString(),
     }));
   };
 
   const updateGallery = (gallery: ChurchGalleryItem[]) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       gallery,
@@ -785,6 +853,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addGalleryItem = (item: Omit<ChurchGalleryItem, 'id'>) => {
+    markLocalEdits();
     const newItem: ChurchGalleryItem = {
       ...item,
       id: `gal-${Date.now()}`,
@@ -797,6 +866,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteGalleryItem = (id: string) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       gallery: (prev.gallery || []).filter((g) => g.id !== id),
@@ -805,6 +875,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateGalleryItem = (id: string, updated: Partial<ChurchGalleryItem>) => {
+    markLocalEdits();
     setContent((prev) => ({
       ...prev,
       gallery: (prev.gallery || []).map((g) => (g.id === id ? { ...g, ...updated } : g)),
@@ -816,6 +887,8 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setContent(DEFAULT_CHURCH_CONTENT);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('church_has_local_edits');
+      localStorage.removeItem('church_last_edit_time');
     } catch (e) {
       console.error(e);
     }

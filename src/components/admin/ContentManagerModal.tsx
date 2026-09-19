@@ -1737,10 +1737,16 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                                   </div>
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Tautan Foto</label>
-                                  <Input
-                                    value={item.imageUrl}
-                                    onChange={(e) => updateGalleryItem(item.id, { imageUrl: e.target.value })}
+                                  <ImagePickerField
+                                    label="Ganti Foto Dokumentasi"
+                                    description="Unggah dari HP/komputer atau masukkan tautan URL foto."
+                                    currentValue={item.imageUrl}
+                                    onChange={(url) => {
+                                      updateGalleryItem(item.id, { imageUrl: url });
+                                      showToast('Foto berhasil diperbarui!');
+                                    }}
+                                    onToast={showToast}
+                                    aspectRatio="4:3"
                                   />
                                 </div>
                                 <div>

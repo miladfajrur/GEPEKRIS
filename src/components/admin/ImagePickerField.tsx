@@ -129,7 +129,7 @@ export function ImagePickerField({
           const img = new window.Image();
           img.onload = () => {
             let { width, height } = img;
-            const maxDimension = 1280;
+            const maxDimension = 1200;
             if (width > maxDimension || height > maxDimension) {
               if (width > height) {
                 height = Math.round((height * maxDimension) / width);
@@ -150,8 +150,8 @@ export function ImagePickerField({
             }
 
             ctx.drawImage(img, 0, 0, width, height);
-            // Compress to high-quality JPEG (~120KB-200KB)
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+            // Compress to optimized JPEG (~70KB-120KB)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.76);
             resolve(dataUrl);
           };
           img.onerror = () => reject(new Error('Gagal memproses gambar'));
@@ -161,6 +161,7 @@ export function ImagePickerField({
         reader.readAsDataURL(file);
       });
 
+      setUrlInput(compressedDataUrl);
       onChange(compressedDataUrl);
       onToast?.('Foto berhasil diunggah dan disimpan!');
     } catch (err) {
