@@ -1,15 +1,17 @@
-# Apache configuration for React Single Page Application (SPA)
+# Apache configuration for React Single Page Application (SPA) with PHP Support
+DirectoryIndex index.php index.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # Allow direct access to existing files & folders (e.g. assets, api, images)
+  # Allow direct access to existing files & folders (e.g. assets, api, images, index.php)
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Route all other URLs to index.html for React Router / client routing
-  RewriteRule ^ index.html [L]
+  # Route all other URLs to index.php or index.html for React Router / client routing
+  RewriteRule ^ index.php [L]
 </IfModule>
 
 # Browser Caching for static assets
