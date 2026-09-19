@@ -380,10 +380,10 @@ export const GEPEKRIS_TRETES_CONTENT: ChurchWebsiteContent = {
 
 export const DEFAULT_HOSTING_CONFIG: HostingDirectoryConfig = {
   enabled: true,
-  serverUrl: 'https://gepekristretes.org/api/content.php',
+  serverUrl: '/api/content.php',
   apiSecret: 'gepekristretes2025',
   storagePath: 'public_html/data/church_content.json',
-  autoSync: false,
+  autoSync: true,
   autoLoad: true,
   lastSyncTime: null,
   lastSyncStatus: 'idle',
