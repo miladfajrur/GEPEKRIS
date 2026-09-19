@@ -43,8 +43,16 @@ export function ServiceTimes() {
 
         {/* Service Cards with Staggered Scroll Entrance & Hover Lift */}
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8 mb-16">
-          {content.services.map((service, index) => {
-            const IconComponent = getIcon(service.iconName);
+          {(content.services || []).map((service, index) => {
+            const IconComponent = getIcon(service.iconName || 'Clock');
+            const displayTimes = Array.isArray(service.times)
+              ? service.times.join(' & ')
+              : typeof service.times === 'string'
+              ? service.times
+              : (service as any)?.time
+              ? `${(service as any)?.day ? (service as any).day + ' ' : ''}${(service as any).time}`
+              : 'Minggu 07:30 WIB';
+
             return (
               <motion.div
                 key={service.id || service.name}
@@ -70,7 +78,7 @@ export function ServiceTimes() {
                         {service.name}
                       </h3>
                       <div className="inline-block px-3 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold text-base sm:text-lg mb-4 border border-amber-200/70">
-                        {service.times.join(' & ')}
+                        {displayTimes}
                       </div>
                       <p className="text-gray-600 text-sm leading-relaxed">
                         {service.description}

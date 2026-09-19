@@ -129,7 +129,7 @@ export function ImagePickerField({
           const img = new window.Image();
           img.onload = () => {
             let { width, height } = img;
-            const maxDimension = 1600;
+            const maxDimension = 1280;
             if (width > maxDimension || height > maxDimension) {
               if (width > height) {
                 height = Math.round((height * maxDimension) / width);
@@ -150,8 +150,8 @@ export function ImagePickerField({
             }
 
             ctx.drawImage(img, 0, 0, width, height);
-            // Compress to high-quality JPEG
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.84);
+            // Compress to high-quality JPEG (~120KB-200KB)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
             resolve(dataUrl);
           };
           img.onerror = () => reject(new Error('Gagal memproses gambar'));

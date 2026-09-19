@@ -69,6 +69,11 @@ export function Footer({
                 </a>
               </li>
               <li>
+                <a href="#gallery" className="text-gray-300 hover:text-white transition-colors">
+                  Galeri Dokumentasi
+                </a>
+              </li>
+              <li>
                 <a href="#contact" className="text-gray-300 hover:text-white transition-colors">
                   Contact
                 </a>

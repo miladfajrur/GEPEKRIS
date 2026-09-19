@@ -4,6 +4,7 @@ import {
   ChurchServiceItem,
   ChurchMinistryItem,
   ChurchEventItem,
+  ChurchGalleryItem,
   DEFAULT_ADMIN_PASSWORD,
   DEFAULT_CHURCH_CONTENT,
 } from '../../context/ChurchContentContext';
@@ -16,6 +17,7 @@ import {
   BookOpen,
   Users,
   Calendar,
+  Camera,
   Save,
   RotateCcw,
   Plus,
@@ -66,6 +68,10 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     addEvent,
     deleteEvent,
     updateEventItem,
+    updateGallery,
+    addGalleryItem,
+    deleteGalleryItem,
+    updateGalleryItem,
     resetToDefaults,
     importContent,
     applyGepekrisTretesPreset,
@@ -82,7 +88,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
   } = useChurchContent();
 
   const [activeTab, setActiveTab] = useState<
-    'info' | 'hero' | 'about' | 'services' | 'ministries' | 'events' | 'hosting' | 'backup' | 'security'
+    'info' | 'hero' | 'about' | 'services' | 'ministries' | 'events' | 'gallery' | 'hosting' | 'backup' | 'security'
   >('info');
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -128,6 +134,14 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [editingMinistryId, setEditingMinistryId] = useState<string | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [editingGalleryId, setEditingGalleryId] = useState<string | null>(null);
+
+  // New Gallery Photo Form State
+  const [newGalTitle, setNewGalTitle] = useState('');
+  const [newGalCategory, setNewGalCategory] = useState('Ibadah');
+  const [newGalImageUrl, setNewGalImageUrl] = useState('');
+  const [newGalDate, setNewGalDate] = useState('');
+  const [newGalDesc, setNewGalDesc] = useState('');
 
   // JSON Import/Export state
   const [importJsonText, setImportJsonText] = useState('');
@@ -573,6 +587,18 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
             </button>
 
             <button
+              onClick={() => setActiveTab('gallery')}
+              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+                activeTab === 'gallery'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
+              }`}
+            >
+              <Camera className="w-4 h-4 shrink-0" />
+              <span>Galeri Foto ({content.gallery?.length || 0})</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('hosting')}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
                 activeTab === 'hosting'
@@ -907,7 +933,7 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                           <div>
                             <label className="block text-xs font-semibold text-gray-700 mb-1">Waktu / Jadwal (pisahkan koma jika lebih dari satu)</label>
                             <Input
-                              value={srv.times.join(', ')}
+                              value={Array.isArray(srv.times) ? srv.times.join(', ') : (srv.times || '')}
                               onChange={(e) => updateServiceItem(srv.id, { times: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
                               placeholder="contoh: 07:30 WIB, 10:00 WIB"
                             />
@@ -942,7 +968,7 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                               <h4 className="font-semibold text-gray-900 text-sm">{srv.name}</h4>
                             </div>
                             <div className="text-xs font-medium text-primary">
-                              {srv.times.join(' & ')}
+                              {Array.isArray(srv.times) ? srv.times.join(' & ') : (srv.times || '')}
                             </div>
                             <p className="text-xs text-gray-600">{srv.description}</p>
                           </div>
@@ -1498,6 +1524,308 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                     <RotateCcw className="w-4 h-4" />
                     <span>Reset Everything</span>
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: Galeri & Dokumentasi Foto Kegiatan */}
+            {activeTab === 'gallery' && (
+              <div className="space-y-6 max-w-4xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900">
+                        Dokumentasi
+                      </span>
+                      <span className="text-xs text-gray-500">• Galeri Foto Gereja</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mt-1">
+                      Dokumentasi & Galeri Kegiatan ({content.gallery?.length || 0})
+                    </h3>
+                    <p className="text-xs text-gray-600">
+                      Kelola album foto dokumentasi ibadah, persekutuan pemuda, sekolah minggu, dan baksos GEPEKRIS Tretes.
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={async () => {
+                      setSyncingToHosting(true);
+                      const res = await syncToHosting();
+                      setSyncingToHosting(false);
+                      if (res.success) {
+                        showToast('✓ Berhasil disimpan ke hosting server!');
+                      } else {
+                        alert(`Gagal push ke hosting: ${res.message}`);
+                      }
+                    }}
+                    disabled={syncingToHosting}
+                    className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-2 text-xs self-start sm:self-auto"
+                    size="sm"
+                  >
+                    <Server className={`w-3.5 h-3.5 ${syncingToHosting ? 'animate-spin' : ''}`} />
+                    <span>{syncingToHosting ? 'Menyimpan...' : 'Simpan ke Hosting (Push)'}</span>
+                  </Button>
+                </div>
+
+                {/* Form Tambah Foto Baru */}
+                <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200/80 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900">Unggah Foto Dokumentasi Baru</h4>
+                      <p className="text-xs text-gray-500">Isi keterangan foto untuk menambah dokumentasi ke galeri publik.</p>
+                    </div>
+                  </div>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!newGalTitle.trim() || !newGalImageUrl.trim()) {
+                        alert('Mohon masukkan judul dan foto dokumentasi.');
+                        return;
+                      }
+                      addGalleryItem({
+                        title: newGalTitle.trim(),
+                        category: newGalCategory,
+                        imageUrl: newGalImageUrl.trim(),
+                        date: newGalDate.trim() || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+                        description: newGalDesc.trim(),
+                      });
+                      setNewGalTitle('');
+                      setNewGalImageUrl('');
+                      setNewGalDate('');
+                      setNewGalDesc('');
+                      showToast('Foto berhasil ditambahkan ke galeri!');
+                    }}
+                    className="space-y-3"
+                  >
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Foto Kegiatan (Pilih Berkas atau Tautan URL) *
+                      </label>
+                      <ImagePickerField
+                        label="Pilih Foto Dokumentasi"
+                        description="Unggah dari komputer/HP atau masukkan URL gambar."
+                        currentValue={newGalImageUrl}
+                        onChange={(url) => setNewGalImageUrl(url)}
+                        onToast={showToast}
+                        aspectRatio="4:3"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Judul Kegiatan / Foto *
+                      </label>
+                      <Input
+                        required
+                        value={newGalTitle}
+                        onChange={(e) => setNewGalTitle(e.target.value)}
+                        placeholder="Contoh: Ibadah Syukur & Perjamuan Kudus"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">
+                          Kategori Kegiatan *
+                        </label>
+                        <select
+                          value={newGalCategory}
+                          onChange={(e) => setNewGalCategory(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border rounded-lg bg-white border-gray-300 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                        >
+                          <option value="Ibadah">Ibadah</option>
+                          <option value="Pemuda">Pemuda & Remaja</option>
+                          <option value="Sekolah Minggu">Sekolah Minggu</option>
+                          <option value="Diakonia">Diakonia & Baksos</option>
+                          <option value="Persekutuan">Persekutuan Jemaat</option>
+                          <option value="Perayaan">Perayaan & Khusus</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">
+                          Tanggal Kegiatan
+                        </label>
+                        <Input
+                          value={newGalDate}
+                          onChange={(e) => setNewGalDate(e.target.value)}
+                          placeholder="Contoh: Minggu, 7 September 2025"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Keterangan Singkat / Momen Berkesan
+                      </label>
+                      <Textarea
+                        rows={2}
+                        value={newGalDesc}
+                        onChange={(e) => setNewGalDesc(e.target.value)}
+                        placeholder="Tuliskan cerita singkat tentang foto kegiatan ini..."
+                      />
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        type="submit"
+                        className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-2"
+                        size="sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Tambahkan ke Galeri</span>
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Daftar Foto yang Ada */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-bold text-gray-800">
+                    Foto Dokumentasi Tersimpan ({content.gallery?.length || 0})
+                  </h4>
+
+                  {(!content.gallery || content.gallery.length === 0) ? (
+                    <div className="p-8 text-center bg-gray-50 rounded-xl border border-gray-200">
+                      <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Belum ada foto kegiatan di dalam galeri.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {content.gallery.map((item) => {
+                        const isEditing = editingGalleryId === item.id;
+                        return (
+                          <div
+                            key={item.id}
+                            className="p-4 bg-white rounded-xl border border-gray-200 shadow-xs hover:border-amber-300 transition-colors"
+                          >
+                            {isEditing ? (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Foto</label>
+                                  <Input
+                                    value={item.title}
+                                    onChange={(e) => updateGalleryItem(item.id, { title: e.target.value })}
+                                  />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Kategori</label>
+                                    <select
+                                      value={item.category || 'Ibadah'}
+                                      onChange={(e) => updateGalleryItem(item.id, { category: e.target.value })}
+                                      className="w-full px-3 py-2 text-sm border rounded-lg bg-white border-gray-300"
+                                    >
+                                      <option value="Ibadah">Ibadah</option>
+                                      <option value="Pemuda">Pemuda & Remaja</option>
+                                      <option value="Sekolah Minggu">Sekolah Minggu</option>
+                                      <option value="Diakonia">Diakonia & Baksos</option>
+                                      <option value="Persekutuan">Persekutuan</option>
+                                      <option value="Perayaan">Perayaan & Khusus</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-1">Tanggal</label>
+                                    <Input
+                                      value={item.date || ''}
+                                      onChange={(e) => updateGalleryItem(item.id, { date: e.target.value })}
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Tautan Foto</label>
+                                  <Input
+                                    value={item.imageUrl}
+                                    onChange={(e) => updateGalleryItem(item.id, { imageUrl: e.target.value })}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Deskripsi</label>
+                                  <Textarea
+                                    rows={2}
+                                    value={item.description || ''}
+                                    onChange={(e) => updateGalleryItem(item.id, { description: e.target.value })}
+                                  />
+                                </div>
+                                <div className="flex justify-end gap-2 pt-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setEditingGalleryId(null)}
+                                    className="cursor-pointer"
+                                  >
+                                    Selesai Edit
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-20 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.title}
+                                      referrerPolicy="no-referrer"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">
+                                        {item.category || 'Kegiatan'}
+                                      </span>
+                                      {item.date && (
+                                        <span className="text-xs text-gray-500">
+                                          {item.date}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <h5 className="font-bold text-sm text-gray-900">{item.title}</h5>
+                                    {item.description && (
+                                      <p className="text-xs text-gray-600 line-clamp-1 mt-0.5">
+                                        {item.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 self-end sm:self-auto">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setEditingGalleryId(item.id)}
+                                    className="cursor-pointer text-gray-600 hover:text-amber-700"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5 mr-1" />
+                                    <span>Edit</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (confirm(`Hapus foto "${item.title}"?`)) {
+                                        deleteGalleryItem(item.id);
+                                        showToast('Foto berhasil dihapus.');
+                                      }
+                                    }}
+                                    className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                    <span>Hapus</span>
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

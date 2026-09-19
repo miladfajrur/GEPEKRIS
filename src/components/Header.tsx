@@ -56,6 +56,9 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
               <a href="#events" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
                 Warta & Berita
               </a>
+              <a href="#gallery" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
+                Galeri
+              </a>
               <a href="#contact" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
                 Kontak
               </a>
@@ -129,6 +132,13 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
                 className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm"
               >
                 Warta & Berita
+              </a>
+              <a
+                href="#gallery"
+                onClick={() => setIsOpen(false)}
+                className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm"
+              >
+                Galeri Foto
               </a>
               <a
                 href="#contact"

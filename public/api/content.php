@@ -11,6 +11,8 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Admin-Token");
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
 header("Content-Type: application/json; charset=UTF-8");
 
 // Tangani Preflight OPTIONS request dari browser

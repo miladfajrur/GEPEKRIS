@@ -5,6 +5,7 @@ import { ServiceTimes } from './components/ServiceTimes';
 import { About } from './components/About';
 import { Ministries } from './components/Ministries';
 import { Events } from './components/Events';
+import { PhotoGallery } from './components/PhotoGallery';
 import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
 import { PlanVisitModal } from './components/PlanVisitModal';
@@ -123,6 +124,7 @@ function ChurchApp() {
           <About />
           <Ministries />
           <Events onReadArticle={(id) => handleOpenArticle(id)} />
+          <PhotoGallery />
           <Contact />
 
           {/* Optional dedicated section drawers for Give, Prayer & Sermons */}
