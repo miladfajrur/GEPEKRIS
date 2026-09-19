@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { CHURCH_INFO } from '../data/churchData';
+import { useChurchContent } from '../context/ChurchContentContext';
 import { Church, Menu, X, Calendar, Heart, Globe, Play, Phone } from 'lucide-react';
 
 interface NavbarProps {
@@ -19,6 +20,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { content } = useChurchContent();
+  const churchName = content?.info?.name || CHURCH_INFO.name;
 
   const navLinks = [
     { id: 'services', label: language === 'en' ? 'Services' : 'Ibadah' },
@@ -79,10 +82,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="font-serif-display text-xl font-bold tracking-tight text-stone-900 leading-none">
-                {language === 'en' ? 'Grace Church' : 'Gereja Kasih'}
+                {churchName}
               </div>
               <div className="text-[11px] font-medium tracking-widest text-amber-800 uppercase mt-1">
-                {language === 'en' ? 'Community of Hope' : 'Komunitas Harapan'}
+                {language === 'en' ? 'Tretes, Prigen' : 'Kawasan Tretes, Prigen'}
               </div>
             </div>
           </button>

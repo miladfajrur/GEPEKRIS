@@ -629,7 +629,7 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                         updateInfo({ name: e.target.value });
                         showToast('Updated church name');
                       }}
-                      placeholder="e.g. Grace Community Church"
+                      placeholder="e.g. GEPEKRIS TRETES"
                     />
                   </div>
 

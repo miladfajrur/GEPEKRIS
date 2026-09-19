@@ -1,17 +1,17 @@
 import { ServiceSchedule, Sermon, ChurchEvent, Ministry, StaffMember, PrayerRequest } from '../types';
 
 export const CHURCH_INFO = {
-  name: "Grace Church Community",
-  nameId: "Komunitas Gereja Kasih Karunia",
-  tagline: "A Place of Hope, Love, and True Belonging",
-  taglineId: "Tempat Harapan, Kasih, dan Persekutuan Sejati",
-  address: "Jl. Boulevard Kasih No. 12, Graha Harmoni, Jakarta",
-  phone: "+62 21 555-0819",
+  name: "GEPEKRIS TRETES",
+  nameId: "Gereja Persekutuan Kristen Tretes",
+  tagline: "Persekutuan Kasih Kristus di Hawa Sejuk Tretes",
+  taglineId: "Berakar dalam Firman, Bertumbuh dalam Kasih, Berbuah bagi Sesama",
+  address: "Kawasan Wisata Tretes, Kec. Prigen, Pasuruan, Jawa Timur 67157",
+  phone: "+62 343 881234",
   whatsapp: "+62 812-3456-7890",
-  email: "hello@gracecommunity.church",
-  instagram: "@gracechurch.id",
-  youtube: "@GraceCommunityChurchLive",
-  establishedYear: 2008,
+  email: "sekretariat@gepekristretes.org",
+  instagram: "@gepekristretes",
+  youtube: "@GEPEKRISTretesOfficial",
+  establishedYear: 1985,
 };
 
 export const SERVICE_SCHEDULES: ServiceSchedule[] = [
@@ -280,8 +280,8 @@ export const MINISTRIES: Ministry[] = [
   },
   {
     id: "care-outreach",
-    name: "Grace Care & Diakonia",
-    nameId: "Pelayanan Kasih & Diakonia",
+    name: "Diakonia & Aksi Kasih GEPEKRIS",
+    nameId: "Pelayanan Kasih & Diakonia GEPEKRIS Tretes",
     leader: "Budi Santoso",
     schedule: "Monthly Outreach & Crisis Care",
     targetAudience: "Community & Underprivileged",
@@ -295,11 +295,11 @@ export const MINISTRIES: Ministry[] = [
 export const STAFF_MEMBERS: StaffMember[] = [
   {
     id: "staff-1",
-    name: "Ps. Samuel & Grace Kusuma",
+    name: "Pdt. Samuel & Ibu Ruth Kusuma",
     role: "Senior Pastors",
     roleId: "Gembala Sidang",
-    bio: "Serving Grace Community since 2008 with a heart for family restoration, discipleship, and spiritual renewal in urban communities.",
-    bioId: "Melayani jemaat sejak tahun 2008 dengan kerinduan memulihkan keluarga, pemuridan, dan menghadirkan terang Kristus di tengah kota.",
+    bio: "Serving GEPEKRIS Tretes with a heart for family restoration, discipleship, and spiritual renewal in Tretes & Prigen.",
+    bioId: "Melayani jemaat GEPEKRIS Tretes dengan kerinduan memulihkan keluarga, pemuridan, dan menghadirkan terang Kristus di kawasan Tretes & Prigen.",
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
   },
   {

@@ -113,7 +113,7 @@ export function Ministries() {
               </p>
               <div className="p-3 bg-gray-50 rounded-lg text-xs text-gray-600 space-y-1 mb-5">
                 <div>Meeting times: <strong>Weekly / Monthly schedule</strong></div>
-                <div>Location: <strong>Grace Community Church & Community Centers</strong></div>
+                <div>Location: <strong>Gedung Gereja GEPEKRIS Tretes</strong></div>
               </div>
               <Button onClick={() => setSelectedMinistry(null)} className="w-full cursor-pointer">
                 Close

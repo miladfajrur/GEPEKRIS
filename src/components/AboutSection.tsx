@@ -20,12 +20,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ language }) => {
             {language === 'en' ? 'Who We Are' : 'Tentang Kami'}
           </span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-serif-display font-bold text-stone-900">
-            {language === 'en' ? 'Rooted in Grace, Living for His Glory' : 'Berakar dalam Kasih, Hidup bagi Kemuliaan-Nya'}
+            {language === 'en' ? 'Rooted in Christ, Living in Fellowship' : 'Berakar dalam Firman, Bertumbuh dalam Kasih'}
           </h2>
           <p className="mt-3 text-stone-600 text-base sm:text-lg">
             {language === 'en'
-              ? 'Founded in 2008, Grace Church is a diverse family of believers dedicated to worshiping Jesus, cultivating authentic relationships, and serving our city.'
-              : 'Berdiri sejak 2008, Gereja Grace Community adalah keluarga rohani yang rindu menyembah Kristus, membangun persekutuan erat, dan menjadi terang di tengah masyarakat.'}
+              ? 'Gereja Persekutuan Kristen (GEPEKRIS) Tretes is a family of believers in Tretes & Prigen dedicated to worshiping Jesus Christ, cultivating deep fellowship, and blessing the local community.'
+              : 'Gereja Persekutuan Kristen (GEPEKRIS) Tretes adalah keluarga rohani di kawasan Tretes & Prigen yang rindu menyembah Kristus, membangun persekutuan erat, dan menjadi berkat bagi sesama.'}
           </p>
         </div>
 
@@ -71,7 +71,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ language }) => {
             <div className="lg:col-span-6 rounded-3xl overflow-hidden shadow-md border border-stone-200">
               <img
                 src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80"
-                alt="Grace Church Fellowship"
+                alt="GEPEKRIS Tretes Fellowship"
                 className="w-full h-80 sm:h-96 object-cover"
                 referrerPolicy="no-referrer"
               />
@@ -84,8 +84,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ language }) => {
               </h3>
               <p>
                 {language === 'en'
-                  ? 'Grace Church started 18 years ago with a small gathering of 12 people praying in a living room, asking God to create an authentic church where broken people find healing, skeptics find honest answers, and seekers encounter genuine unconditional love.'
-                  : 'Gereja ini berawal dari 12 orang yang berkumpul berdoa di ruang keluarga pada tahun 2008, memohon agar Tuhan menumbuhkan sebuah gereja di mana yang terluka dipulihkan, yang mencari menemukan jawaban, dan setiap orang mengalami kasih Kristus yang sejati.'}
+                  ? 'GEPEKRIS Tretes is committed to reaching the people of Tretes and Prigen, creating an authentic church where the weary find rest, seekers encounter Christ, and believers grow together in faith.'
+                  : 'GEPEKRIS Tretes berkomitmen melayani jemaat di daerah Tretes, Prigen, dan sekitarnya, menghadirkan persekutuan di mana yang berbeban berat beroleh kelegaan, pencari kebenaran berjumpa dengan Kristus, dan setiap jemaat saling membangun dalam iman.'}
               </p>
               <p>
                 {language === 'en'

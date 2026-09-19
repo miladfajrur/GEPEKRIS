@@ -1,6 +1,6 @@
 {
-  "name": "Grace Church Community",
-  "description": "Website resmi jemaat gereja GEPEKRIS Tretes dengan manajemen konten admin CMS terproteksi kata sandi dan sinkronisasi direktori hosting server gepekristretes.org.",
+  "name": "GEPEKRIS Tretes",
+  "description": "Website resmi Gereja Persekutuan Kristen (GEPEKRIS) Tretes, Prigen, Pasuruan - Jadwal Ibadah, Warta Berita Jemaat, dan Pelayanan Kasih.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

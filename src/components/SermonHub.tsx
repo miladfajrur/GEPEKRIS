@@ -309,7 +309,7 @@ export const SermonHub: React.FC<SermonHubProps> = ({
                   <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-6 text-white">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium bg-black/50 px-2.5 py-1 rounded backdrop-blur-xs">
-                        Grace Community Live Stream Archive
+                        GEPEKRIS Tretes Live Stream Archive
                       </span>
                       <button
                         onClick={() => setIsPlayingAudio(!isPlayingAudio)}

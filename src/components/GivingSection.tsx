@@ -314,7 +314,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                     </button>
                   </div>
                   <div className="text-[11px] text-stone-500">
-                    a.n. <strong>Gereja Grace Community Indonesia</strong>
+                    a.n. <strong>GEPEKRIS Tretes</strong>
                   </div>
                 </div>
               )}
@@ -323,8 +323,8 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                 <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-center">
                   <div className="w-28 h-28 bg-white p-2 rounded-xl border border-stone-300 mx-auto mb-2 flex items-center justify-center shadow-xs">
                     <img
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GRACE-CHURCH-GIVING-PLEDGE"
-                      alt="QRIS Giving Code"
+                      src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GEPEKRIS-TRETES-PERSEMBAHAN"
+                      alt="QRIS Giving Code GEPEKRIS Tretes"
                       className="w-full h-full object-contain"
                     />
                   </div>
