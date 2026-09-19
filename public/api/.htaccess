@@ -1,0 +1,18 @@
+# .htaccess untuk folder /api/ di gepekristretes.org
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^content/?$ content.php [L,QSA]
+</IfModule>
+
+# Pastikan Authorization & Custom Headers diteruskan ke PHP
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase ^(Authorization|X-Admin-Token) "(.*)" HTTP_$1=$2
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Admin-Token"
+</IfModule>

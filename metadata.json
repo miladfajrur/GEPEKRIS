@@ -1,0 +1,7 @@
+{
+  "name": "Grace Church Community",
+  "description": "Website resmi jemaat gereja GEPEKRIS Tretes dengan manajemen konten admin CMS terproteksi kata sandi dan sinkronisasi direktori hosting server gepekristretes.org.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
