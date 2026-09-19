@@ -1,5 +1,6 @@
 # Apache configuration for React Single Page Application (SPA) with PHP Support
 DirectoryIndex index.php index.html
+Options -Indexes
 
 <IfModule mod_rewrite.c>
   RewriteEngine On

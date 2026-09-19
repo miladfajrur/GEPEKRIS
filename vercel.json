@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/content.php",
+      "destination": "/api/content"
+    },
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

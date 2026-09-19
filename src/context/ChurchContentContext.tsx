@@ -634,23 +634,40 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const testHostingConnection = async (urlOverride?: string, secretOverride?: string): Promise<{ success: boolean; message: string; details?: any }> => {
-    const targetUrl = urlOverride || hostingConfig.serverUrl;
+    let targetUrl = urlOverride || hostingConfig.serverUrl;
     const testPingUrl = targetUrl.includes('?') 
       ? `${targetUrl}&action=ping&_t=${Date.now()}` 
       : `${targetUrl}?action=ping&_t=${Date.now()}`;
     
     try {
-      const res = await fetch(testPingUrl, {
+      let res = await fetch(testPingUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
       });
 
+      // Fallback: if .php returns 404 or 405, try without .php (for Vercel serverless)
+      if (!res.ok && (res.status === 404 || res.status === 405) && targetUrl.includes('.php')) {
+        const fallbackUrl = targetUrl.replace(/\.php(\?|$)/, '$1');
+        const fallbackPing = fallbackUrl.includes('?') 
+          ? `${fallbackUrl}&action=ping&_t=${Date.now()}` 
+          : `${fallbackUrl}?action=ping&_t=${Date.now()}`;
+        const fallbackRes = await fetch(fallbackPing, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+        }).catch(() => null);
+        if (fallbackRes && fallbackRes.ok) {
+          res = fallbackRes;
+          targetUrl = fallbackUrl;
+          updateHostingConfig({ serverUrl: fallbackUrl });
+        }
+      }
+
       if (!res.ok) {
         return { 
           success: false, 
-          message: `Server merespon dengan HTTP status ${res.status} (${res.statusText}). Pastikan file api/content.php sudah diunggah di gepekristretes.org.`,
+          message: `Server merespon dengan HTTP status ${res.status} (${res.statusText}). Jika di Vercel atau cPanel, pastikan endpoint API telah aktif.`,
         };
       }
 
@@ -663,18 +680,18 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (err: any) {
       return {
         success: false,
-        message: `Tidak dapat terhubung ke ${targetUrl}. Kemungkinan CORS belum aktif, file belum diupload di hosting, atau server offline. (${err?.message || 'Network error'})`,
+        message: `Tidak dapat terhubung ke ${targetUrl}. (${err?.message || 'Network error'})`,
       };
     }
   };
 
   const syncToHosting = async (overrideConfig?: Partial<HostingDirectoryConfig>): Promise<{ success: boolean; message: string; details?: any }> => {
     const cfg = { ...hostingConfig, ...(overrideConfig || {}) };
-    const targetUrl = cfg.serverUrl;
+    let targetUrl = cfg.serverUrl;
     updateHostingConfig({ lastSyncStatus: 'syncing', lastSyncError: null });
 
     try {
-      const res = await fetch(targetUrl, {
+      let res = await fetch(targetUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -686,12 +703,38 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }),
       });
 
+      // If server returns 405 (e.g. Vercel static or Apache rewriting POST to index.html)
+      // and URL ends with .php, try calling the serverless endpoint without .php
+      if (res.status === 405 && targetUrl.includes('.php')) {
+        const fallbackUrl = targetUrl.replace(/\.php(\?|$)/, '$1');
+        try {
+          const fallbackRes = await fetch(fallbackUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Admin-Token': cfg.apiSecret,
+            },
+            body: JSON.stringify({
+              api_secret: cfg.apiSecret,
+              content: content,
+            }),
+          });
+          if (fallbackRes.ok) {
+            res = fallbackRes;
+            targetUrl = fallbackUrl;
+            updateHostingConfig({ serverUrl: fallbackUrl });
+          }
+        } catch {
+          // Keep original response
+        }
+      }
+
       const json = await res.json().catch(() => null);
 
       if (!res.ok) {
         let errorMsg = json?.message || `Gagal menyimpan ke server (HTTP ${res.status})`;
         if (res.status === 405) {
-          errorMsg = `Gagal menyimpan (HTTP 405 Method Not Allowed). Server menolak metode POST. Pastikan URL mengarah ke file PHP (seperti /api/content.php) di server cPanel/Apache yang mendukung eksekusi skrip backend.`;
+          errorMsg = `Server hosting Anda saat ini menolak metode POST (HTTP 405). Perubahan Anda tetap tersimpan aman di browser. Untuk sinkronisasi cloud, deploy berkas api/content.ts (Vercel) atau upload folder api/ ke cPanel.`;
         }
         updateHostingConfig({
           lastSyncStatus: 'error',
@@ -709,11 +752,11 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       return {
         success: true,
-        message: 'Konten berhasil disimpan ke direktori hosting gepekristretes.org!',
+        message: 'Konten berhasil disimpan dan disinkronkan ke server gepekristretes.org!',
         details: json,
       };
     } catch (err: any) {
-      const msg = `Gagal mengirim ke hosting: ${err?.message || 'Network Error'}. Pastikan content.php sudah diunggah di hosting gepekristretes.org.`;
+      const msg = `Gagal mengirim ke hosting: ${err?.message || 'Network Error'}.`;
       updateHostingConfig({
         lastSyncStatus: 'error',
         lastSyncError: msg,
