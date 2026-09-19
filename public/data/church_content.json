@@ -1,0 +1,131 @@
+{
+  "info": {
+    "name": "GEPEKRIS TRETES",
+    "tagline": "Gereja Persekutuan Kristen Tretes - Bertumbuh Dalam Kasih Kristus dan Melayani Sesama",
+    "phone": "+62 812-3456-7890",
+    "email": "sekretariat@gepekristretes.org",
+    "address": "Jl. Raya Tretes, Prigen, Pasuruan, Jawa Timur 67157",
+    "liveStreamUrl": "https://www.youtube.com/@gepekristretes"
+  },
+  "hero": {
+    "badge": "Selamat Datang di Rumah Tuhan",
+    "heading": "Gereja Persekutuan Kristen (GEPEKRIS) Tretes",
+    "subheading": "Tempat persekutuan yang hangat, berakar dalam firman Tuhan, dan bertumbuh bersama dalam kasih Kristus di kawasan Tretes - Prigen.",
+    "bgImage": "https://images.unsplash.com/photo-1548625361-19597793d980?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5kYXklMjB3b3JzaGlwJTIwY2h1cmNoJTIwcHJheWVyfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080"
+  },
+  "about": {
+    "heading": "Bertumbuh Bersama Dalam Kasih Karunia Kristus",
+    "paragraph1": "Gereja Persekutuan Kristen (GEPEKRIS) Tretes rindu menjadi persekutuan keluarga rohani yang bersahabat bagi siapa saja yang rindu mengenal dan mengalami kasih Allah secara nyata.",
+    "paragraph2": "Melalui ibadah minggu yang khidmat, pengajaran Alkitab yang setia, persekutuan doa, serta pelayanan kasih bagi lingkungan sekitar Tretes dan Prigen, kami bersama-sama melangkah menghadirkan terang Kristus.",
+    "image": "https://images.unsplash.com/photo-1511632765486-a01980e01a18?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjBjb21tdW5pdHklMjBmZWxsb3dzaGlwfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
+    "values": [
+      {
+        "title": "Kasih Persaudaraan",
+        "description": "Menyambut setiap jiwa dengan tulus, saling menopang dalam doa dan pergumulan hidup.",
+        "iconName": "Heart"
+      },
+      {
+        "title": "Kesetiaan Firman",
+        "description": "Pengajaran yang berpusat pada Injil Yesus Kristus sebagai dasar iman dan pedoman tingkah laku.",
+        "iconName": "Book"
+      },
+      {
+        "title": "Generasi Penerus",
+        "description": "Membimbing anak-anak, remaja, dan pemuda bertumbuh teguh dalam iman dan karakter kristiani.",
+        "iconName": "Star"
+      },
+      {
+        "title": "Kepedulian Sosial",
+        "description": "Menjadi saluran berkat melalui pelayanan kasih nyata bagi sesama di kawasan Tretes & Prigen.",
+        "iconName": "Shield"
+      }
+    ]
+  },
+  "services": [
+    {
+      "id": "srv-1",
+      "name": "Kebaktian Umum I (Pagi)",
+      "times": ["Minggu 07:30 WIB"],
+      "description": "Ibadah raya pagi dengan liturgi khidmat, pujian bersama, dan pemberitaan firman Tuhan",
+      "iconName": "Clock"
+    },
+    {
+      "id": "srv-2",
+      "name": "Kebaktian Umum II & Sekolah Minggu",
+      "times": ["Minggu 10:00 WIB"],
+      "description": "Ibadah raya siang bersama keluarga dan kelas sekolah minggu anak di ruang khusus",
+      "iconName": "Calendar"
+    },
+    {
+      "id": "srv-3",
+      "name": "Persekutuan Pemuda Remaja",
+      "times": ["Sabtu 17:00 WIB"],
+      "description": "Praise and worship, diskusi firman, dan keakraban generasi muda",
+      "iconName": "Users"
+    }
+  ],
+  "ministries": [
+    {
+      "id": "min-1",
+      "title": "Komisi Sekolah Minggu (Anak)",
+      "description": "Mendidik anak-anak mengenal kasih Yesus sejak usia dini dengan metode interaktif, pujian anak, dan cerita Alkitab bergambar.",
+      "image": "https://images.unsplash.com/photo-1577896851231-70ef18881754?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGlsZHJlbiUyMGNodXJjaCUyMHN1bmRheSUyMHNjaG9vbHxlbnwxfHx8fDE3NTYzNjE2NTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "features": ["Kelas Balita, Pratama, dan Madya", "Aktivitas Kreatif & Ayat Hafalan", "Guru Sekolah Minggu Terlatih"]
+    },
+    {
+      "id": "min-2",
+      "title": "Komisi Pemuda & Remaja (Youth)",
+      "description": "Menyiapkan generasi muda berkarakter Kristus, aktif melayani, dan memiliki komunitas pergaulan yang sehat serta membangun.",
+      "image": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b3V0aCUyMGdyb3VwJTIwY2h1cmNofGVufDF8fHx8MTc1NjM2MTY2MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "features": ["Tim Musik & Multimedia", "Camp & Retret Kepemimpinan", "Mentoring & Pemuridan Pribadi"]
+    },
+    {
+      "id": "min-3",
+      "title": "Pelayanan Diakonia & Kasih",
+      "description": "Mewujudkan kasih nyata melalui kepedulian bagi lansia, orang sakit, jemaat prasejahtera, dan bantuan sosial lingkungan sekitar.",
+      "image": "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tdW5pdHklMjBzZXJ2aWNlJTIwaGVscGluZ3xlbnwxfHx8fDE3NTYzNjE2NjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "features": ["Kunjungan Jemaat Lansia & Sakit", "Bantuan Sosial & Sembako Kasih", "Konseling & Doa Keluarga"]
+    }
+  ],
+  "events": [
+    {
+      "id": "evt-1",
+      "title": "Kebaktian Perjamuan Kudus Awal Bulan",
+      "date": "Minggu Pertama Bulan Ini",
+      "time": "07:30 & 10:00 WIB",
+      "location": "Gedung Gereja GEPEKRIS Tretes",
+      "description": "Mengingat pengorbanan dan karya penebusan Kristus melalui perjamuan kudus bersama.",
+      "category": "Ibadah Khusus",
+      "featured": true,
+      "image": "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=1200&q=80",
+      "author": "Majelis Gereja GEPEKRIS Tretes",
+      "content": "Puji syukur kepada Tuhan Yesus Kristus, Kepala Gereja kita. Segenap jemaat dan simpatisan diundang untuk hadir dan bersekutu dalam Kebaktian Perjamuan Kudus Awal Bulan di Gereja Persekutuan Kristen (GEPEKRIS) Tretes.\n\nPerjamuan Kudus ini dilaksanakan dalam dua sesi ibadah umum (Kebaktian I Pkl. 07:30 WIB dan Kebaktian II Pkl. 10:00 WIB). Seluruh jemaat yang telah menerima sakramen baptisan kudus / sidi diharapkan mempersiapkan hati dengan doa dan pembacaan firman Tuhan.\n\nMari kita datang dengan kerinduan hati untuk mengingat kembali kasih pengorbanan Kristus di kayu salib, memperbaharui komitmen hidup kudus, serta mempererat tali persaudaraan antar jemaat dalam persekutuan tubuh Kristus. Bagi jemaat yang membutuhkan pelayanan perjamuan kudus di rumah bagi lansia yang sakit, silakan menghubungi sekretariat gereja atau koordinator diakonia."
+    },
+    {
+      "id": "evt-2",
+      "title": "Retret Jemaat & Pembinaan Rohani Keluarga",
+      "date": "Bulan Depan",
+      "time": "Jumat - Minggu",
+      "location": "Wisma Retret Tretes, Prigen",
+      "description": "Menikmati waktu pembaharuan rohani, kebersamaan antar jemaat, dan firman yang mendalam di udara sejuk Tretes.",
+      "category": "Retret",
+      "featured": false,
+      "image": "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80",
+      "author": "Panitia Pembinaan Rohani",
+      "content": "Sebagai bagian dari program pertumbuhan iman jemaat GEPEKRIS Tretes, gereja mengadakan Retret Pembinaan Rohani Keluarga dengan tema: 'Berakar Kuat, Berbuah Lebat'.\n\nKegiatan ini dirancang untuk seluruh kalangan usia—anak-anak, pemuda-remaja, hingga orang tua dan lansia. Selama tiga hari dua malam, jemaat akan diajak mendalami firman Tuhan dalam sesi pleno, kelompok sharing doa yang intim, workshop keluarga kristiani, serta malam puji-pujian dan keakraban di sejuknya hawa pegunungan Tretes.\n\nPendaftaran telah dibuka melalui sekretariat gereja. Tempat terbatas demi kenyamanan akomodasi. Mari luangkan waktu sejenak dari kesibukan rutinitas untuk disegarkan kembali dalam hadirat Tuhan bersama keluarga tercinta."
+    },
+    {
+      "id": "evt-3",
+      "title": "Aksi Kasih Diakonia: Berbagi Berkat Sembako Bagi Warga Prigen",
+      "date": "Sabtu Pekan Depan",
+      "time": "09:00 WIB - Selesai",
+      "location": "Halaman Gereja GEPEKRIS Tretes",
+      "description": "Pemberian paket sembako dan pelayanan kasih bagi masyarakat sekitar lingkungan gereja.",
+      "category": "Diakonia",
+      "featured": false,
+      "image": "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80",
+      "author": "Komisi Diakonia & Sosial",
+      "content": "Gereja bukan hanya tempat beribadah di dalam gedung, tetapi juga terang dan garam di tengah masyarakat sekitar. Komisi Diakonia GEPEKRIS Tretes kembali menyelenggarakan 'Aksi Kasih Berbagi Berkat'.\n\nDalam aksi sosial ini, gereja menyalurkan paket bahan pokok (sembako), vitamin, serta pemeriksaan kesehatan dasar gratis bagi warga lansia dan keluarga prasejahtera di sekitar kawasan Prigen dan Tretes.\n\nBagi jemaat yang terbeban untuk mendukung pengadaan paket bahan pokok maupun tenaga sukarelawan medis / logistik, persembahan kasih dan partisipasi dapat dikoordinasikan langsung bersama tim Diakonia. Kiranya kasih Kristus terpancar nyata melalui pelayanan bersama ini."
+    }
+  ]
+}

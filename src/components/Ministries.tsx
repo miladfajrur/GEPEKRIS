@@ -14,10 +14,10 @@ export function Ministries() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-            Our Ministries
+            Pelayanan & Komisi Gereja
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover opportunities to grow in faith, build relationships, and serve others
+            Wadah bertumbuh dalam iman, melayani sesama, dan mempererat persekutuan kasih di GEPEKRIS Tretes
           </p>
         </div>
 
@@ -52,7 +52,7 @@ export function Ministries() {
                   className="w-full cursor-pointer"
                   onClick={() => setSelectedMinistry(ministry.title)}
                 >
-                  Learn More
+                  Informasi Lengkap
                 </Button>
               </div>
             </Card>
@@ -61,35 +61,35 @@ export function Ministries() {
 
         {/* Additional Ministries */}
         <div className="bg-white rounded-xl p-8 shadow-xs border border-gray-200/80">
-          <h3 className="text-2xl font-semibold text-center mb-8 text-gray-900">Additional Ministries</h3>
+          <h3 className="text-2xl font-semibold text-center mb-8 text-gray-900">Komisi & Pelayanan Lainnya</h3>
           <div className="grid md:grid-cols-4 gap-6 text-center">
             <div
               className="p-4 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-              onClick={() => setSelectedMinistry("Small Groups")}
+              onClick={() => setSelectedMinistry("Persekutuan Doa & PA")}
             >
-              <h4 className="font-semibold mb-1.5 text-gray-900">Small Groups</h4>
-              <p className="text-sm text-gray-600">Bible study and fellowship in homes</p>
+              <h4 className="font-semibold mb-1.5 text-gray-900">Persekutuan Doa</h4>
+              <p className="text-sm text-gray-600">Pendalaman Alkitab dan doa bersama di rumah jemaat</p>
             </div>
             <div
               className="p-4 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-              onClick={() => setSelectedMinistry("Women's Ministry")}
+              onClick={() => setSelectedMinistry("Komisi Wanita (PW)")}
             >
-              <h4 className="font-semibold mb-1.5 text-gray-900">Women's Ministry</h4>
-              <p className="text-sm text-gray-600">Encouraging women in their faith journey</p>
+              <h4 className="font-semibold mb-1.5 text-gray-900">Komisi Wanita</h4>
+              <p className="text-sm text-gray-600">Membangun iman dan kebersamaan ibu-ibu serta wanita</p>
             </div>
             <div
               className="p-4 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-              onClick={() => setSelectedMinistry("Men's Ministry")}
+              onClick={() => setSelectedMinistry("Komisi Pria (PP)")}
             >
-              <h4 className="font-semibold mb-1.5 text-gray-900">Men's Ministry</h4>
-              <p className="text-sm text-gray-600">Building strong Christian men</p>
+              <h4 className="font-semibold mb-1.5 text-gray-900">Komisi Pria</h4>
+              <p className="text-sm text-gray-600">Penguatan peran pria dan kepala keluarga kristiani</p>
             </div>
             <div
               className="p-4 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-              onClick={() => setSelectedMinistry("Seniors Ministry")}
+              onClick={() => setSelectedMinistry("Komisi Usia Indah (Lansia)")}
             >
-              <h4 className="font-semibold mb-1.5 text-gray-900">Seniors Ministry</h4>
-              <p className="text-sm text-gray-600">Fellowship and activities for seniors</p>
+              <h4 className="font-semibold mb-1.5 text-gray-900">Komisi Usia Indah</h4>
+              <p className="text-sm text-gray-600">Persekutuan kasih dan perhatian khusus bagi opa-oma</p>
             </div>
           </div>
         </div>
@@ -109,14 +109,17 @@ export function Ministries() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedMinistry}</h3>
               <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                Thank you for your interest in {selectedMinistry}! We would love to help you get connected with leaders and members in this group.
+                Terima kasih atas minat dan kerinduan Anda dalam pelayanan {selectedMinistry}! Anda dapat bergabung atau menghubungi koordinator komisi melalui sekretariat gereja.
               </p>
               <div className="p-3 bg-gray-50 rounded-lg text-xs text-gray-600 space-y-1 mb-5">
-                <div>Meeting times: <strong>Weekly / Monthly schedule</strong></div>
-                <div>Location: <strong>Gedung Gereja GEPEKRIS Tretes</strong></div>
+                <div>Jadwal Kegiatan: <strong>Rutin Setiap Pekan / Bulan</strong></div>
+                <div>Lokasi: <strong>Gedung GEPEKRIS Tretes & Rumah Jemaat</strong></div>
               </div>
-              <Button onClick={() => setSelectedMinistry(null)} className="w-full cursor-pointer">
-                Close
+              <Button
+                className="w-full cursor-pointer"
+                onClick={() => setSelectedMinistry(null)}
+              >
+                Tutup
               </Button>
             </div>
           </div>

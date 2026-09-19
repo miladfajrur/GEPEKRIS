@@ -42,22 +42,22 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
           <nav className="hidden md:block">
             <div className="ml-6 flex items-baseline space-x-5 lg:space-x-7">
               <a href="#home" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
-                Home
+                Beranda
               </a>
               <a href="#about" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
-                About
+                Tentang Kami
               </a>
               <a href="#services" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
-                Services
+                Jadwal Ibadah
               </a>
               <a href="#ministries" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
-                Ministries
+                Pelayanan
               </a>
               <a href="#events" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
                 Warta & Berita
               </a>
               <a href="#contact" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
-                Contact
+                Kontak
               </a>
             </div>
           </nav>
@@ -75,7 +75,7 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
               </Button>
             )}
             <Button onClick={onPlanVisit} className="cursor-pointer" size="sm">
-              Visit Us
+              Rencana Kunjungan
             </Button>
           </div>
 
@@ -100,28 +100,28 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
                 onClick={() => setIsOpen(false)}
                 className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm"
               >
-                Home
+                Beranda
               </a>
               <a
                 href="#about"
                 onClick={() => setIsOpen(false)}
                 className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm"
               >
-                About
+                Tentang Kami
               </a>
               <a
                 href="#services"
                 onClick={() => setIsOpen(false)}
                 className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm"
               >
-                Services
+                Jadwal Ibadah
               </a>
               <a
                 href="#ministries"
                 onClick={() => setIsOpen(false)}
                 className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm"
               >
-                Ministries
+                Pelayanan
               </a>
               <a
                 href="#events"
@@ -135,7 +135,7 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
                 onClick={() => setIsOpen(false)}
                 className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm"
               >
-                Contact
+                Kontak
               </a>
               <div className="pt-3 flex flex-col gap-2">
                 {onOpenNews && (
@@ -157,7 +157,7 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
                   }}
                   className="w-full cursor-pointer"
                 >
-                  Visit Us
+                  Rencana Kunjungan
                 </Button>
               </div>
             </div>

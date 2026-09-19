@@ -398,9 +398,12 @@ interface ContentContextType {
   updateMinistries: (ministries: ChurchMinistryItem[]) => void;
   addMinistry: (item: Omit<ChurchMinistryItem, 'id'>) => void;
   deleteMinistry: (id: string) => void;
+  updateMinistryItem: (id: string, updated: Partial<ChurchMinistryItem>) => void;
   updateEvents: (events: ChurchEventItem[]) => void;
   addEvent: (item: Omit<ChurchEventItem, 'id'>) => void;
   deleteEvent: (id: string) => void;
+  updateEventItem: (id: string, updated: Partial<ChurchEventItem>) => void;
+  updateServiceItem: (id: string, updated: Partial<ChurchServiceItem>) => void;
   resetToDefaults: () => void;
   importContent: (newContent: ChurchWebsiteContent) => boolean;
   applyGepekrisTretesPreset: () => void;
@@ -454,6 +457,46 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [content]);
 
+  // Sync across open browser tabs in real time
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          const updated = JSON.parse(e.newValue);
+          if (updated && updated.info && updated.hero) {
+            setContent(updated);
+          }
+        } catch (err) {
+          console.error("Failed to parse storage sync", err);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Background fetch latest content from server if available
+  useEffect(() => {
+    const fetchRemoteContent = async () => {
+      try {
+        const res = await fetch(`/data/church_content.json?_t=${Date.now()}`).catch(() => null);
+        if (res && res.ok) {
+          const remoteJson = await res.json().catch(() => null);
+          if (remoteJson && remoteJson.info && remoteJson.hero) {
+            // Only adopt if local hasn't been modified or if user hasn't customized
+            const hasLocal = localStorage.getItem(STORAGE_KEY);
+            if (!hasLocal) {
+              setContent(remoteJson);
+            }
+          }
+        }
+      } catch {
+        // Silent fallback
+      }
+    };
+    fetchRemoteContent();
+  }, []);
+
   const updateInfo = (data: Partial<ChurchGeneralInfo>) => {
     setContent((prev) => ({ ...prev, info: { ...prev.info, ...data } }));
   };
@@ -485,6 +528,13 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
   };
 
+  const updateServiceItem = (id: string, updated: Partial<ChurchServiceItem>) => {
+    setContent((prev) => ({
+      ...prev,
+      services: prev.services.map((s) => (s.id === id ? { ...s, ...updated } : s)),
+    }));
+  };
+
   const updateMinistries = (ministries: ChurchMinistryItem[]) => {
     setContent((prev) => ({ ...prev, ministries }));
   };
@@ -504,6 +554,13 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
   };
 
+  const updateMinistryItem = (id: string, updated: Partial<ChurchMinistryItem>) => {
+    setContent((prev) => ({
+      ...prev,
+      ministries: prev.ministries.map((m) => (m.id === id ? { ...m, ...updated } : m)),
+    }));
+  };
+
   const updateEvents = (events: ChurchEventItem[]) => {
     setContent((prev) => ({ ...prev, events }));
   };
@@ -520,6 +577,13 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setContent((prev) => ({
       ...prev,
       events: prev.events.filter((e) => e.id !== id),
+    }));
+  };
+
+  const updateEventItem = (id: string, updated: Partial<ChurchEventItem>) => {
+    setContent((prev) => ({
+      ...prev,
+      events: prev.events.map((e) => (e.id === id ? { ...e, ...updated } : e)),
     }));
   };
 
@@ -884,12 +948,15 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateServices,
         addService,
         deleteService,
+        updateServiceItem,
         updateMinistries,
         addMinistry,
         deleteMinistry,
+        updateMinistryItem,
         updateEvents,
         addEvent,
         deleteEvent,
+        updateEventItem,
         resetToDefaults,
         importContent,
         applyGepekrisTretesPreset,

@@ -34,10 +34,10 @@ export function ServiceTimes() {
             <span>Jadwal Ibadah & Komunitas</span>
           </span>
           <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-            Service Times
+            Jadwal Ibadah GEPEKRIS Tretes
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto font-light leading-relaxed">
-            Come as you are and experience the love of Christ in our welcoming community
+            Mari bersekutu bersama kami dan alami kehangatan kasih Kristus dalam keluarga rohani
           </p>
         </motion.div>
 
@@ -99,7 +99,7 @@ export function ServiceTimes() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-1">
-                  Our Location & Sanctuary
+                  Lokasi Gedung Gereja & Tempat Ibadah
                 </h3>
                 <p className="text-gray-600 text-sm sm:text-base leading-relaxed max-w-xl">
                   {content.info.address}
@@ -107,14 +107,14 @@ export function ServiceTimes() {
               </div>
             </div>
             <div className="w-full md:w-auto text-left md:text-right pt-2 md:pt-0 border-t md:border-t-0 border-gray-100">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Need directions or map view?</p>
+              <p className="text-xs text-gray-500 mb-2 font-medium">Petunjuk arah & navigasi peta Google Maps:</p>
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(content.info.address)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 text-sm font-semibold transition-transform hover:scale-105 active:scale-95 shadow-xs"
               >
-                <span>Get Directions</span>
+                <span>Buka Rute di Google Maps</span>
                 <ArrowRight className="w-4 h-4" />
               </a>
             </div>

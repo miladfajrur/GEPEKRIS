@@ -56,17 +56,17 @@ export function Contact() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-            Get In Touch
+            Hubungi Sekretariat GEPEKRIS Tretes
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            We'd love to hear from you. Reach out with any questions or to learn more about our church
+            Punya pertanyaan seputar jadwal ibadah atau membutuhkan pokok doa? Kami siap melayani Anda
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Contact Information */}
           <div>
-            <h3 className="text-2xl font-semibold mb-6 text-gray-900">Contact Information</h3>
+            <h3 className="text-2xl font-semibold mb-6 text-gray-900">Informasi Kontak & Lokasi</h3>
             <div className="grid sm:grid-cols-2 gap-6 mb-8">
               {contactInfo.map((info) => {
                 const IconComponent = info.icon;
@@ -108,16 +108,16 @@ export function Contact() {
           <div>
             <Card className="bg-white">
               <CardContent className="p-6">
-                <h3 className="text-2xl font-semibold mb-6 text-gray-900">Send us a Message</h3>
+                <h3 className="text-2xl font-semibold mb-6 text-gray-900">Kirim Pesan / Permohonan Doa</h3>
                 
                 {submitted ? (
                   <div className="p-8 text-center bg-emerald-50 rounded-xl border border-emerald-200 space-y-3">
                     <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
                       <CheckCircle2 className="w-7 h-7" />
                     </div>
-                    <h4 className="text-xl font-bold text-emerald-900">Thank you, {formData.firstName}!</h4>
+                    <h4 className="text-xl font-bold text-emerald-900">Terima kasih, {formData.firstName}!</h4>
                     <p className="text-sm text-emerald-700 leading-relaxed">
-                      Your message has been received. Our ministry staff will get back to you within 24–48 hours.
+                      Pesan atau permohonan doa Anda telah kami terima. Tim sekretariat atau pendoa gereja akan segera merespons.
                     </p>
                     <Button
                       variant="outline"
@@ -134,7 +134,7 @@ export function Contact() {
                       }}
                       className="mt-2"
                     >
-                      Send Another Message
+                      Kirim Pesan Lainnya
                     </Button>
                   </div>
                 ) : (
@@ -142,23 +142,23 @@ export function Contact() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="firstName" className="block text-sm font-medium mb-1 text-gray-700">
-                          First Name *
+                          Nama Depan *
                         </label>
                         <Input
                           id="firstName"
                           required
-                          placeholder="Your first name"
+                          placeholder="Nama depan Anda"
                           value={formData.firstName}
                           onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                         />
                       </div>
                       <div>
                         <label htmlFor="lastName" className="block text-sm font-medium mb-1 text-gray-700">
-                          Last Name
+                          Nama Belakang
                         </label>
                         <Input
                           id="lastName"
-                          placeholder="Your last name"
+                          placeholder="Nama belakang / marga"
                           value={formData.lastName}
                           onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                         />
@@ -167,13 +167,13 @@ export function Contact() {
                     
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-700">
-                        Email *
+                        Alamat Email *
                       </label>
                       <Input
                         id="email"
                         type="email"
                         required
-                        placeholder="your.email@example.com"
+                        placeholder="email.anda@example.com"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
@@ -181,12 +181,12 @@ export function Contact() {
                     
                     <div>
                       <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-700">
-                        Phone (Optional)
+                        Nomor WhatsApp / HP (Opsional)
                       </label>
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="(555) 123-4567"
+                        placeholder="0812-xxxx-xxxx"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       />
@@ -194,11 +194,11 @@ export function Contact() {
                     
                     <div>
                       <label htmlFor="subject" className="block text-sm font-medium mb-1 text-gray-700">
-                        Subject
+                        Perihal / Topik
                       </label>
                       <Input
                         id="subject"
-                        placeholder="What's this about?"
+                        placeholder="Contoh: Permohonan Doa / Jadwal Ibadah"
                         value={formData.subject}
                         onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       />
@@ -206,12 +206,12 @@ export function Contact() {
                     
                     <div>
                       <label htmlFor="message" className="block text-sm font-medium mb-1 text-gray-700">
-                        Message *
+                        Pesan Anda *
                       </label>
                       <Textarea 
                         id="message" 
                         required
-                        placeholder="Tell us how we can help you..."
+                        placeholder="Tuliskan pesan, pertanyaan, atau pokok doa Anda di sini..."
                         className="min-h-32"
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -219,7 +219,7 @@ export function Contact() {
                     </div>
                     
                     <Button type="submit" className="w-full cursor-pointer">
-                      Send Message
+                      Kirim Pesan Sekarang
                     </Button>
                   </form>
                 )}

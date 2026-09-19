@@ -37,6 +37,7 @@ import {
   Globe,
   Eye,
   EyeOff,
+  Pencil,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -58,10 +59,13 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     updateAbout,
     addService,
     deleteService,
+    updateServiceItem,
     addMinistry,
     deleteMinistry,
+    updateMinistryItem,
     addEvent,
     deleteEvent,
+    updateEventItem,
     resetToDefaults,
     importContent,
     applyGepekrisTretesPreset,
@@ -119,6 +123,11 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
   const [newEventImage, setNewEventImage] = useState('');
   const [newEventAuthor, setNewEventAuthor] = useState('');
   const [newEventFeatured, setNewEventFeatured] = useState(false);
+
+  // Inline item editing state
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [editingMinistryId, setEditingMinistryId] = useState<string | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   // JSON Import/Export state
   const [importJsonText, setImportJsonText] = useState('');
@@ -883,30 +892,85 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                   {content.services.map((srv) => (
                     <div
                       key={srv.id}
-                      className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-start justify-between gap-4"
+                      className="p-4 bg-gray-50 rounded-xl border border-gray-200"
                     >
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-primary shrink-0" />
-                          <h4 className="font-semibold text-gray-900 text-sm">{srv.name}</h4>
+                      {editingServiceId === srv.id ? (
+                        <div className="space-y-3 bg-white p-3 rounded-lg border border-primary/30">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Kebaktian / Ibadah</label>
+                            <Input
+                              value={srv.name}
+                              onChange={(e) => updateServiceItem(srv.id, { name: e.target.value })}
+                              placeholder="Nama Ibadah"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Waktu / Jadwal (pisahkan koma jika lebih dari satu)</label>
+                            <Input
+                              value={srv.times.join(', ')}
+                              onChange={(e) => updateServiceItem(srv.id, { times: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
+                              placeholder="contoh: 07:30 WIB, 10:00 WIB"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Deskripsi / Keterangan</label>
+                            <Textarea
+                              rows={2}
+                              value={srv.description}
+                              onChange={(e) => updateServiceItem(srv.id, { description: e.target.value })}
+                              placeholder="Keterangan ibadah..."
+                            />
+                          </div>
+                          <div className="flex justify-end pt-1">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setEditingServiceId(null);
+                                showToast('Jadwal ibadah diperbarui!');
+                              }}
+                              className="cursor-pointer text-xs"
+                            >
+                              Selesai Mengedit
+                            </Button>
+                          </div>
                         </div>
-                        <div className="text-xs font-medium text-primary">
-                          {srv.times.join(' & ')}
+                      ) : (
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-primary shrink-0" />
+                              <h4 className="font-semibold text-gray-900 text-sm">{srv.name}</h4>
+                            </div>
+                            <div className="text-xs font-medium text-primary">
+                              {srv.times.join(' & ')}
+                            </div>
+                            <p className="text-xs text-gray-600">{srv.description}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditingServiceId(srv.id)}
+                              className="text-gray-500 hover:text-primary hover:bg-primary/10 cursor-pointer"
+                              title="Edit jadwal ini"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                deleteService(srv.id);
+                                showToast(`Removed "${srv.name}"`);
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                              title="Delete this service"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-600">{srv.description}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          deleteService(srv.id);
-                          showToast(`Removed "${srv.name}"`);
-                        }}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        title="Delete this service"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -967,40 +1031,101 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                       key={min.id}
                       className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col justify-between"
                     >
-                      <div>
-                        <div className="h-28 w-full rounded-lg overflow-hidden mb-2 bg-gray-200">
-                          <img
-                            src={min.image}
-                            alt={min.title}
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
+                      {editingMinistryId === min.id ? (
+                        <div className="space-y-3 bg-white p-3 rounded-lg border border-primary/30">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Bidang Pelayanan</label>
+                            <Input
+                              value={min.title}
+                              onChange={(e) => updateMinistryItem(min.id, { title: e.target.value })}
+                              placeholder="Nama Pelayanan"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Deskripsi / Visi</label>
+                            <Textarea
+                              rows={2}
+                              value={min.description}
+                              onChange={(e) => updateMinistryItem(min.id, { description: e.target.value })}
+                              placeholder="Deskripsi pelayanan..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">URL Gambar Cover</label>
+                            <Input
+                              value={min.image}
+                              onChange={(e) => updateMinistryItem(min.id, { image: e.target.value })}
+                              placeholder="https://..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Fokus / Tag (pisahkan koma)</label>
+                            <Input
+                              value={min.features.join(', ')}
+                              onChange={(e) => updateMinistryItem(min.id, { features: e.target.value.split(',').map(f => f.trim()).filter(Boolean) })}
+                              placeholder="Fokus 1, Fokus 2"
+                            />
+                          </div>
+                          <div className="flex justify-end pt-1">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setEditingMinistryId(null);
+                                showToast('Pelayanan diperbarui!');
+                              }}
+                              className="cursor-pointer text-xs"
+                            >
+                              Selesai Mengedit
+                            </Button>
+                          </div>
                         </div>
-                        <h4 className="font-semibold text-gray-900 text-sm mb-1">{min.title}</h4>
-                        <p className="text-xs text-gray-600 mb-2 leading-relaxed">{min.description}</p>
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {min.features.map((f, i) => (
-                            <span key={i} className="text-[10px] bg-white px-2 py-0.5 rounded border text-gray-600">
-                              {f}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                      ) : (
+                        <>
+                          <div>
+                            <div className="h-28 w-full rounded-lg overflow-hidden mb-2 bg-gray-200">
+                              <img
+                                src={min.image}
+                                alt={min.title}
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                            <h4 className="font-semibold text-gray-900 text-sm mb-1">{min.title}</h4>
+                            <p className="text-xs text-gray-600 mb-2 leading-relaxed">{min.description}</p>
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {min.features.map((f, i) => (
+                                <span key={i} className="text-[10px] bg-white px-2 py-0.5 rounded border text-gray-600">
+                                  {f}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
 
-                      <div className="pt-2 border-t border-gray-200 flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            deleteMinistry(min.id);
-                            showToast(`Removed "${min.title}"`);
-                          }}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
+                          <div className="pt-2 border-t border-gray-200 flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditingMinistryId(min.id)}
+                              className="text-gray-600 hover:text-primary hover:bg-primary/10 text-xs cursor-pointer"
+                            >
+                              <Pencil className="w-3.5 h-3.5 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                deleteMinistry(min.id);
+                                showToast(`Removed "${min.title}"`);
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1068,42 +1193,123 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                   {content.events.map((evt) => (
                     <div
                       key={evt.id}
-                      className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-start justify-between gap-4"
+                      className="p-4 bg-gray-50 rounded-xl border border-gray-200"
                     >
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
-                            {evt.category}
-                          </span>
-                          {evt.featured && (
-                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
-                              Featured
-                            </span>
-                          )}
-                          <h4 className="font-semibold text-gray-900 text-sm">{evt.title}</h4>
+                      {editingEventId === evt.id ? (
+                        <div className="space-y-3 bg-white p-3 rounded-lg border border-primary/30">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Warta / Kegiatan</label>
+                            <Input
+                              value={evt.title}
+                              onChange={(e) => updateEventItem(evt.id, { title: e.target.value })}
+                              placeholder="Judul Warta"
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Tanggal</label>
+                              <Input
+                                value={evt.date}
+                                onChange={(e) => updateEventItem(evt.id, { date: e.target.value })}
+                                placeholder="Tanggal"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Waktu</label>
+                              <Input
+                                value={evt.time}
+                                onChange={(e) => updateEventItem(evt.id, { time: e.target.value })}
+                                placeholder="Waktu"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Lokasi</label>
+                              <Input
+                                value={evt.location}
+                                onChange={(e) => updateEventItem(evt.id, { location: e.target.value })}
+                                placeholder="Lokasi"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Ringkasan Singkat</label>
+                            <Input
+                              value={evt.description}
+                              onChange={(e) => updateEventItem(evt.id, { description: e.target.value })}
+                              placeholder="Ringkasan singkat..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Isi Berita / Warta Lengkap</label>
+                            <Textarea
+                              rows={3}
+                              value={evt.content || evt.description}
+                              onChange={(e) => updateEventItem(evt.id, { content: e.target.value })}
+                              placeholder="Detail teks warta lengkap..."
+                            />
+                          </div>
+                          <div className="flex justify-end pt-1">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setEditingEventId(null);
+                                showToast('Warta / kegiatan diperbarui!');
+                              }}
+                              className="cursor-pointer text-xs"
+                            >
+                              Selesai Mengedit
+                            </Button>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-600 flex items-center gap-3">
-                          <span>{evt.date}</span>
-                          <span>•</span>
-                          <span>{evt.time}</span>
-                          <span>•</span>
-                          <span>{evt.location}</span>
-                        </div>
-                        <p className="text-xs text-gray-500">{evt.description}</p>
-                      </div>
+                      ) : (
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
+                                {evt.category}
+                              </span>
+                              {evt.featured && (
+                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+                                  Featured
+                                </span>
+                              )}
+                              <h4 className="font-semibold text-gray-900 text-sm">{evt.title}</h4>
+                            </div>
+                            <div className="text-xs text-gray-600 flex items-center gap-3">
+                              <span>{evt.date}</span>
+                              <span>•</span>
+                              <span>{evt.time}</span>
+                              <span>•</span>
+                              <span>{evt.location}</span>
+                            </div>
+                            <p className="text-xs text-gray-500">{evt.description}</p>
+                          </div>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          deleteEvent(evt.id);
-                          showToast(`Removed "${evt.title}"`);
-                        }}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        title="Delete event"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEditingEventId(evt.id)}
+                              className="text-gray-600 hover:text-primary hover:bg-primary/10 cursor-pointer"
+                              title="Edit warta ini"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                deleteEvent(evt.id);
+                                showToast(`Removed "${evt.title}"`);
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                              title="Delete event"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1788,14 +1994,27 @@ $dataFile = dirname(__DIR__) . '/data/church_content.json';
         </div>
 
         {/* Modal Bottom Bar */}
-        <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50 text-xs text-gray-500">
-          <div className="flex items-center gap-1.5 text-emerald-600 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>All changes are live in your browser preview</span>
+        <div className="px-6 py-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/80 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-emerald-700 font-medium">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Perubahan langsung tersimpan & tampil di web!</span>
           </div>
-          <Button size="sm" onClick={onClose} className="cursor-pointer">
-            Done Editing
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSyncToHosting}
+              disabled={syncingToHosting}
+              className="cursor-pointer text-xs border-emerald-600 text-emerald-700 hover:bg-emerald-50 flex items-center gap-1.5"
+              title="Kirim dan simpan data ke server hosting gepekristretes.org"
+            >
+              <Server className="w-3.5 h-3.5" />
+              <span>{syncingToHosting ? 'Menyimpan ke Hosting...' : 'Simpan ke Hosting (Push)'}</span>
+            </Button>
+            <Button size="sm" onClick={onClose} className="cursor-pointer bg-primary text-white hover:bg-primary/90">
+              Selesai & Lihat Web
+            </Button>
+          </div>
         </div>
 
       </div>

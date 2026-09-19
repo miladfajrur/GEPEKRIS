@@ -15,11 +15,11 @@ import { ContentManagerModal } from './components/admin/ContentManagerModal';
 import { AdminLoginModal } from './components/admin/AdminLoginModal';
 import { NewsBlogReader } from './components/NewsBlogReader';
 import { ChurchContentProvider, useChurchContent } from './context/ChurchContentContext';
-import { X } from 'lucide-react';
+import { X, Pencil, ShieldCheck, LogOut } from 'lucide-react';
 import { Button } from './components/ui/button';
 
 function ChurchApp() {
-  const { content, isAdmin } = useChurchContent();
+  const { content, isAdmin, logoutAdmin } = useChurchContent();
   const [isPlanVisitOpen, setIsPlanVisitOpen] = useState(false);
   const [isWatchOnlineOpen, setIsWatchOnlineOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -240,6 +240,36 @@ function ChurchApp() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Floating Admin Toolbar (Visible when logged in as Admin) */}
+      {isAdmin && (
+        <aside 
+          aria-label="Admin Control Bar"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-stone-900/95 text-white px-4 py-2 rounded-full shadow-2xl border border-amber-500/50 flex items-center gap-3 text-xs backdrop-blur-md animate-in fade-in slide-in-from-bottom-2"
+        >
+          <div className="flex items-center gap-2 font-medium text-amber-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="hidden sm:inline">Mode Admin Aktif</span>
+            <span className="sm:hidden">Admin</span>
+          </div>
+          <div className="h-4 w-px bg-stone-700"></div>
+          <button
+            onClick={() => setIsAdminOpen(true)}
+            className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-3.5 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            <span>Edit Konten Halaman</span>
+          </button>
+          <button
+            onClick={logoutAdmin}
+            className="text-stone-400 hover:text-white px-2 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1"
+            title="Keluar Mode Admin"
+          >
+            <LogOut className="w-3 h-3" />
+            <span className="hidden sm:inline">Keluar</span>
+          </button>
+        </aside>
       )}
     </div>
   );
