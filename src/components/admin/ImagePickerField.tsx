@@ -10,9 +10,15 @@ import {
   ExternalLink,
   Trash2,
   Loader2,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import {
+  validateImageFile,
+  validateImageUrlString,
+  MAX_RAW_IMAGE_SIZE_LABEL,
+} from '../../lib/imageValidation';
 
 export interface ImagePreset {
   id: string;
@@ -92,12 +98,14 @@ export function ImagePickerField({
   const [urlInput, setUrlInput] = useState<string>(currentValue || '');
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [imgLoadStatus, setImgLoadStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync internal URL state when currentValue changes from outside
   useEffect(() => {
     setUrlInput(currentValue || '');
+    setValidationError(null);
   }, [currentValue]);
 
   // Test load image whenever currentValue changes
@@ -114,13 +122,19 @@ export function ImagePickerField({
     testImg.src = currentValue;
   }, [currentValue]);
 
-  // Resizes large images to fit safely within browser storage
+  // Resizes large images to fit safely within browser storage and payload limits
   const processImageFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      onToast?.('Mohon pilih berkas gambar yang valid (JPG, PNG, WebP)');
+    // 1. Client-side format (JPG/PNG) and size (<=5MB) validation
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      const errorMsg = validation.error || 'Berkas gambar tidak memenuhi syarat.';
+      setValidationError(errorMsg);
+      onToast?.(errorMsg);
+      // Existing state is completely preserved, preventing state reset!
       return;
     }
 
+    setValidationError(null);
     setIsProcessing(true);
     try {
       const compressedDataUrl = await new Promise<string>((resolve, reject) => {
@@ -150,7 +164,7 @@ export function ImagePickerField({
             }
 
             ctx.drawImage(img, 0, 0, width, height);
-            // Compress to optimized JPEG (~70KB-120KB)
+            // Compress to high-efficiency JPEG (~60KB-120KB)
             const dataUrl = canvas.toDataURL('image/jpeg', 0.76);
             resolve(dataUrl);
           };
@@ -163,10 +177,12 @@ export function ImagePickerField({
 
       setUrlInput(compressedDataUrl);
       onChange(compressedDataUrl);
-      onToast?.('Foto berhasil diunggah dan disimpan!');
+      onToast?.('Foto berhasil divalidasi, dioptimasi, dan disimpan!');
     } catch (err) {
       console.error('Error processing image:', err);
-      onToast?.('Gagal memproses foto. Silakan coba berkas lain.');
+      const errMsg = 'Gagal memproses foto. Silakan coba berkas gambar JPG atau PNG lainnya.';
+      setValidationError(errMsg);
+      onToast?.(errMsg);
     } finally {
       setIsProcessing(false);
     }
@@ -206,10 +222,14 @@ export function ImagePickerField({
   };
 
   const handleApplyUrl = () => {
-    if (!urlInput.trim()) {
-      onToast?.('Masukkan URL gambar yang valid');
+    const val = validateImageUrlString(urlInput);
+    if (!val.valid) {
+      const errMsg = val.error || 'Format tautan gambar tidak valid.';
+      setValidationError(errMsg);
+      onToast?.(errMsg);
       return;
     }
+    setValidationError(null);
     onChange(urlInput.trim());
     onToast?.('Tautan gambar berhasil diterapkan!');
   };
@@ -381,11 +401,30 @@ export function ImagePickerField({
         )}
       </div>
 
-      {/* Hidden File Input */}
+      {/* Validation Error Alert - Protects state and explains reason */}
+      {validationError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2.5 animate-in fade-in">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+          <div className="flex-1 space-y-0.5">
+            <p className="font-bold">Unggahan Ditolak Validasi Sisi Klien</p>
+            <p>{validationError}</p>
+            <p className="text-[11px] text-red-600">Foto sebelumnya tetap aman dan tidak di-reset.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setValidationError(null)}
+            className="text-red-500 hover:text-red-700 font-bold px-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Hidden File Input with specific accepted formats */}
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/jpg"
+        accept="image/jpeg,image/png,image/jpg,image/webp,.jpg,.jpeg,.png,.webp"
         className="hidden"
         onChange={handleFileChange}
       />
@@ -417,15 +456,30 @@ export function ImagePickerField({
                 : 'Klik untuk pilih foto, atau seret foto ke sini'}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Mendukung JPG, PNG, atau WebP dari HP atau Komputer (Otomatis dioptimasi)
+              Foto otomatis dikompresi beresolusi tajam & siap dikirim ke server hosting
             </p>
           </div>
+
+          {/* Format & Size Requirements Badges */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+              Format: JPG, PNG
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+              Maks. {MAX_RAW_IMAGE_SIZE_LABEL}
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-stone-100 text-stone-600 border border-stone-200">
+              Auto-Compress (~80 KB)
+            </span>
+          </div>
+
           <Button
             type="button"
             variant="outline"
             size="sm"
             disabled={isProcessing}
-            className="text-xs font-semibold px-4 py-1.5 h-8 bg-stone-50 hover:bg-stone-100 pointer-events-none"
+            className="text-xs font-semibold px-4 py-1.5 h-8 bg-stone-50 hover:bg-stone-100 pointer-events-none mt-1"
           >
             Pilih Berkas dari Perangkat
           </Button>

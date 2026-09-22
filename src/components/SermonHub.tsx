@@ -5,15 +5,18 @@ import { Play, Search, BookOpen, Clock, Calendar, User, Sparkles, Filter, Check,
 
 interface SermonHubProps {
   language: Language;
-  selectedSermon: Sermon | null;
-  onSelectSermon: (sermon: Sermon | null) => void;
+  selectedSermon?: Sermon | null;
+  onSelectSermon?: (sermon: Sermon | null) => void;
 }
 
 export const SermonHub: React.FC<SermonHubProps> = ({
   language,
-  selectedSermon,
-  onSelectSermon,
+  selectedSermon: externalSelectedSermon,
+  onSelectSermon: externalOnSelectSermon,
 }) => {
+  const [internalSelectedSermon, setInternalSelectedSermon] = useState<Sermon | null>(null);
+  const selectedSermon = externalSelectedSermon !== undefined ? externalSelectedSermon : internalSelectedSermon;
+  const onSelectSermon = externalOnSelectSermon || setInternalSelectedSermon;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [copiedLink, setCopiedLink] = useState(false);

@@ -22,6 +22,11 @@ import { useChurchContent, ChurchGalleryItem } from '../context/ChurchContentCon
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
+import {
+  validateImageFile,
+  validateImageUrlString,
+  MAX_RAW_IMAGE_SIZE_LABEL,
+} from '../lib/imageValidation';
 
 const CATEGORIES = [
   'Semua',
@@ -51,6 +56,7 @@ export function PhotoGallery() {
   const [description, setDescription] = useState('');
   const [imageTab, setImageTab] = useState<'upload' | 'url'>('upload');
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -96,6 +102,7 @@ export function PhotoGallery() {
     );
     setDescription('');
     setImageTab('upload');
+    setFileValidationError(null);
     setSyncStatus(null);
     setIsModalOpen(true);
   };
@@ -109,6 +116,7 @@ export function PhotoGallery() {
     setDate(item.date || '');
     setDescription(item.description || '');
     setImageTab(item.imageUrl.startsWith('data:') ? 'upload' : 'url');
+    setFileValidationError(null);
     setSyncStatus(null);
     setIsModalOpen(true);
   };
@@ -120,11 +128,21 @@ export function PhotoGallery() {
     }
   };
 
-  // Compress and handle file upload
+  // Compress and handle file upload with client-side format & size validation
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 1. Client-side format (JPG/PNG) & file size (<=5MB) validation
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setFileValidationError(validation.error || 'Format atau ukuran berkas gambar tidak sesuai.');
+      // Reset input so user can pick another file, state is preserved!
+      e.target.value = '';
+      return;
+    }
+
+    setFileValidationError(null);
     setIsProcessingFile(true);
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -160,9 +178,13 @@ export function PhotoGallery() {
       };
       img.onerror = () => {
         setIsProcessingFile(false);
-        alert('Gagal memproses berkas gambar.');
+        setFileValidationError('Gagal memproses berkas gambar. Pastikan gambar tidak korup.');
       };
       img.src = event.target?.result as string;
+    };
+    reader.onerror = () => {
+      setIsProcessingFile(false);
+      setFileValidationError('Gagal membaca berkas gambar.');
     };
     reader.readAsDataURL(file);
   };
@@ -170,10 +192,18 @@ export function PhotoGallery() {
   const handleSaveModal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !imageUrl.trim()) {
-      alert('Mohon isi judul dan sediakan gambar foto kegiatan.');
+      setFileValidationError('Mohon lengkapi judul dan sediakan gambar foto kegiatan.');
       return;
     }
 
+    // Validate image format before storing
+    const imgValidation = validateImageUrlString(imageUrl);
+    if (!imgValidation.valid) {
+      setFileValidationError(imgValidation.error || 'Format gambar tidak valid. Gunakan JPG atau PNG.');
+      return;
+    }
+
+    setFileValidationError(null);
     if (editingItem) {
       updateGalleryItem(editingItem.id, {
         title: title.trim(),
@@ -555,12 +585,30 @@ export function PhotoGallery() {
                     </button>
                   </div>
 
+                  {/* Validation Error Notice */}
+                  {fileValidationError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2 animate-in fade-in">
+                      <span className="font-bold text-red-600">✕</span>
+                      <div className="flex-1">
+                        <p className="font-semibold">{fileValidationError}</p>
+                        <p className="text-[11px] text-red-600 mt-0.5">Format yang didukung: JPG atau PNG (Maks. {MAX_RAW_IMAGE_SIZE_LABEL}).</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFileValidationError(null)}
+                        className="text-red-500 hover:text-red-700 px-1 font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
                   {imageTab === 'upload' ? (
                     <div className="border-2 border-dashed border-stone-200 hover:border-amber-400 rounded-xl p-4 text-center bg-stone-50/50">
                       <input
                         type="file"
                         id="gallery-file-input"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/jpg,image/webp,.jpg,.jpeg,.png,.webp"
                         onChange={handleFileUpload}
                         className="hidden"
                       />
@@ -572,8 +620,16 @@ export function PhotoGallery() {
                         <span className="text-xs font-medium text-amber-800 hover:underline">
                           Klik untuk memilih foto dari galeri HP atau komputer
                         </span>
+                        <div className="flex items-center justify-center gap-1.5 mt-1.5">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            JPG / PNG
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                            Maks. {MAX_RAW_IMAGE_SIZE_LABEL}
+                          </span>
+                        </div>
                         <span className="text-[11px] text-stone-400 mt-1">
-                          Foto otomatis dikompresi beresolusi tajam & siap sinkronisasi hosting
+                          Foto otomatis dikompresi (~80 KB) beresolusi tajam & siap sinkronisasi hosting
                         </span>
                       </label>
                       {isProcessingFile && (

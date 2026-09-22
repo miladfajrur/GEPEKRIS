@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { validateContentPayloadForSync } from '../lib/imageValidation';
 
 export interface ChurchGeneralInfo {
   name: string;
@@ -1060,6 +1061,27 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(contentToPush));
     } catch {}
+
+    // Pre-flight client-side validation: format check (JPG/PNG) & file/payload size check
+    // This blocks invalid or oversized payloads before sending to /api/content,
+    // avoiding HTTP 413 / 500 errors and ensuring local state is preserved without reset.
+    const payloadValidation = validateContentPayloadForSync(contentToPush);
+    if (!payloadValidation.valid) {
+      const errorMsg = payloadValidation.error || 'Format gambar atau ukuran payload tidak memenuhi syarat.';
+      updateHostingConfig({
+        lastSyncStatus: 'error',
+        lastSyncError: errorMsg,
+        lastSyncTime: new Date().toISOString(),
+      });
+      return {
+        success: false,
+        message: errorMsg,
+        details: {
+          oversizedImages: payloadValidation.oversizedImages,
+          totalSize: payloadValidation.totalSizeFormatted,
+        },
+      };
+    }
 
     try {
       let res = await fetch(targetUrl, {

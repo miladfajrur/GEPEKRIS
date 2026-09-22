@@ -9,6 +9,7 @@ import {
   DEFAULT_CHURCH_CONTENT,
 } from '../../context/ChurchContentContext';
 import { ImagePickerField, DEFAULT_HERO_PRESETS } from './ImagePickerField';
+import { validateImageUrlString } from '../../lib/imageValidation';
 import {
   X,
   Building,
@@ -1584,6 +1585,11 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                       e.preventDefault();
                       if (!newGalTitle.trim() || !newGalImageUrl.trim()) {
                         alert('Mohon masukkan judul dan foto dokumentasi.');
+                        return;
+                      }
+                      const imgValidation = validateImageUrlString(newGalImageUrl.trim());
+                      if (!imgValidation.valid) {
+                        alert(imgValidation.error || 'Format gambar tidak valid. Gunakan format JPG atau PNG.');
                         return;
                       }
                       addGalleryItem({
