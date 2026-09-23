@@ -3,51 +3,287 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panduan Penyimpanan Direktori Hosting - gepekristretes.org</title>
+  <title>Panduan Hosting cPanel & Sinkronisasi Konten - GEPEKRIS Tretes</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #f8fafc; padding: 2rem 1rem; }
-    .container { max-width: 800px; margin: 0 auto; background: #ffffff; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
-    h1 { color: #0f172a; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem; }
-    h2 { color: #1e40af; margin-top: 1.75rem; font-size: 1.25rem; }
-    code, pre { background: #f1f5f9; border-radius: 0.375rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    code { padding: 0.2rem 0.4rem; font-size: 0.875em; color: #0369a1; }
-    pre { padding: 1rem; overflow-x: auto; font-size: 0.85em; border: 1px solid #cbd5e1; }
-    .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: #dbeafe; color: #1e40af; }
-    .alert { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; }
-    ol li { margin-bottom: 0.75rem; }
+    :root {
+      --primary: #15803d;
+      --primary-dark: #166534;
+      --bg: #fafaf9;
+      --card: #ffffff;
+      --border: #e7e5e4;
+      --text: #1c1917;
+      --text-muted: #57534e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      padding: 2.5rem 1rem;
+    }
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      background: var(--card);
+      padding: 2.5rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #dcfce7;
+      color: var(--primary-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      color: #0c0a09;
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+    p.lead {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 1.75rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.25rem;
+    }
+    h2 {
+      color: #0f172a;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .alert-why {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      padding: 1.25rem;
+      border-radius: 0.75rem;
+      margin: 1.5rem 0;
+    }
+    .alert-why h3 {
+      color: #78350f;
+      margin-top: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .alert-success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      padding: 1.25rem;
+      border-radius: 0.75rem;
+      margin: 1.5rem 0;
+    }
+    .card-step {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.85rem;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .card-step-title {
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+    .step-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    code, pre {
+      background: #1e293b;
+      color: #38bdf8;
+      border-radius: 0.4rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    code {
+      padding: 0.2rem 0.45rem;
+      font-size: 0.85em;
+      background: #f1f5f9;
+      color: #0369a1;
+      border: 1px solid #e2e8f0;
+    }
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.85em;
+      line-height: 1.5;
+      color: #a7f3d0;
+      margin: 0.75rem 0;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      border: none;
+      padding: 0;
+    }
+    ol, ul {
+      padding-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <span class="badge">GEPEKRIS Tretes</span>
-    <h1>Panduan Penyimpanan Direktori di Hosting gepekristretes.org</h1>
-    <p>Dokumen ini menjelaskan struktur direktori penyimpanan konten website pada hosting <strong>gepekristretes.org</strong>.</p>
-    
-    <div class="alert">
-      <strong>Direktori Penyimpanan Aktif:</strong> Konten website disimpan dalam format JSON di <code>public_html/data/church_content.json</code> dengan cadangan otomatis di <code>public_html/data/backups/</code>.
+    <span class="badge">GEPEKRIS Tretes Official</span>
+    <h1>Panduan Hosting cPanel & Solusi Konten</h1>
+    <p class="lead">Mengapa editan di Vercel tidak berubah di HP orang lain, dan panduan lengkap memindahkan ke hosting cPanel.</p>
+
+    <!-- Jawaban & Penyebab Masalah -->
+    <div class="alert-why">
+      <h3>❓ Mengapa perubahan di web tidak muncul di perangkat / HP orang lain?</h3>
+      <p style="margin-bottom: 0.5rem;">
+        <strong>Penyebab Utama:</strong> Vercel adalah platform hosting statis (Jamstack). Ketika Anda mengubah isi website di browser Anda, perubahan tersebut hanya tersimpan di <code>localStorage</code> (memori lokal browser HP/laptop Anda sendiri).
+      </p>
+      <p>
+        Orang lain atau jemaat yang membuka website di HP mereka hanya membuka file statis yang di-deploy pertama kali di Vercel, sehingga mereka tidak bisa melihat perubahan yang Anda simpan di browser Anda.
+      </p>
     </div>
 
-    <h2>1. Struktur Direktori di cPanel / Server</h2>
-    <pre>public_html/
-├── index.html              (Halaman utama website)
-├── assets/                 (Berkas CSS & JS terkompilasi)
-├── api/
-│   ├── content.php         (Script API penyimpan & pembaca data)
-│   └── .htaccess           (Konfigurasi CORS & headers)
-└── data/                   [Dibuat otomatis oleh script]
-    ├── church_content.json (Berkas utama seluruh isi website)
-    └── backups/            (Cadangan otomatis sebelum setiap perubahan)</pre>
+    <div class="alert-success">
+      <h3 style="margin-top: 0; font-size: 1.05rem; font-weight: 700; color: #14532d; margin-bottom: 0.4rem;">
+        ✅ Solusinya: Hosting di cPanel (Full Stack PHP + React)
+      </h3>
+      <p>
+        Aplikasi ini sudah dilengkapi dengan backend API PHP (<code>api/content.php</code>). Di cPanel, script ini memiliki izin untuk menulis dan menyimpan berkas <code>data/church_content.json</code> langsung di server hosting.
+      </p>
+      <p style="margin-top: 0.4rem; font-weight: 600;">
+        Hasilnya: Setiap kali Anda klik "Publikasikan ke Hosting" di Admin CMS, data tersimpan di server hosting dan SEMUA ORANG di seluruh dunia langsung melihat perubahannya!
+      </p>
+    </div>
 
-    <h2>2. Langkah Pengunggahan ke cPanel gepekristretes.org</h2>
+    <h2>🚀 Panduan Lengkap Upload ke Hosting cPanel</h2>
+    <p style="margin-bottom: 1rem; color: var(--text-muted);">
+      Ikuti 5 langkah mudah berikut untuk menjalankan website di cPanel Anda:
+    </p>
+
+    <div class="card-step">
+      <div class="card-step-title">
+        <span class="step-number">1</span>
+        <span>Build Aplikasi (di Komputer Anda)</span>
+      </div>
+      <p>Buka terminal di folder project website Anda, lalu jalankan:</p>
+      <pre><code>npm run build</code></pre>
+      <p>Perintah ini akan membuat folder baru bernama <strong>dist/</strong> yang berisi seluruh website yang sudah siap dipublikasikan.</p>
+    </div>
+
+    <div class="card-step">
+      <div class="card-step-title">
+        <span class="step-number">2</span>
+        <span>Login ke cPanel Hosting Anda</span>
+      </div>
+      <p>Buka alamat cPanel Anda (contoh: <code>https://domainanda.com:2083</code> atau <code>https://cpanel.domainanda.com</code>) menggunakan username & password dari penyedia hosting Anda.</p>
+    </div>
+
+    <div class="card-step">
+      <div class="card-step-title">
+        <span class="step-number">3</span>
+        <span>Buka File Manager & Masuk ke public_html</span>
+      </div>
+      <p>Di dashboard cPanel, klik menu <strong>File Manager</strong>, kemudian klik folder <strong>public_html/</strong>.</p>
+      <p style="margin-top: 0.4rem; font-size: 0.9rem; color: var(--text-muted);">
+        (Catatan: Jika domain Anda adalah addon domain atau subdomain, buka folder yang sesuai dengan root domain tersebut).
+      </p>
+    </div>
+
+    <div class="card-step">
+      <div class="card-step-title">
+        <span class="step-number">4</span>
+        <span>Upload Seluruh Isi Folder dist/</span>
+      </div>
+      <p>Upload seluruh isi di dalam folder <strong>dist/</strong> ke dalam folder <strong>public_html/</strong>:</p>
+      <pre><code>public_html/
+├── index.html              (Halaman utama React)
+├── index.php               (Loader PHP)
+├── .htaccess               (Routing Apache & penonaktifan cache JSON)
+├── assets/                 (Folder file CSS & JS)
+├── api/
+│   ├── content.php         (Script penyimpan & pembaca data)
+│   └── .htaccess           (Header CORS API)
+└── data/
+    ├── church_content.json (Database konten JSON seluruh website)
+    └── backups/            (Cadangan otomatis setiap kali ada update)</code></pre>
+      <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+        <em>Tips: Anda dapat mengompres folder <strong>dist/</strong> menjadi <strong>dist.zip</strong>, upload file zip tersebut ke cPanel, lalu klik tombol <strong>Extract</strong> di File Manager.</em>
+      </p>
+    </div>
+
+    <div class="card-step">
+      <div class="card-step-title">
+        <span class="step-number">5</span>
+        <span>Atur Izin Folder (CHMOD) data/ ke 755</span>
+      </div>
+      <p>Di File Manager cPanel, klik kanan pada folder <code>public_html/data</code> &rarr; pilih <strong>Change Permissions</strong> &rarr; pastikan nilainya <strong>755</strong> (atau 777) agar script PHP dapat menyimpan perubahan konten.</p>
+    </div>
+
+    <h2>🎉 Cara Mengupdate Konten Website Setelah di cPanel</h2>
     <ol>
-      <li>Login ke cPanel hosting Anda di <code>https://gepekristretes.org:2083</code>.</li>
-      <li>Buka <strong>File Manager</strong> dan masuk ke folder <code>public_html</code>.</li>
-      <li>Buat folder bernama <code>api</code> jika belum ada, lalu unggah file <code>content.php</code> dan <code>.htaccess</code> ke dalam <code>public_html/api/</code>.</li>
-      <li>Pastikan izin folder (CHMOD) <code>public_html/data/</code> adalah <code>0755</code> agar PHP dapat menyimpan berkas JSON.</li>
+      <li>Buka website Anda di browser: <code>https://domainanda.com</code>.</li>
+      <li>Scroll ke footer paling bawah, klik <strong>"Akses Pengurus"</strong> (kata sandi bawaan: <code>admin123</code>).</li>
+      <li>Ubah informasi gereja, jadwal ibadah, warta jemaat, atau foto galeri sesuai kebutuhan.</li>
+      <li>Klik tombol hijau <strong>"Publikasikan ke Hosting"</strong> di pojok kanan atas.</li>
+      <li>Selesai! Seluruh jemaat yang membuka website di HP, tablet, maupun komputer akan langsung melihat konten terbaru secara real-time.</li>
     </ol>
 
-    <h2>3. Sinkronisasi dari Admin CMS</h2>
-    <p>Di website, login ke <strong>Akses Pengurus</strong> (kata sandi bawaan: <code>admin123</code>), buka tab <strong>Hosting & Server</strong>, lalu klik <strong>"Kirim / Simpan ke Direktori gepekristretes.org"</strong>.</p>
+    <h2>⚙️ Opsi Alternatif: Tetap Pakai Vercel tapi Data di cPanel</h2>
+    <p>Jika domain utama Anda ingin tetap dihosting di Vercel, Anda cukup memanfaatkan hosting cPanel sebagai server API:</p>
+    <ol>
+      <li>Upload file <code>api/content.php</code> ke folder <code>public_html/api/content.php</code> di hosting cPanel Anda.</li>
+      <li>Buka Admin CMS di website Vercel Anda, buka tab <strong>Hosting & Server</strong>.</li>
+      <li>Di kolom <strong>URL Endpoint API</strong>, masukkan alamat lengkap cPanel Anda: <code>https://namadomaincpanel.com/api/content.php</code>.</li>
+      <li>Klik <strong>Uji Koneksi (Ping)</strong>, lalu klik <strong>Publikasikan ke Hosting</strong>.</li>
+    </ol>
+
+    <div class="footer">
+      Gereja Persekutuan Kristen (GEPEKRIS) Tretes &bull; Prigen, Pasuruan, Jawa Timur
+    </div>
   </div>
 </body>
 </html>

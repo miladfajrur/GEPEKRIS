@@ -1,8 +1,10 @@
 node_modules/
 build/
-dist/
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
+
+# dist/ is included so cPanel Git Version Control can deploy the compiled site directly
+!dist/

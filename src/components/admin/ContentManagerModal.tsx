@@ -46,6 +46,7 @@ import {
   Search,
   Grid,
   List,
+  Package,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -488,12 +489,25 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                 Website Content Manager
               </h2>
               <p className="text-xs text-gray-500">
-                Live editor: Updates apply immediately & save automatically to your browser
+                Pengelola Konten &bull; Klik &ldquo;Publikasikan ke Hosting&rdquo; agar perubahan tampil untuk semua orang
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Direct Push / Save to Server Hosting Button */}
+            <Button
+              onClick={handleSyncToHosting}
+              disabled={syncingToHosting}
+              size="sm"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-xs"
+              title="Publikasikan semua perubahan ke hosting server cPanel agar dapat dilihat oleh semua orang"
+            >
+              <Upload className={`w-3.5 h-3.5 ${syncingToHosting ? 'animate-bounce' : ''}`} />
+              <span className="hidden sm:inline">{syncingToHosting ? 'Menyimpan ke Hosting...' : 'Publikasikan ke Hosting'}</span>
+              <span className="sm:hidden">{syncingToHosting ? 'Menyimpan...' : 'Publikasi'}</span>
+            </Button>
+
             {toastMessage && (
               <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1.5 animate-in fade-in">
                 <Check className="w-3.5 h-3.5" />
@@ -2076,6 +2090,24 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                   </p>
                 </div>
 
+                {/* Critical Explanation: Mengapa Vercel tidak berubah di HP orang lain */}
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 space-y-2">
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-amber-950 uppercase tracking-wide">
+                        Mengapa perubahan di Vercel tidak berubah di HP / perangkat orang lain?
+                      </h4>
+                      <p className="text-xs text-amber-900 leading-relaxed">
+                        <strong>Vercel adalah hosting statis (tanpa penyimpanan file permanen)</strong>. Saat Anda mengedit di panel admin ini saat website berada di Vercel, perubahannya hanya tersimpan di memori browser lokal perangkat Anda sendiri (<em>localStorage</em>). Pengunjung lain membuka halaman statis Vercel yang tidak memiliki akses ke browser Anda.
+                      </p>
+                      <p className="text-xs text-amber-900 leading-relaxed">
+                        <strong>Solusi Permanen (Hosting cPanel):</strong> Aplikasi ini sudah dibuat lengkap dengan backend PHP (<code>api/content.php</code>). Saat Anda upload ke cPanel, script ini akan menulis langsung berkas <code>data/church_content.json</code> di server cPanel. Begitu Anda klik <strong className="text-emerald-800">&ldquo;Publikasikan ke Hosting&rdquo;</strong>, <strong>semua jemaat dan pengunjung langsung melihat perubahan secara real-time!</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Connection Status & Quick Sync Dashboard */}
                 <div className="p-5 bg-gradient-to-br from-emerald-50/70 via-teal-50/40 to-cyan-50/50 rounded-2xl border border-emerald-200/80 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2375,10 +2407,10 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                       <Globe className="w-5 h-5 text-blue-700" />
                       <div>
                         <h4 className="text-sm font-semibold text-blue-950">
-                          Panduan Unggah ke cPanel gepekristretes.org
+                          Panduan Deployment ke Hosting cPanel (Lengkap & Mudah)
                         </h4>
                         <p className="text-xs text-blue-800">
-                          Ikuti 3 langkah mudah ini untuk mengaktifkan penyimpanan di hosting Anda:
+                          Pilih salah satu dari 2 metode di bawah ini sesuai kebutuhan Anda:
                         </p>
                       </div>
                     </div>
@@ -2393,14 +2425,99 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                     </a>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-1">
-                      <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-[10px]">
-                        1
+                  {/* Master ZIP Package Download Banner */}
+                  <div className="p-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 rounded-xl text-white space-y-3 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-5 h-5 text-amber-300" />
+                          <h5 className="font-bold text-sm text-white">Paket Berkas cPanel Siap Upload (cpanel_deploy.zip)</h5>
+                          <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold text-amber-200">
+                            Instant Deploy
+                          </span>
+                        </div>
+                        <p className="text-xs text-emerald-50 leading-relaxed max-w-xl">
+                          Berkas ZIP ini sudah berisi seluruh website siap saji (React HTML, CSS, JavaScript, API PHP <code>content.php</code>, <code>.htaccess</code>, dan database <code>church_content.json</code>). Tinggal upload ke <code>public_html/</code> di cPanel dan klik <strong>Extract</strong>!
+                        </p>
+                      </div>
+                      <a
+                        href="/cpanel_deploy.zip"
+                        download="cpanel_deploy.zip"
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs shadow-md transition-all cursor-pointer shrink-0"
+                      >
+                        <Download className="w-4 h-4 text-emerald-700" />
+                        <span>Unduh cpanel_deploy.zip</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Method A: Full cPanel Hosting (Recommended) */}
+                  <div className="p-4 bg-white rounded-xl border border-blue-200 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                        REKOMENDASI
                       </span>
-                      <p className="font-semibold text-gray-900">Unduh Berkas PHP</p>
+                      <h5 className="text-xs font-bold text-gray-900">
+                        METODE 1: Hosting Penuh di cPanel (Website & Data dalam 1 Hosting)
+                      </h5>
+                    </div>
+                    <p className="text-[11px] text-gray-600 leading-relaxed">
+                      Sangat praktis, tidak perlu Vercel lagi. Website React & sistem penyimpanan PHP berjalan langsung di hosting cPanel Anda.
+                    </p>
+                    <ol className="text-xs text-gray-700 space-y-2 list-decimal list-inside bg-gray-50 p-3 rounded-lg border border-gray-100 font-medium">
+                      <li>
+                        Jalankan perintah <code>npm run build</code> di komputer Anda untuk menghasilkan folder <code>dist/</code>.
+                      </li>
+                      <li>
+                        Buka cPanel &rarr; <strong>File Manager</strong> &rarr; buka folder <code>public_html/</code>.
+                      </li>
+                      <li>
+                        Upload seluruh berkas dan folder yang ada di dalam <strong>dist/</strong> ke dalam <code>public_html/</code> (termasuk <code>index.html</code>, <code>index.php</code>, <code>.htaccess</code>, folder <code>assets/</code>, folder <code>api/</code>, dan folder <code>data/</code>).
+                      </li>
+                      <li>
+                        Pastikan izin folder (CHMOD) <code>public_html/data/</code> adalah <strong>755</strong> (atau 777) agar PHP dapat menulis berkas data.
+                      </li>
+                      <li>
+                        Buka domain Anda, login Admin CMS, lalu klik tombol hijau <strong className="text-emerald-700">&ldquo;Publikasikan ke Hosting&rdquo;</strong> di pojok kanan atas modal ini.
+                      </li>
+                    </ol>
+                  </div>
+
+                  {/* Method B: Vercel Frontend + cPanel Backend */}
+                  <div className="p-4 bg-white rounded-xl border border-blue-200 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                        ALTERNATIF
+                      </span>
+                      <h5 className="text-xs font-bold text-gray-900">
+                        METODE 2: Website Tetap di Vercel, Data Tersimpan di cPanel
+                      </h5>
+                    </div>
+                    <p className="text-[11px] text-gray-600 leading-relaxed">
+                      Jika domain Anda diarahkan ke Vercel, Anda dapat menjadikan cPanel sebagai server API database:
+                    </p>
+                    <ol className="text-xs text-gray-700 space-y-1.5 list-decimal list-inside bg-gray-50 p-3 rounded-lg border border-gray-100 font-medium">
+                      <li>
+                        Upload file <code>content.php</code> ke folder <code>public_html/api/content.php</code> di hosting cPanel Anda.
+                      </li>
+                      <li>
+                        Pada formulir di atas, ubah <strong>URL Endpoint API</strong> menjadi URL cPanel Anda (contoh: <code>https://domain-cpanel-anda.com/api/content.php</code>).
+                      </li>
+                      <li>
+                        Klik <strong>Uji Koneksi (Ping)</strong>, lalu klik <strong>Publikasikan ke Hosting</strong>.
+                      </li>
+                    </ol>
+                  </div>
+
+                  {/* Download Helper Files */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                    <div className="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-1">
+                      <p className="font-semibold text-gray-900 flex items-center gap-1.5">
+                        <Download className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Unduh Script content.php</span>
+                      </p>
                       <p className="text-[11px] text-gray-600">
-                        Unduh script <code>content.php</code> yang sudah disesuaikan dengan kunci rahasia Anda.
+                        Script backend PHP untuk ditaruh di <code>public_html/api/content.php</code> di cPanel.
                       </p>
                       <Button
                         onClick={handleDownloadContentPhp}
@@ -2413,23 +2530,21 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                     </div>
 
                     <div className="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-1">
-                      <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-[10px]">
-                        2
-                      </span>
-                      <p className="font-semibold text-gray-900">Buka cPanel</p>
-                      <p className="text-[11px] text-gray-600">
-                        Login ke cPanel <code>gepekristretes.org</code> &rarr; buka <strong>File Manager</strong> &rarr; masuk ke folder <code>public_html/</code>.
+                      <p className="font-semibold text-gray-900 flex items-center gap-1.5">
+                        <Download className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Unduh church_content.json Terkini</span>
                       </p>
-                    </div>
-
-                    <div className="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-1">
-                      <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-[10px]">
-                        3
-                      </span>
-                      <p className="font-semibold text-gray-900">Buat Folder & Upload</p>
                       <p className="text-[11px] text-gray-600">
-                        Buat folder <code>api</code> di dalam <code>public_html/</code>, lalu upload <code>content.php</code>. Folder <code>data</code> otomatis dibuat server!
+                        Salinan seluruh teks, jadwal, warta, dan foto untuk ditaruh di <code>public_html/data/</code>.
                       </p>
+                      <Button
+                        onClick={handleExportJson}
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-2 text-[11px] cursor-pointer border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                      >
+                        <Download className="w-3 h-3 mr-1" /> Unduh church_content.json
+                      </Button>
                     </div>
                   </div>
 
