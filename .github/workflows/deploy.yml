@@ -1,4 +1,4 @@
-name: Deploy ke cPanel Hosting
+name: Build Website & Deploy cPanel
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
-    name: Build & Deploy ke cPanel
+  build:
+    name: Build Website
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +20,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Dependencies
         run: npm install
@@ -28,11 +27,9 @@ jobs:
       - name: Build Website
         run: npm run build
 
-      - name: Deploy ke cPanel via FTP (Jika Secret Dikonfigurasi)
+      - name: Deploy ke cPanel via FTP (Hanya jika Secret FTP Diisi)
+        if: ${{ secrets.CPANEL_FTP_SERVER != '' && secrets.CPANEL_FTP_USERNAME != '' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        if: env.CPANEL_FTP_SERVER != ''
-        env:
-          CPANEL_FTP_SERVER: ${{ secrets.CPANEL_FTP_SERVER }}
         with:
           server: ${{ secrets.CPANEL_FTP_SERVER }}
           username: ${{ secrets.CPANEL_FTP_USERNAME }}
