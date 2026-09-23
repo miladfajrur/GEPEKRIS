@@ -22,15 +22,15 @@ cPanel memiliki fitur bawaan untuk langsung meng-import repository dari GitHub. 
 
 4. **Isi Pengaturan Repository:**
    - **Clone URL:** Masukkan URL clone GitHub Anda (contoh: `https://github.com/username/gepekris-tretes-web.git`).
-   - **Repository Path:** Ketik `repositories/gepekris` (atau biarkan default).
-   - **Repository Name:** `gepekris`
+   - **Repository Path:** `/home/gepa9828/repositories/GEPEKRIS`
+   - **Repository Name:** `GEPEKRIS`
    - Klik **Create**.
 
 5. **Deploy ke public_html:**
-   - Setelah clone selesai, klik **Manage** pada repository yang baru dibuat.
+   - Setelah clone selesai, klik **Manage** pada repository `GEPEKRIS`.
    - Buka tab **Deploy HEAD Commit**.
    - Klik tombol **Deploy HEAD Commit**.
-   - File `.cpanel.yml` yang sudah terpasang akan **otomatis menyalin seluruh website ke `public_html/`** dan mengatur izin folder data ke 755!
+   - File `.cpanel.yml` yang sudah terpasang akan **otomatis menyalin seluruh website ke `/home/gepa9828/public_html/`** dan mengatur izin folder data ke 755!
 
 *(Ke depan, setiap kali Anda update kode di GitHub, Anda cukup klik tombol **Update from Remote** lalu **Deploy HEAD Commit** di cPanel. Website langsung terupdate tanpa perlu upload ulang!)*
 
