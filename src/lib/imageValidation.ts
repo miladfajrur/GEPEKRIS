@@ -199,6 +199,13 @@ export function validateContentPayloadForSync(
     }
   });
 
+  // 6. Check mediaLibrary
+  (content.mediaLibrary || []).forEach((med) => {
+    if (med.url) {
+      checkImageField('Pustaka Media', med.title || 'Berkas Media', med.url);
+    }
+  });
+
   // Calculate total payload size
   let totalSizeBytes = 0;
   try {

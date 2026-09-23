@@ -6,9 +6,12 @@ import { useChurchContent } from '../context/ChurchContentContext';
 interface HeaderProps {
   onPlanVisit?: () => void;
   onOpenNews?: () => void;
+  onOpenSermons?: () => void;
+  onOpenPrayer?: () => void;
+  onGoHome?: () => void;
 }
 
-export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
+export function Header({ onPlanVisit, onOpenNews, onOpenSermons, onOpenPrayer, onGoHome }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { content } = useChurchContent();
 
@@ -28,7 +31,11 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="#home" className="flex-shrink-0 flex items-center gap-2">
+            <a 
+              href="#home" 
+              onClick={() => onGoHome?.()} 
+              className="flex-shrink-0 flex items-center gap-2 cursor-pointer"
+            >
               <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-xs tracking-wider">
                 {getInitials(content.info.name) || 'GC'}
               </div>
@@ -41,7 +48,11 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
           {/* Desktop Navigation */}
           <nav className="hidden md:block">
             <div className="ml-6 flex items-baseline space-x-5 lg:space-x-7">
-              <a href="#home" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
+              <a 
+                href="#home" 
+                onClick={() => onGoHome?.()} 
+                className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors cursor-pointer"
+              >
                 Beranda
               </a>
               <a href="#about" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
@@ -56,6 +67,22 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
               <a href="#events" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
                 Warta & Berita
               </a>
+              {onOpenSermons && (
+                <button
+                  onClick={onOpenSermons}
+                  className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors cursor-pointer"
+                >
+                  Khotbah
+                </button>
+              )}
+              {onOpenPrayer && (
+                <button
+                  onClick={onOpenPrayer}
+                  className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors cursor-pointer"
+                >
+                  Pokok Doa
+                </button>
+              )}
               <a href="#gallery" className="text-gray-700 hover:text-primary px-2 py-2 text-sm font-medium transition-colors">
                 Galeri
               </a>
@@ -100,8 +127,11 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
             <div className="px-2 pt-2 pb-4 space-y-1 sm:px-3 bg-white border-t border-gray-100">
               <a
                 href="#home"
-                onClick={() => setIsOpen(false)}
-                className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm"
+                onClick={() => {
+                  setIsOpen(false);
+                  onGoHome?.();
+                }}
+                className="text-gray-900 hover:text-primary block px-3 py-2 rounded-md font-medium text-sm cursor-pointer"
               >
                 Beranda
               </a>
@@ -133,6 +163,28 @@ export function Header({ onPlanVisit, onOpenNews }: HeaderProps) {
               >
                 Warta & Berita
               </a>
+              {onOpenSermons && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    onOpenSermons();
+                  }}
+                  className="text-gray-900 hover:text-primary block w-full text-left px-3 py-2 rounded-md font-medium text-sm cursor-pointer"
+                >
+                  Khotbah & Renungan
+                </button>
+              )}
+              {onOpenPrayer && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    onOpenPrayer();
+                  }}
+                  className="text-gray-900 hover:text-primary block w-full text-left px-3 py-2 rounded-md font-medium text-sm cursor-pointer"
+                >
+                  Prayer Wall (Pokok Doa)
+                </button>
+              )}
               <a
                 href="#gallery"
                 onClick={() => setIsOpen(false)}

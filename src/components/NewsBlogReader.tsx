@@ -12,7 +12,8 @@ import {
   MessageCircle, 
   Copy, 
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  X
 } from 'lucide-react';
 import { ChurchEventItem } from '../context/ChurchContentContext';
 import { Button } from './ui/button';
@@ -72,19 +73,19 @@ export const NewsBlogReader: React.FC<NewsBlogReaderProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-gray-900 pb-20 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#FDFBF7] text-gray-900 pb-20 animate-in fade-in duration-200">
       {/* Top Sticky Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-amber-950/10 shadow-xs">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-amber-950/10 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={onClose}
-              className="cursor-pointer gap-2 text-gray-700 hover:text-primary hover:bg-amber-50"
+              className="cursor-pointer gap-2 border-primary/20 text-primary hover:bg-primary/5 font-semibold text-xs sm:text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="font-semibold text-xs sm:text-sm">Kembali ke Beranda</span>
+              <span>Kembali ke Beranda Utama</span>
             </Button>
             <span className="hidden sm:inline text-gray-300">|</span>
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-amber-900 font-medium">
@@ -122,6 +123,17 @@ export const NewsBlogReader: React.FC<NewsBlogReaderProps> = ({
             >
               <MessageCircle className="w-3.5 h-3.5 sm:mr-1.5" />
               <span className="hidden sm:inline">Bagikan WA</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="cursor-pointer text-xs h-8 px-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg ml-1"
+              title="Tutup Pembaca Warta"
+            >
+              <X className="w-4 h-4" />
+              <span className="sr-only">Tutup</span>
             </Button>
           </div>
         </div>

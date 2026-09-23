@@ -1,6 +1,7 @@
 import { Component, ReactNode, ErrorInfo } from 'react';
 import { AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
+import { clearCacheAndHardReload } from '../lib/cacheCleaner';
 
 interface Props {
   children: ReactNode;
@@ -30,13 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleClearStorageAndReload = () => {
-    try {
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (e) {
-      console.error('Failed to clear storage:', e);
-    }
-    window.location.href = '/';
+    clearCacheAndHardReload();
   };
 
   public render() {

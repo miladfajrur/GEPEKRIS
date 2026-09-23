@@ -41,10 +41,16 @@ import {
   Eye,
   EyeOff,
   Pencil,
+  FolderOpen,
+  Smartphone,
+  Search,
+  Grid,
+  List,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import { MediaManagerModal } from './MediaManagerModal';
 
 interface ContentManagerModalProps {
   isOpen: boolean;
@@ -73,6 +79,10 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     addGalleryItem,
     deleteGalleryItem,
     updateGalleryItem,
+    addMediaItem,
+    deleteMediaItem,
+    updateMediaItem,
+    getAllIndexedMedia,
     resetToDefaults,
     importContent,
     applyGepekrisTretesPreset,
@@ -86,12 +96,16 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     syncToHosting,
     syncFromHosting,
     testHostingConnection,
+    clearCacheAndStartFresh,
   } = useChurchContent();
 
   const [activeTab, setActiveTab] = useState<
-    'info' | 'hero' | 'about' | 'services' | 'ministries' | 'events' | 'gallery' | 'hosting' | 'backup' | 'security'
+    'info' | 'hero' | 'about' | 'services' | 'ministries' | 'events' | 'gallery' | 'media' | 'hosting' | 'backup' | 'security'
   >('info');
 
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [mediaSearchQuery, setMediaSearchQuery] = useState('');
+  const [mediaCategoryFilter, setMediaCategoryFilter] = useState<string>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Hosting State
@@ -513,11 +527,11 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
         {/* Modal Body with Sidebar Tabs */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
-          {/* Navigation Sidebar */}
-          <div className="w-full md:w-60 bg-gray-50 border-r border-gray-200/80 p-3 space-y-1 overflow-y-auto shrink-0">
+          {/* Navigation Sidebar (Horizontal swipe on Mobile HP, Vertical on Desktop) */}
+          <div className="w-full md:w-60 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200/80 p-2 md:p-3 flex md:flex-col gap-1.5 md:gap-1 overflow-x-auto md:overflow-y-auto shrink-0 no-scrollbar">
             <button
               onClick={() => setActiveTab('info')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'info'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
@@ -529,7 +543,7 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
 
             <button
               onClick={() => setActiveTab('hero')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'hero'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
@@ -541,7 +555,7 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
 
             <button
               onClick={() => setActiveTab('about')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'about'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
@@ -553,43 +567,43 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
 
             <button
               onClick={() => setActiveTab('services')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'services'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
               }`}
             >
               <Clock className="w-4 h-4 shrink-0" />
-              <span>Service Times ({content.services.length})</span>
+              <span>Jadwal Ibadah ({content.services.length})</span>
             </button>
 
             <button
               onClick={() => setActiveTab('ministries')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'ministries'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
               }`}
             >
               <Users className="w-4 h-4 shrink-0" />
-              <span>Ministries ({content.ministries.length})</span>
+              <span>Komisi & Pelayanan ({content.ministries.length})</span>
             </button>
 
             <button
               onClick={() => setActiveTab('events')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'events'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
               }`}
             >
               <Calendar className="w-4 h-4 shrink-0" />
-              <span>Events ({content.events.length})</span>
+              <span>Warta Kegiatan ({content.events.length})</span>
             </button>
 
             <button
               onClick={() => setActiveTab('gallery')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'gallery'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
@@ -600,14 +614,26 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
             </button>
 
             <button
+              onClick={() => setActiveTab('media')}
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
+                activeTab === 'media'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'text-amber-800 bg-amber-50/70 hover:bg-amber-100/70 hover:text-amber-900'
+              }`}
+            >
+              <FolderOpen className="w-4 h-4 shrink-0 text-amber-500" />
+              <span>Pustaka Media</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('hosting')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center justify-between gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'hosting'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
               }`}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <Server className="w-4 h-4 shrink-0" />
                 <span>Hosting Server</span>
               </div>
@@ -622,7 +648,7 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
 
             <button
               onClick={() => setActiveTab('backup')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'backup'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
@@ -634,7 +660,7 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
 
             <button
               onClick={() => setActiveTab('security')}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'security'
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
@@ -1842,6 +1868,196 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
               </div>
             )}
 
+            {/* Tab: Pustaka Media & Foto (HP & Komputer) */}
+            {activeTab === 'media' && (
+              <div className="space-y-6 max-w-4xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                        Pustaka Media & Foto
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {getAllIndexedMedia().length} berkas foto terdaftar
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mt-1">
+                      Koleksi Media Foto Website GEPEKRIS Tretes
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      Kelola dan temukan foto jemaat, gedung, kegiatan komisi, dan warta. Unggah langsung melalui kamera/galeri HP atau masukkan URL gambar web.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      onClick={() => setIsMediaModalOpen(true)}
+                      className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm"
+                    >
+                      <FolderOpen className="w-4 h-4" />
+                      <span>Buka Pengelola Media Penuh</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* HP Friendly Notice Box */}
+                <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                    <Smartphone className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 text-xs text-amber-900">
+                    <p className="font-semibold text-amber-950">Ramah HP & Ringan untuk Hosting gepekristretes.org</p>
+                    <p className="text-amber-800 mt-0.5">
+                      Setiap foto yang diunggah dikompresi secara otomatis dengan format Web-Ready JPEG (maksimal 1400px edge, kompresi 85%), sehingga halaman website tetap kencang dibuka di HP jemaat dan hemat kuota hosting.
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsMediaModalOpen(true)}
+                    className="border-amber-300 text-amber-900 hover:bg-amber-100 text-xs shrink-0"
+                  >
+                    Unggah Foto Baru
+                  </Button>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="relative flex-1 max-w-sm">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Input
+                      value={mediaSearchQuery}
+                      onChange={(e) => setMediaSearchQuery(e.target.value)}
+                      placeholder="Cari foto berdasarkan nama..."
+                      className="h-9 pl-9 text-xs border-gray-200 focus:border-amber-500 rounded-xl"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 no-scrollbar text-xs">
+                    {[
+                      { id: 'all', label: 'Semua' },
+                      { id: 'hero', label: 'Hero' },
+                      { id: 'about', label: 'Tentang' },
+                      { id: 'ministries', label: 'Komisi' },
+                      { id: 'events', label: 'Warta' },
+                      { id: 'gallery', label: 'Galeri' },
+                      { id: 'services', label: 'Ibadah' },
+                      { id: 'general', label: 'Umum' },
+                    ].map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setMediaCategoryFilter(cat.id)}
+                        className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
+                          mediaCategoryFilter === cat.id
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Media Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {getAllIndexedMedia()
+                    .filter((item) => {
+                      const matchCat =
+                        mediaCategoryFilter === 'all' || item.category === mediaCategoryFilter;
+                      const q = mediaSearchQuery.toLowerCase().trim();
+                      const matchQ =
+                        !q ||
+                        item.title.toLowerCase().includes(q) ||
+                        (item.description && item.description.toLowerCase().includes(q));
+                      return matchCat && matchQ;
+                    })
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col"
+                      >
+                        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                          <img
+                            src={item.url}
+                            alt={item.title}
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            loading="lazy"
+                          />
+                          <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-black/70 text-amber-300 backdrop-blur-xs">
+                            {item.category}
+                          </span>
+                        </div>
+                        <div className="p-2.5 flex-1 flex flex-col justify-between">
+                          <div>
+                            <h5 className="text-xs font-bold text-gray-900 line-clamp-1" title={item.title}>
+                              {item.title}
+                            </h5>
+                            {item.description && (
+                              <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between gap-1 text-[11px]">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(item.url);
+                                showToast('Tautan gambar berhasil disalin!');
+                              }}
+                              className="text-amber-700 hover:text-amber-800 font-medium"
+                            >
+                              Salin URL
+                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateHero({ bgImage: item.url });
+                                  showToast(`Foto "${item.title}" dijadikan Hero Beranda!`);
+                                }}
+                                className="text-stone-600 hover:text-amber-700 px-1 py-0.5 rounded text-[10px]"
+                                title="Jadikan foto hero beranda"
+                              >
+                                Hero
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateAbout({ image: item.url });
+                                  showToast(`Foto "${item.title}" dijadikan Foto Profil Gereja!`);
+                                }}
+                                className="text-stone-600 hover:text-sky-700 px-1 py-0.5 rounded text-[10px]"
+                                title="Jadikan foto profil tentang gereja"
+                              >
+                                Profil
+                              </button>
+                              {item.id.startsWith('media-') && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (confirm(`Hapus foto "${item.title}" dari pustaka?`)) {
+                                      deleteMediaItem(item.id);
+                                      showToast('Foto berhasil dihapus.');
+                                    }
+                                  }}
+                                  className="text-red-500 hover:text-red-700 p-0.5 rounded"
+                                  title="Hapus foto"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
             {/* Tab: Hosting & Server Directory (gepekristretes.org) */}
             {activeTab === 'hosting' && (
               <div className="space-y-6 max-w-3xl">
@@ -1899,7 +2115,19 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
 
                     <div className="text-xs text-gray-500 text-left sm:text-right">
                       {hostingConfig.lastSyncTime ? (
-                        <span>Sinkron terakhir: {new Date(hostingConfig.lastSyncTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} WIB</span>
+                        <span>
+                          Sinkron terakhir:{' '}
+                          {(() => {
+                            try {
+                              const d = new Date(hostingConfig.lastSyncTime);
+                              return isNaN(d.getTime())
+                                ? '-'
+                                : d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+                            } catch {
+                              return '-';
+                            }
+                          })()}
+                        </span>
                       ) : (
                         <span className="italic text-gray-400">Belum pernah disinkronkan sesi ini</span>
                       )}
@@ -1992,6 +2220,28 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                     className="cursor-pointer text-xs bg-amber-600 hover:bg-amber-700 text-white shrink-0 font-medium"
                   >
                     Terapkan Profil GEPEKRIS Tretes
+                  </Button>
+                </div>
+
+                {/* Clear Cache & Hard Reload Shortcut */}
+                <div className="p-4 bg-sky-50/70 rounded-2xl border border-sky-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-sky-950 flex items-center gap-1.5">
+                      <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
+                      <span>Hapus Cache Browser & Mulai Baru</span>
+                    </h4>
+                    <p className="text-[11px] text-sky-800">
+                      Sistem otomatis membersihkan cache saat pertama kali dibuka. Klik tombol ini kapan saja untuk membersihkan sisa cache memori dan memuat data terbaru secara instan.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={clearCacheAndStartFresh}
+                    size="sm"
+                    variant="outline"
+                    className="cursor-pointer text-xs border-sky-300 text-sky-700 hover:bg-sky-100 shrink-0 font-medium flex items-center gap-1.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Hapus Cache & Reload</span>
                   </Button>
                 </div>
 
@@ -2358,6 +2608,12 @@ $dataFile = dirname(__DIR__) . '/data/church_content.json';
         </div>
 
       </div>
+
+      {/* Embedded Full Media Manager Modal */}
+      <MediaManagerModal
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+      />
     </div>
   );
 };

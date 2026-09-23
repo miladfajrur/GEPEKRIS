@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { validateContentPayloadForSync } from '../lib/imageValidation';
+import { clearCacheAndHardReload } from '../lib/cacheCleaner';
 
 export interface ChurchGeneralInfo {
   name: string;
@@ -74,6 +75,28 @@ export interface ChurchGalleryItem {
   date?: string;
 }
 
+export type MediaCategory =
+  | 'hero'
+  | 'about'
+  | 'services'
+  | 'ministries'
+  | 'events'
+  | 'gallery'
+  | 'general';
+
+export interface ChurchMediaItem {
+  id: string;
+  title: string;
+  url: string;
+  category: MediaCategory | string;
+  description?: string;
+  uploadedAt: string;
+  fileSizeBytes?: number;
+  width?: number;
+  height?: number;
+  source?: 'upload' | 'url' | 'system';
+}
+
 export interface ChurchWebsiteContent {
   info: ChurchGeneralInfo;
   hero: ChurchHeroContent;
@@ -82,6 +105,7 @@ export interface ChurchWebsiteContent {
   ministries: ChurchMinistryItem[];
   events: ChurchEventItem[];
   gallery?: ChurchGalleryItem[];
+  mediaLibrary?: ChurchMediaItem[];
   lastUpdated?: string;
 }
 
@@ -225,6 +249,81 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
       content: `Gereja bukan hanya tempat beribadah di dalam gedung, tetapi juga terang dan garam di tengah masyarakat sekitar. Komisi Diakonia GEPEKRIS Tretes kembali menyelenggarakan 'Aksi Kasih Berbagi Berkat'.\n\nDalam aksi sosial ini, gereja menyalurkan paket bahan pokok (sembako), vitamin, serta pemeriksaan kesehatan dasar gratis bagi warga lansia dan keluarga prasejahtera di sekitar kawasan Prigen dan Tretes.\n\nBagi jemaat yang terbeban untuk mendukung pengadaan paket bahan pokok maupun tenaga sukarelawan medis / logistik, persembahan kasih dan partisipasi dapat dikoordinasikan langsung bersama tim Diakonia. Kiranya kasih Kristus terpancar nyata melalui pelayanan bersama ini.`
     },
   ],
+  mediaLibrary: [
+    {
+      id: "med-hero-1",
+      title: "Gedung & Altar Utama GEPEKRIS Tretes",
+      url: "https://images.unsplash.com/photo-1724398932316-e0d488b96e15?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjBzYW5jdHVhcnklMjBpbnRlcmlvciUyMHBlYWNlZnVsfGVufDF8fHx8MTc1NjM2MTYzMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      category: "hero",
+      description: "Foto latar beranda utama dan ruang kebaktian Minggu",
+      uploadedAt: "2025-01-10T08:00:00.000Z",
+      source: "system",
+    },
+    {
+      id: "med-about-1",
+      title: "Persekutuan Kasih & Kebersamaan Jemaat",
+      url: "https://images.unsplash.com/photo-1658734029438-d97357737bf9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwY29tbXVuaXR5JTIwcGVvcGxlJTIwdG9nZXRoZXJ8ZW58MXx8fHwxNzU2MzYxNjU4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      category: "about",
+      description: "Dokumentasi kebersamaan dan persekutuan erat jemaat Tretes",
+      uploadedAt: "2025-01-12T09:30:00.000Z",
+      source: "system",
+    },
+    {
+      id: "med-pw-1",
+      title: "Komisi Persekutuan Wanita (P/W)",
+      url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800",
+      category: "ministries",
+      description: "Kegiatan doa dan pembinaan wanita kristiani",
+      uploadedAt: "2025-01-15T10:00:00.000Z",
+      source: "system",
+    },
+    {
+      id: "med-sm-1",
+      title: "Sekolah Minggu Anak (Anak-Anak)",
+      url: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800",
+      category: "ministries",
+      description: "Pendidikan Alkitab dan aktivitas ceria anak-anak",
+      uploadedAt: "2025-01-15T11:00:00.000Z",
+      source: "system",
+    },
+    {
+      id: "med-youth-1",
+      title: "Pemuda & Remaja (Youth Fellowship)",
+      url: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=800",
+      category: "ministries",
+      description: "Generasi muda bertumbuh dalam iman dan persekutuan",
+      uploadedAt: "2025-01-18T14:00:00.000Z",
+      source: "system",
+    },
+    {
+      id: "med-diakonia-1",
+      title: "Aksi Kasih Diakonia Sembako",
+      url: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80",
+      category: "events",
+      description: "Pelayanan kasih bagi masyarakat di kawasan Prigen",
+      uploadedAt: "2025-02-01T08:30:00.000Z",
+      source: "system",
+    },
+    {
+      id: "med-retreat-1",
+      title: "Retret Jemaat di Wisma Tretes",
+      url: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80",
+      category: "events",
+      description: "Kebersamaan dan doa di udara sejuk Tretes",
+      uploadedAt: "2025-02-10T16:00:00.000Z",
+      source: "system",
+    },
+    {
+      id: "med-cross-1",
+      title: "Salib Suci & Fajar Pagi Tretes",
+      url: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=1200&q=80",
+      category: "general",
+      description: "Simbol salib dan pengharapan fajar pagi",
+      uploadedAt: "2025-02-15T06:00:00.000Z",
+      source: "system",
+    },
+  ],
+  lastUpdated: "2026-09-23T04:00:00.000Z",
 };
 
 export interface HostingDirectoryConfig {
@@ -470,6 +569,10 @@ interface ContentContextType {
   deleteGalleryItem: (id: string) => void;
   updateGalleryItem: (id: string, updated: Partial<ChurchGalleryItem>) => void;
   updateServiceItem: (id: string, updated: Partial<ChurchServiceItem>) => void;
+  addMediaItem: (item: Omit<ChurchMediaItem, 'id' | 'uploadedAt'>) => ChurchMediaItem;
+  deleteMediaItem: (id: string) => void;
+  updateMediaItem: (id: string, updated: Partial<ChurchMediaItem>) => void;
+  getAllIndexedMedia: () => ChurchMediaItem[];
   resetToDefaults: () => void;
   importContent: (newContent: ChurchWebsiteContent) => boolean;
   applyGepekrisTretesPreset: () => void;
@@ -484,6 +587,7 @@ interface ContentContextType {
   syncToHosting: (overrideConfig?: Partial<HostingDirectoryConfig>) => Promise<{ success: boolean; message: string; details?: any }>;
   syncFromHosting: (overrideConfig?: Partial<HostingDirectoryConfig>) => Promise<{ success: boolean; message: string; details?: any }>;
   testHostingConnection: (url?: string, secret?: string) => Promise<{ success: boolean; message: string; details?: any }>;
+  clearCacheAndStartFresh: () => void;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -552,6 +656,21 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
       }))
     : (DEFAULT_CHURCH_CONTENT.gallery || []);
 
+  const mediaLibrary = Array.isArray(raw.mediaLibrary)
+    ? raw.mediaLibrary.map((m: any, idx: number) => ({
+        id: m?.id || `med-${idx + 1}`,
+        title: m?.title || `Media ${idx + 1}`,
+        url: m?.url || '',
+        category: m?.category || 'general',
+        description: m?.description || '',
+        uploadedAt: m?.uploadedAt || new Date().toISOString(),
+        fileSizeBytes: typeof m?.fileSizeBytes === 'number' ? m.fileSizeBytes : 0,
+        width: m?.width,
+        height: m?.height,
+        source: m?.source || 'upload',
+      }))
+    : (DEFAULT_CHURCH_CONTENT.mediaLibrary || []);
+
   return {
     ...DEFAULT_CHURCH_CONTENT,
     ...raw,
@@ -562,6 +681,7 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
     ministries,
     events,
     gallery,
+    mediaLibrary,
     lastUpdated: raw.lastUpdated || DEFAULT_CHURCH_CONTENT.lastUpdated,
   };
 };
@@ -569,12 +689,16 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
 export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [content, setContent] = useState<ChurchWebsiteContent>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('grace_church_content_v2');
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // If saved data was the old Grace church, automatically discard and use GEPEKRIS Tretes
+        // Only use saved if it's GEPEKRIS and newer or equal to the fresh default version
         if (parsed.info?.name && !parsed.info.name.includes('Grace')) {
-          return normalizeChurchContent(parsed);
+          const parsedTime = parsed.lastUpdated ? new Date(parsed.lastUpdated).getTime() : 0;
+          const defaultTime = DEFAULT_CHURCH_CONTENT.lastUpdated ? new Date(DEFAULT_CHURCH_CONTENT.lastUpdated).getTime() : 0;
+          if (parsedTime >= defaultTime) {
+            return normalizeChurchContent(parsed);
+          }
         }
       }
     } catch (e) {
@@ -624,29 +748,28 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Background fetch latest content from server ONLY ONCE on initial app load
+  // Background fetch latest content from server on initial app load with strict anti-cache
   useEffect(() => {
     let isCancelled = false;
 
     const fetchRemoteContent = async () => {
-      const hasLocalEdits = localStorage.getItem('church_has_local_edits') === 'true';
-      const hasSavedStorage = !!localStorage.getItem(STORAGE_KEY);
-
-      // Try endpoints: api/content.php, api/content, and data/church_content.json with anti-cache timestamp
+      // Try endpoints: data/church_content.json and api/content.php with anti-cache timestamp
       const endpoints = [
+        `/data/church_content.json?_t=${Date.now()}`,
         `/api/content.php?_t=${Date.now()}`,
         `/api/content?_t=${Date.now()}`,
-        `/data/church_content.json?_t=${Date.now()}`,
       ];
 
       for (const endpoint of endpoints) {
         if (isCancelled) break;
         try {
           const res = await fetch(endpoint, {
+            cache: 'no-store',
             headers: {
               'Accept': 'application/json',
               'Cache-Control': 'no-cache, no-store, must-revalidate',
               'Pragma': 'no-cache',
+              'Expires': '0',
             },
           }).catch(() => null);
 
@@ -656,28 +779,10 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
               if (isCancelled) break;
 
               const remoteJson = normalizeChurchContent(remoteRaw);
-              
-              setContent((prev) => {
-                // If the user has local edits or saved storage in this browser, preserve their work
-                if (hasLocalEdits || hasSavedStorage) {
-                  if (prev.lastUpdated && remoteJson.lastUpdated) {
-                    const localTime = new Date(prev.lastUpdated).getTime();
-                    const remoteTime = new Date(remoteJson.lastUpdated).getTime();
-                    // Only adopt remote if remote is STRICTLY newer than local edits
-                    if (remoteTime <= localTime) {
-                      return prev;
-                    }
-                  } else {
-                    return prev;
-                  }
-                }
-
-                // If no local edits or remote is strictly newer, adopt remote
-                try {
-                  localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteJson));
-                } catch {}
-                return remoteJson;
-              });
+              setContent(remoteJson);
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteJson));
+              } catch {}
               break;
             }
           }
@@ -688,9 +793,6 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     fetchRemoteContent();
-
-    // Note: Deliberately DO NOT re-fetch on window focus or visibilitychange.
-    // Re-fetching when returning from the OS file picker was causing newly chosen photos to be overwritten!
 
     return () => {
       isCancelled = true;
@@ -882,6 +984,122 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       gallery: (prev.gallery || []).map((g) => (g.id === id ? { ...g, ...updated } : g)),
       lastUpdated: new Date().toISOString(),
     }));
+  };
+
+  const addMediaItem = (item: Omit<ChurchMediaItem, 'id' | 'uploadedAt'>): ChurchMediaItem => {
+    markLocalEdits();
+    const newItem: ChurchMediaItem = {
+      ...item,
+      id: `med-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      uploadedAt: new Date().toISOString(),
+    };
+    setContent((prev) => ({
+      ...prev,
+      mediaLibrary: [newItem, ...(prev.mediaLibrary || [])],
+      lastUpdated: new Date().toISOString(),
+    }));
+    return newItem;
+  };
+
+  const deleteMediaItem = (id: string) => {
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      mediaLibrary: (prev.mediaLibrary || []).filter((m) => m.id !== id),
+      lastUpdated: new Date().toISOString(),
+    }));
+  };
+
+  const updateMediaItem = (id: string, updated: Partial<ChurchMediaItem>) => {
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      mediaLibrary: (prev.mediaLibrary || []).map((m) => (m.id === id ? { ...m, ...updated } : m)),
+      lastUpdated: new Date().toISOString(),
+    }));
+  };
+
+  const getAllIndexedMedia = (): ChurchMediaItem[] => {
+    const list: ChurchMediaItem[] = [...(content.mediaLibrary || [])];
+    const seenUrls = new Set(list.map((m) => m.url));
+
+    // Auto-collect Hero image
+    if (content.hero?.bgImage && !seenUrls.has(content.hero.bgImage)) {
+      list.push({
+        id: 'auto-hero',
+        title: 'Foto Hero Beranda (Saat Ini)',
+        url: content.hero.bgImage,
+        category: 'hero',
+        description: 'Latar belakang utama beranda website',
+        uploadedAt: content.lastUpdated || new Date().toISOString(),
+        source: 'system',
+      });
+      seenUrls.add(content.hero.bgImage);
+    }
+
+    // Auto-collect About image
+    if (content.about?.image && !seenUrls.has(content.about.image)) {
+      list.push({
+        id: 'auto-about',
+        title: 'Foto Profil Gereja (Tentang Kami)',
+        url: content.about.image,
+        category: 'about',
+        description: 'Foto persekutuan jemaat di halaman Tentang Kami',
+        uploadedAt: content.lastUpdated || new Date().toISOString(),
+        source: 'system',
+      });
+      seenUrls.add(content.about.image);
+    }
+
+    // Auto-collect Ministries images
+    (content.ministries || []).forEach((min, idx) => {
+      if (min.image && !seenUrls.has(min.image)) {
+        list.push({
+          id: `auto-min-${min.id || idx}`,
+          title: min.title || `Pelayanan ${idx + 1}`,
+          url: min.image,
+          category: 'ministries',
+          description: min.description || 'Foto bidang pelayanan',
+          uploadedAt: content.lastUpdated || new Date().toISOString(),
+          source: 'system',
+        });
+        seenUrls.add(min.image);
+      }
+    });
+
+    // Auto-collect Events images
+    (content.events || []).forEach((evt, idx) => {
+      if (evt.image && !seenUrls.has(evt.image)) {
+        list.push({
+          id: `auto-evt-${evt.id || idx}`,
+          title: evt.title || `Warta ${idx + 1}`,
+          url: evt.image,
+          category: 'events',
+          description: evt.description || 'Foto kegiatan warta gereja',
+          uploadedAt: content.lastUpdated || new Date().toISOString(),
+          source: 'system',
+        });
+        seenUrls.add(evt.image);
+      }
+    });
+
+    // Auto-collect Gallery images
+    (content.gallery || []).forEach((gal, idx) => {
+      if (gal.imageUrl && !seenUrls.has(gal.imageUrl)) {
+        list.push({
+          id: `auto-gal-${gal.id || idx}`,
+          title: gal.title || `Dokumentasi ${idx + 1}`,
+          url: gal.imageUrl,
+          category: 'gallery',
+          description: gal.description || 'Foto dokumentasi kegiatan gereja',
+          uploadedAt: content.lastUpdated || new Date().toISOString(),
+          source: 'system',
+        });
+        seenUrls.add(gal.imageUrl);
+      }
+    });
+
+    return list;
   };
 
   const resetToDefaults = () => {
@@ -1290,6 +1508,10 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addGalleryItem,
         deleteGalleryItem,
         updateGalleryItem,
+        addMediaItem,
+        deleteMediaItem,
+        updateMediaItem,
+        getAllIndexedMedia,
         resetToDefaults,
         importContent,
         applyGepekrisTretesPreset,
@@ -1304,6 +1526,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         syncToHosting,
         syncFromHosting,
         testHostingConnection,
+        clearCacheAndStartFresh: clearCacheAndHardReload,
       }}
     >
       {children}

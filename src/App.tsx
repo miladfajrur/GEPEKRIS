@@ -14,10 +14,21 @@ import { GivingSection } from './components/GivingSection';
 import { PrayerWall } from './components/PrayerWall';
 import { ContentManagerModal } from './components/admin/ContentManagerModal';
 import { AdminLoginModal } from './components/admin/AdminLoginModal';
+import { MediaManagerModal } from './components/admin/MediaManagerModal';
 import { NewsBlogReader } from './components/NewsBlogReader';
 import { ChurchContentProvider, useChurchContent } from './context/ChurchContentContext';
-import { X, Pencil, ShieldCheck, LogOut } from 'lucide-react';
+import { X, Pencil, ShieldCheck, LogOut, FolderOpen } from 'lucide-react';
 import { Button } from './components/ui/button';
+import {
+  SEOHead,
+  HelmetProvider,
+  buildChurchSchema,
+  buildArticleSchema,
+  buildPrayerWallSchema,
+  buildSermonArchiveSchema,
+  buildGivingSchema,
+} from './components/SEOHead';
+import { SEOConfig, safeIsoDate } from './lib/seo';
 
 function ChurchApp() {
   const { content, isAdmin, logoutAdmin } = useChurchContent();
@@ -25,13 +36,14 @@ function ChurchApp() {
   const [isWatchOnlineOpen, setIsWatchOnlineOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  const [isMediaManagerOpen, setIsMediaManagerOpen] = useState(false);
   const [activeSpecialView, setActiveSpecialView] = useState<'none' | 'sermons' | 'give' | 'prayer'>('none');
   
   // Blog / 2-column news reader state
   const [isNewsReaderOpen, setIsNewsReaderOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 
-  // Support hash routing: #admin, #berita, #berita/:id, #events
+  // Support hash routing: #admin, #media, #berita/:id, #events, #prayer, #sermons, #give, #live, #visit
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash;
@@ -41,12 +53,42 @@ function ChurchApp() {
         } else {
           setIsAdminLoginOpen(true);
         }
-      } else if (hash.startsWith('#berita')) {
+      } else if (hash === '#media') {
+        if (isAdmin) {
+          setIsMediaManagerOpen(true);
+        } else {
+          setIsAdminLoginOpen(true);
+        }
+      } else if (hash.startsWith('#berita/')) {
         const parts = hash.split('/');
         if (parts.length > 1 && parts[1]) {
           setSelectedArticleId(parts[1]);
+          setIsNewsReaderOpen(true);
+          setActiveSpecialView('none');
         }
-        setIsNewsReaderOpen(true);
+      } else if (hash === '#berita') {
+        // Scroll to the warta/events section on the regular main page
+        setIsNewsReaderOpen(false);
+        setActiveSpecialView('none');
+        const el = document.getElementById('events');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      } else if (hash === '#prayer' || hash === '#doa') {
+        setActiveSpecialView('prayer');
+        setIsNewsReaderOpen(false);
+      } else if (hash === '#sermons' || hash === '#khotbah') {
+        setActiveSpecialView('sermons');
+        setIsNewsReaderOpen(false);
+      } else if (hash === '#give' || hash === '#persembahan') {
+        setActiveSpecialView('give');
+        setIsNewsReaderOpen(false);
+      } else if (hash === '#live' || hash === '#streaming') {
+        setIsWatchOnlineOpen(true);
+      } else if (hash === '#visit' || hash === '#kunjungan') {
+        setIsPlanVisitOpen(true);
+      } else {
+        // Any regular home page section (#home, #about, #services, #ministries, #events, #gallery, #contact, or empty)
+        setIsNewsReaderOpen(false);
+        setActiveSpecialView('none');
       }
     };
     handleHash();
@@ -57,12 +99,38 @@ function ChurchApp() {
   const handleOpenArticle = (id: string) => {
     setSelectedArticleId(id);
     setIsNewsReaderOpen(true);
+    setActiveSpecialView('none');
     window.location.hash = `berita/${id}`;
   };
 
   const handleCloseNewsReader = () => {
     setIsNewsReaderOpen(false);
     if (window.location.hash.startsWith('#berita')) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  };
+
+  const handleOpenPrayer = () => {
+    setActiveSpecialView('prayer');
+    setIsNewsReaderOpen(false);
+    window.location.hash = 'prayer';
+  };
+
+  const handleOpenSermons = () => {
+    setActiveSpecialView('sermons');
+    setIsNewsReaderOpen(false);
+    window.location.hash = 'sermons';
+  };
+
+  const handleOpenGive = () => {
+    setActiveSpecialView('give');
+    setIsNewsReaderOpen(false);
+    window.location.hash = 'give';
+  };
+
+  const handleCloseSpecialView = () => {
+    setActiveSpecialView('none');
+    if (['#prayer', '#doa', '#sermons', '#khotbah', '#give', '#persembahan'].includes(window.location.hash)) {
       history.replaceState(null, '', window.location.pathname);
     }
   };
@@ -87,90 +155,236 @@ function ChurchApp() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAdmin]);
 
+  // Construct canonical base URL (clean origin + pathname)
+  const baseUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}${window.location.pathname}`
+    : 'https://gepekristretes.org/';
+
+  // Compute active view SEO metadata dynamically
+  let seoConfig: SEOConfig;
+
+  if (isAdminOpen || isAdminLoginOpen) {
+    seoConfig = {
+      title: `Portal Admin & CMS Konten | ${content.info.name}`,
+      description: 'Portal administratif pengelolaan warta, jadwal ibadah, galeri, dan media foto GEPEKRIS Tretes.',
+      canonical: `${baseUrl}#admin`,
+      noIndex: true, // Disallow search engine indexing of private admin views
+    };
+  } else if (isNewsReaderOpen) {
+    const activeArticle = content.events.find((e) => e.id === selectedArticleId) || content.events[0];
+    if (activeArticle) {
+      const canonical = `${baseUrl}#berita/${activeArticle.id}`;
+      const descSnippet = (activeArticle.description || activeArticle.content || 'Warta kegiatan dan kabar pelayanan GEPEKRIS Tretes.')
+        .replace(/\s+/g, ' ')
+        .slice(0, 155);
+
+      seoConfig = {
+        title: `${activeArticle.title} | Warta ${content.info.name}`,
+        description: descSnippet,
+        canonical,
+        ogType: 'article',
+        ogImage: activeArticle.image || content.hero.bgImage,
+        author: activeArticle.author || `${content.info.name} Tim Media`,
+        publishedTime: safeIsoDate(activeArticle.date),
+        keywords: [
+          activeArticle.title,
+          'Warta GEPEKRIS',
+          activeArticle.category,
+          'Gereja Tretes Pasuruan',
+          'Berita Kristen',
+        ],
+        schema: buildArticleSchema(activeArticle, canonical, content.info.name),
+      };
+    } else {
+      const canonical = `${baseUrl}#berita`;
+      seoConfig = {
+        title: `Warta Kegiatan & Berita Jemaat | ${content.info.name}`,
+        description: 'Daftar lengkap warta mingguan, artikel pembinaan, dan informasi kegiatan pelayanan jemaat GEPEKRIS Tretes.',
+        canonical,
+        ogType: 'website',
+        ogImage: content.hero.bgImage,
+        keywords: ['Warta Jemaat GEPEKRIS', 'Berita Gereja Tretes', 'Kegiatan Rohani Pasuruan'],
+        schema: buildChurchSchema(content.info, content.services, content.hero.bgImage, canonical),
+      };
+    }
+  } else if (activeSpecialView === 'prayer') {
+    const canonical = `${baseUrl}#prayer`;
+    seoConfig = {
+      title: `Pokok Doa & Prayer Wall Jemaat | ${content.info.name}`,
+      description: 'Layanan pokok doa syafaat, doa kesembuhan, dan permohonan doa bersama keluarga jemaat GEPEKRIS Tretes dalam kasih Kristus.',
+      canonical,
+      ogType: 'website',
+      ogImage: content.hero.bgImage,
+      keywords: ['Prayer Wall GEPEKRIS', 'Pokok Doa Kristen', 'Doa Syafaat Gereja', 'GEPEKRIS Tretes'],
+      schema: buildPrayerWallSchema(canonical, content.info.name),
+    };
+  } else if (activeSpecialView === 'sermons') {
+    const canonical = `${baseUrl}#sermons`;
+    seoConfig = {
+      title: `Arsip Khotbah & Renungan Firman Tuhan | ${content.info.name}`,
+      description: 'Dengarkan rekaman khotbah Ibadah Raya Minggu, renungan firman Tuhan, dan seri pengajaran Alkitab jemaat GEPEKRIS Tretes.',
+      canonical,
+      ogType: 'website',
+      ogImage: content.hero.bgImage,
+      keywords: ['Khotbah GEPEKRIS Tretes', 'Renungan Firman Tuhan', 'Khotbah Minggu Kristen Pasuruan', 'Audio Khotbah'],
+      schema: buildSermonArchiveSchema(canonical, content.info.name),
+    };
+  } else if (activeSpecialView === 'give') {
+    const canonical = `${baseUrl}#give`;
+    seoConfig = {
+      title: `Persembahan & Persepuluhan Online | ${content.info.name}`,
+      description: 'Informasi rekening resmi persembahan syukur, persepuluhan, dan diakonia untuk mendukung pelayanan jemaat GEPEKRIS Tretes.',
+      canonical,
+      ogType: 'website',
+      ogImage: content.hero.bgImage,
+      keywords: ['Persembahan Online GEPEKRIS', 'Persepuluhan Gereja Tretes', 'Donasi Pelayanan Kristen'],
+      schema: buildGivingSchema(canonical, content.info.name),
+    };
+  } else if (isWatchOnlineOpen) {
+    const canonical = `${baseUrl}#live`;
+    seoConfig = {
+      title: `Live Streaming Ibadah Raya Online | ${content.info.name}`,
+      description: 'Saksikan siaran langsung Ibadah Raya Minggu dan kegiatan rohani GEPEKRIS Tretes secara live streaming melalui kanal YouTube resmi.',
+      canonical,
+      ogType: 'website',
+      ogImage: content.hero.bgImage,
+      keywords: ['Live Streaming Ibadah', 'Streaming GEPEKRIS Tretes', 'Ibadah Online Pasuruan'],
+      schema: buildChurchSchema(content.info, content.services, content.hero.bgImage, canonical),
+    };
+  } else if (isPlanVisitOpen) {
+    const canonical = `${baseUrl}#visit`;
+    seoConfig = {
+      title: `Rencanakan Kunjungan Ibadah | ${content.info.name}`,
+      description: 'Selamat datang di GEPEKRIS Tretes. Panduan informasi jadwal ibadah, lokasi gereja, dan penyambutan bagi jemaat baru dan tamu.',
+      canonical,
+      ogType: 'website',
+      ogImage: content.hero.bgImage,
+      keywords: ['Kunjungan GEPEKRIS Tretes', 'Jadwal Ibadah Tretes', 'Gereja di Prigen Pasuruan'],
+      schema: buildChurchSchema(content.info, content.services, content.hero.bgImage, canonical),
+    };
+  } else {
+    // Default Home Page View
+    const canonical = baseUrl;
+    seoConfig = {
+      title: `${content.info.name} - Gereja Persekutuan Kristen Tretes`,
+      description: 'Website resmi Gereja Persekutuan Kristen (GEPEKRIS) Tretes, Prigen, Pasuruan - Jadwal Ibadah Raya, Warta Berita Jemaat, Komisi, dan Pelayanan Kasih.',
+      canonical,
+      ogType: 'website',
+      ogImage: content.hero.bgImage,
+      keywords: [
+        'GEPEKRIS Tretes',
+        'Gereja Persekutuan Kristen Tretes',
+        'Gereja Kristen Tretes Prigen',
+        'Jadwal Ibadah Minggu Tretes',
+        'Gereja Pasuruan Jawa Timur',
+        'Warta Jemaat GEPEKRIS',
+        'Pelayanan Kristen Tretes',
+      ],
+      schema: buildChurchSchema(content.info, content.services, content.hero.bgImage, canonical),
+    };
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-primary/10 relative">
+      {/* Dynamic SEO & Document Metadata Head (React Helmet Provider / Document Head Manager) */}
+      <SEOHead {...seoConfig} />
+
       <Header 
-        onPlanVisit={() => setIsPlanVisitOpen(true)}
+        onPlanVisit={() => {
+          setIsPlanVisitOpen(true);
+          window.location.hash = 'visit';
+        }}
+        onGoHome={() => {
+          setIsNewsReaderOpen(false);
+          setActiveSpecialView('none');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         onOpenNews={() => {
-          if (content.events.length > 0) {
+          setIsNewsReaderOpen(false);
+          const el = document.getElementById('events');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          } else if (content.events.length > 0) {
             handleOpenArticle(content.events[0].id);
-          } else {
-            setIsNewsReaderOpen(true);
           }
         }}
+        onOpenSermons={handleOpenSermons}
+        onOpenPrayer={handleOpenPrayer}
       />
       
-      {/* 2-Column Blogspot-Style News & Article Reader View */}
-      {isNewsReaderOpen ? (
-        <main className="flex-1">
-          <NewsBlogReader
-            events={content.events}
-            selectedId={selectedArticleId}
-            onClose={handleCloseNewsReader}
-            onSelectEvent={(id) => {
-              setSelectedArticleId(id);
-              window.location.hash = `berita/${id}`;
-            }}
-            churchName={content.info.name}
-          />
-        </main>
-      ) : (
-        <main className="flex-1">
-          <Hero
-            onPlanVisit={() => setIsPlanVisitOpen(true)}
-            onWatchOnline={() => setIsWatchOnlineOpen(true)}
-          />
-          <ServiceTimes />
-          <About />
-          <Ministries />
-          <Events onReadArticle={(id) => handleOpenArticle(id)} />
-          <PhotoGallery />
-          <Contact />
+      {/* Permanent Regular Main Homepage */}
+      <main className="flex-1">
+        <Hero
+          onPlanVisit={() => setIsPlanVisitOpen(true)}
+          onWatchOnline={() => setIsWatchOnlineOpen(true)}
+        />
+        <ServiceTimes />
+        <About />
+        <Ministries />
+        <Events onReadArticle={(id) => handleOpenArticle(id)} />
+        <PhotoGallery />
+        <Contact />
 
-          {/* Optional dedicated section drawers for Give, Prayer & Sermons */}
-          {activeSpecialView === 'sermons' && (
-            <div id="sermon-hub-section" className="border-t py-12 bg-white">
-              <div className="max-w-7xl mx-auto px-4 flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Church Sermons Archive</h2>
-                <Button variant="ghost" onClick={() => setActiveSpecialView('none')} className="cursor-pointer">
-                  Close
-                </Button>
-              </div>
-              <SermonHub language="en" />
+        {/* Optional dedicated section drawers for Give, Prayer & Sermons */}
+        {activeSpecialView === 'sermons' && (
+          <div id="sermon-hub-section" className="border-t py-12 bg-white">
+            <div className="max-w-7xl mx-auto px-4 flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Church Sermons Archive</h2>
+              <Button variant="ghost" onClick={handleCloseSpecialView} className="cursor-pointer">
+                Close
+              </Button>
             </div>
-          )}
+            <SermonHub language="en" />
+          </div>
+        )}
 
-          {activeSpecialView === 'give' && (
-            <div id="giving-section" className="border-t py-12 bg-white">
-              <div className="max-w-7xl mx-auto px-4 flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Online Giving & Tithes</h2>
-                <Button variant="ghost" onClick={() => setActiveSpecialView('none')} className="cursor-pointer">
-                  Close
-                </Button>
-              </div>
-              <GivingSection language="en" />
+        {activeSpecialView === 'give' && (
+          <div id="giving-section" className="border-t py-12 bg-white">
+            <div className="max-w-7xl mx-auto px-4 flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Online Giving & Tithes</h2>
+              <Button variant="ghost" onClick={handleCloseSpecialView} className="cursor-pointer">
+                Close
+              </Button>
             </div>
-          )}
+            <GivingSection language="en" />
+          </div>
+        )}
 
-          {activeSpecialView === 'prayer' && (
-            <div id="prayer-section" className="border-t py-12 bg-white">
-              <div className="max-w-7xl mx-auto px-4 flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Community Prayer Wall</h2>
-                <Button variant="ghost" onClick={() => setActiveSpecialView('none')} className="cursor-pointer">
-                  Close
-                </Button>
-              </div>
-              <PrayerWall language="en" />
+        {activeSpecialView === 'prayer' && (
+          <div id="prayer-section" className="border-t py-12 bg-white">
+            <div className="max-w-7xl mx-auto px-4 flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Community Prayer Wall</h2>
+              <Button variant="ghost" onClick={handleCloseSpecialView} className="cursor-pointer">
+                Close
+              </Button>
             </div>
-          )}
-        </main>
+            <PrayerWall language="en" />
+          </div>
+        )}
+      </main>
+
+      {/* 2-Column Blogspot-Style News & Article Reader Overlay */}
+      {isNewsReaderOpen && (
+        <NewsBlogReader
+          events={content.events}
+          selectedId={selectedArticleId}
+          onClose={handleCloseNewsReader}
+          onSelectEvent={(id) => {
+            setSelectedArticleId(id);
+            window.location.hash = `berita/${id}`;
+          }}
+          churchName={content.info.name}
+        />
       )}
 
       <Footer
-        onPlanVisit={() => setIsPlanVisitOpen(true)}
-        onOpenGive={() => setActiveSpecialView('give')}
-        onOpenPrayer={() => setActiveSpecialView('prayer')}
-        onOpenSermons={() => setActiveSpecialView('sermons')}
+        onPlanVisit={() => {
+          setIsPlanVisitOpen(true);
+          window.location.hash = 'visit';
+        }}
+        onOpenGive={handleOpenGive}
+        onOpenPrayer={handleOpenPrayer}
+        onOpenSermons={handleOpenSermons}
         onOpenAdmin={handleOpenAdminTrigger}
         onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
       />
@@ -179,6 +393,12 @@ function ChurchApp() {
       <ContentManagerModal
         isOpen={isAdminOpen && isAdmin}
         onClose={() => setIsAdminOpen(false)}
+      />
+
+      {/* Standalone Media Manager Modal */}
+      <MediaManagerModal
+        isOpen={isMediaManagerOpen && isAdmin}
+        onClose={() => setIsMediaManagerOpen(false)}
       />
 
       {/* Admin Login Modal */}
@@ -248,27 +468,36 @@ function ChurchApp() {
       {isAdmin && (
         <aside 
           aria-label="Admin Control Bar"
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-stone-900/95 text-white px-4 py-2 rounded-full shadow-2xl border border-amber-500/50 flex items-center gap-3 text-xs backdrop-blur-md animate-in fade-in slide-in-from-bottom-2"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-stone-900/95 text-white px-3 sm:px-4 py-2 rounded-full shadow-2xl border border-amber-500/50 flex items-center gap-2 sm:gap-3 text-xs backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 max-w-[95vw] overflow-x-auto no-scrollbar"
         >
-          <div className="flex items-center gap-2 font-medium text-amber-300">
+          <div className="flex items-center gap-1.5 sm:gap-2 font-medium text-amber-300 shrink-0">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="hidden sm:inline">Mode Admin Aktif</span>
-            <span className="sm:hidden">Admin</span>
+            <span className="hidden sm:inline">Admin Aktif</span>
+            <span className="sm:hidden text-[11px]">Admin</span>
           </div>
-          <div className="h-4 w-px bg-stone-700"></div>
+          <div className="h-4 w-px bg-stone-700 shrink-0"></div>
           <button
             onClick={() => setIsAdminOpen(true)}
-            className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-3.5 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs"
+            className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-3 sm:px-3.5 py-1.5 rounded-full cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs whitespace-nowrap shrink-0 text-xs"
           >
             <Pencil className="w-3.5 h-3.5" />
-            <span>Edit Konten Halaman</span>
+            <span className="hidden sm:inline">Edit Konten</span>
+            <span className="sm:hidden">CMS</span>
+          </button>
+          <button
+            onClick={() => setIsMediaManagerOpen(true)}
+            className="bg-stone-800 hover:bg-stone-700 text-amber-300 hover:text-white font-medium px-3 sm:px-3.5 py-1.5 rounded-full cursor-pointer transition-colors flex items-center gap-1.5 border border-stone-700 shadow-xs whitespace-nowrap shrink-0 text-xs"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Pustaka Media</span>
+            <span className="sm:hidden">Media</span>
           </button>
           <button
             onClick={logoutAdmin}
-            className="text-stone-400 hover:text-white px-2 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1"
+            className="text-stone-400 hover:text-white px-2 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1 shrink-0"
             title="Keluar Mode Admin"
           >
-            <LogOut className="w-3 h-3" />
+            <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Keluar</span>
           </button>
         </aside>
@@ -280,7 +509,9 @@ function ChurchApp() {
 export default function App() {
   return (
     <ChurchContentProvider>
-      <ChurchApp />
+      <HelmetProvider>
+        <ChurchApp />
+      </HelmetProvider>
     </ChurchContentProvider>
   );
 }
