@@ -128,22 +128,22 @@ export function PhotoGallery() {
     }
   };
 
-  // Compress and handle file upload with client-side format & size validation
+  // Compress and handle file upload for real-time Firebase storage
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 1. Client-side format (JPG/PNG) & file size (<=5MB) validation
+    // 1. Client-side format (JPG/PNG) & file size validation
     const validation = validateImageFile(file);
     if (!validation.valid) {
       setFileValidationError(validation.error || 'Format atau ukuran berkas gambar tidak sesuai.');
-      // Reset input so user can pick another file, state is preserved!
       e.target.value = '';
       return;
     }
 
     setFileValidationError(null);
     setIsProcessingFile(true);
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
@@ -562,19 +562,19 @@ export function PhotoGallery() {
                     <button
                       type="button"
                       onClick={() => setImageTab('upload')}
-                      className={`flex-1 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-lg border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                         imageTab === 'upload'
                           ? 'bg-amber-50 border-amber-300 text-amber-900 font-semibold'
                           : 'border-stone-200 text-stone-600 hover:bg-stone-50'
                       }`}
                     >
                       <Upload className="w-3.5 h-3.5" />
-                      <span>Unggah dari Komputer / HP</span>
+                      <span>Unggah dari HP / Komputer</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setImageTab('url')}
-                      className={`flex-1 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-lg border transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                         imageTab === 'url'
                           ? 'bg-amber-50 border-amber-300 text-amber-900 font-semibold'
                           : 'border-stone-200 text-stone-600 hover:bg-stone-50'
@@ -587,7 +587,7 @@ export function PhotoGallery() {
 
                   {/* Validation Error Notice */}
                   {fileValidationError && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2 animate-in fade-in">
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2 animate-in fade-in mb-2">
                       <span className="font-bold text-red-600">✕</span>
                       <div className="flex-1">
                         <p className="font-semibold">{fileValidationError}</p>
@@ -629,13 +629,13 @@ export function PhotoGallery() {
                           </span>
                         </div>
                         <span className="text-[11px] text-stone-400 mt-1">
-                          Foto otomatis dikompresi (~80 KB) beresolusi tajam & siap sinkronisasi hosting
+                          Foto otomatis dioptimasi & tersimpan secara real-time di Firebase
                         </span>
                       </label>
                       {isProcessingFile && (
                         <div className="mt-2 text-xs text-amber-700 flex items-center justify-center gap-1">
                           <RefreshCw className="w-3 h-3 animate-spin" />
-                          <span>Memproses gambar...</span>
+                          <span>Mengoptimasi gambar...</span>
                         </div>
                       )}
                     </div>

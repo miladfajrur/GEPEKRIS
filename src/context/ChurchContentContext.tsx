@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, testConnection, sanitizeForFirestore } from '../firebase';
 import { validateContentPayloadForSync } from '../lib/imageValidation';
 import { clearCacheAndHardReload } from '../lib/cacheCleaner';
 
@@ -323,6 +325,56 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
       source: "system",
     },
   ],
+  gallery: [
+    {
+      id: "gal-1",
+      title: "Ibadah Raya & Perjamuan Kudus",
+      category: "Ibadah",
+      imageUrl: "https://images.unsplash.com/photo-1548625361-19597793d980?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5kYXklMjB3b3JzaGlwJTIwY2h1cmNoJTIwcHJheWVyfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      description: "Suasana ibadah minggu yang khidmat dan perjamuan kudus jemaat GEPEKRIS Tretes.",
+      date: "Minggu, 7 September 2025"
+    },
+    {
+      id: "gal-2",
+      title: "Persekutuan Pemuda & Remaja (Youth)",
+      category: "Pemuda",
+      imageUrl: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b3V0aCUyMGZlbGxvd3NoaXAlMjBncm91cCUyMGZyaWVuZHN8ZW58MXx8fHwxNzU2MzYxNjU4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      description: "Kebersamaan generasi muda dalam praise & worship serta diskusi firman di Tretes.",
+      date: "Sabtu, 13 September 2025"
+    },
+    {
+      id: "gal-3",
+      title: "Sekolah Minggu Ceria Bersama Anak",
+      category: "Sekolah Minggu",
+      imageUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGlsZHJlbiUyMGJpYmxlJTIwc3R1ZHklMjBzbWlsaW5nfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      description: "Aktivitas kreatif dan pujian anak-anak sekolah minggu dalam mengenal kasih Kristus.",
+      date: "Minggu, 14 September 2025"
+    },
+    {
+      id: "gal-4",
+      title: "Aksi Kasih Diakonia & Baksos Warga",
+      category: "Diakonia",
+      imageUrl: "https://images.unsplash.com/photo-1593113598332-cd288d649433?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGFyaXR5JTIwY29tbXVuaXR5JTIwaGVscGluZ3xlbnwxfHx8fDE3NTYzNjE2NTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      description: "Penyaluran paket bahan pokok dan pelayanan kasih bagi masyarakat di kawasan Prigen.",
+      date: "Sabtu, 30 Agustus 2025"
+    },
+    {
+      id: "gal-5",
+      title: "Pelayanan Musik & Multimedia",
+      category: "Ibadah",
+      imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjB3b3JzaGlwJTIwbXVzaWMlMjBiYW5kfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      description: "Penyembahan dan pelayanan tim musik dalam memimpin jemaat menghadap hadirat Tuhan.",
+      date: "Minggu, 31 Agustus 2025"
+    },
+    {
+      id: "gal-6",
+      title: "Retreat Keluarga & Persekutuan Jemaat",
+      category: "Persekutuan",
+      imageUrl: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjBjb21tdW5pdHklMjBmZWxsb3dzaGlwfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      description: "Kebersamaan jemaat dalam retret pembinaan iman dan keakraban keluarga di kawasan Tretes.",
+      date: "Juli 2025"
+    }
+  ],
   lastUpdated: "2026-09-23T04:00:00.000Z",
 };
 
@@ -588,6 +640,9 @@ interface ContentContextType {
   syncFromHosting: (overrideConfig?: Partial<HostingDirectoryConfig>) => Promise<{ success: boolean; message: string; details?: any }>;
   testHostingConnection: (url?: string, secret?: string) => Promise<{ success: boolean; message: string; details?: any }>;
   clearCacheAndStartFresh: () => void;
+  firestoreStatus: 'connected' | 'syncing' | 'error' | 'idle';
+  firestoreError: string | null;
+  syncToFirestore: () => Promise<{ success: boolean; message: string }>;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -629,20 +684,23 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
     : DEFAULT_CHURCH_CONTENT.ministries;
 
   const events = Array.isArray(raw.events)
-    ? raw.events.map((e: any, idx: number) => ({
-        id: e?.id || `evt-${idx + 1}`,
-        title: e?.title || `Kegiatan ${idx + 1}`,
-        date: e?.date || '',
-        time: e?.time || '',
-        location: e?.location || '',
-        description: e?.description || '',
-        category: e?.category || 'Umum',
-        featured: !!e?.featured,
-        content: e?.content,
-        image: e?.image,
-        author: e?.author,
-        slug: e?.slug,
-      }))
+    ? raw.events.map((e: any, idx: number) => {
+        const item: any = {
+          id: e?.id || `evt-${idx + 1}`,
+          title: e?.title || `Kegiatan ${idx + 1}`,
+          date: e?.date || '',
+          time: e?.time || '',
+          location: e?.location || '',
+          description: e?.description || '',
+          category: e?.category || 'Umum',
+          featured: !!e?.featured,
+        };
+        if (e?.content !== undefined && e?.content !== null) item.content = e.content;
+        if (e?.image !== undefined && e?.image !== null) item.image = e.image;
+        if (e?.author !== undefined && e?.author !== null) item.author = e.author;
+        if (e?.slug !== undefined && e?.slug !== null) item.slug = e.slug;
+        return item;
+      })
     : DEFAULT_CHURCH_CONTENT.events;
 
   const gallery = Array.isArray(raw.gallery)
@@ -657,18 +715,21 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
     : (DEFAULT_CHURCH_CONTENT.gallery || []);
 
   const mediaLibrary = Array.isArray(raw.mediaLibrary)
-    ? raw.mediaLibrary.map((m: any, idx: number) => ({
-        id: m?.id || `med-${idx + 1}`,
-        title: m?.title || `Media ${idx + 1}`,
-        url: m?.url || '',
-        category: m?.category || 'general',
-        description: m?.description || '',
-        uploadedAt: m?.uploadedAt || new Date().toISOString(),
-        fileSizeBytes: typeof m?.fileSizeBytes === 'number' ? m.fileSizeBytes : 0,
-        width: m?.width,
-        height: m?.height,
-        source: m?.source || 'upload',
-      }))
+    ? raw.mediaLibrary.map((m: any, idx: number) => {
+        const item: any = {
+          id: m?.id || `med-${idx + 1}`,
+          title: m?.title || `Media ${idx + 1}`,
+          url: m?.url || '',
+          category: m?.category || 'general',
+          description: m?.description || '',
+          uploadedAt: m?.uploadedAt || new Date().toISOString(),
+          fileSizeBytes: typeof m?.fileSizeBytes === 'number' ? m.fileSizeBytes : 0,
+          source: m?.source || 'upload',
+        };
+        if (typeof m?.width === 'number') item.width = m.width;
+        if (typeof m?.height === 'number') item.height = m.height;
+        return item;
+      })
     : (DEFAULT_CHURCH_CONTENT.mediaLibrary || []);
 
   return {
@@ -798,6 +859,79 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isCancelled = true;
     };
   }, []);
+
+  const [firestoreStatus, setFirestoreStatus] = useState<'connected' | 'syncing' | 'error' | 'idle'>('idle');
+  const [firestoreError, setFirestoreError] = useState<string | null>(null);
+
+  // Real-time Firestore synchronization on boot
+  useEffect(() => {
+    testConnection();
+    setFirestoreStatus('syncing');
+
+    let isMounted = true;
+    const path = 'church_content/main';
+
+    const unsubscribe = onSnapshot(
+      doc(db, 'church_content', 'main'),
+      (docSnap) => {
+        if (!isMounted) return;
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data && data.info && data.hero) {
+            const normalized = normalizeChurchContent(data);
+            setContent(normalized);
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+            } catch {}
+          }
+        } else {
+          // Document does not exist yet; initialize it in Firestore
+          const cleanDefault = sanitizeForFirestore(DEFAULT_CHURCH_CONTENT);
+          setDoc(doc(db, 'church_content', 'main'), cleanDefault).catch((err) => {
+            handleFirestoreError(err, OperationType.WRITE, path);
+          });
+        }
+        setFirestoreStatus('connected');
+        setFirestoreError(null);
+      },
+      (error) => {
+        if (!isMounted) return;
+        console.warn('Firestore onSnapshot listener notice:', error.message);
+        setFirestoreStatus('error');
+        setFirestoreError(error.message);
+        try {
+          handleFirestoreError(error, OperationType.GET, path);
+        } catch {
+          // Keep app running gracefully if permissions or network issues arise
+        }
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const syncToFirestore = async (): Promise<{ success: boolean; message: string }> => {
+    setFirestoreStatus('syncing');
+    const path = 'church_content/main';
+    try {
+      const contentToPush = sanitizeForFirestore({
+        ...content,
+        lastUpdated: new Date().toISOString(),
+      });
+      await setDoc(doc(db, 'church_content', 'main'), contentToPush);
+      setFirestoreStatus('connected');
+      setFirestoreError(null);
+      return { success: true, message: 'Konten berhasil disimpan & disinkronkan ke Firebase Firestore secara real-time!' };
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setFirestoreStatus('error');
+      setFirestoreError(errMsg);
+      handleFirestoreError(err, OperationType.WRITE, path);
+    }
+  };
 
   const updateInfo = (data: Partial<ChurchGeneralInfo>) => {
     markLocalEdits();
@@ -1527,6 +1661,9 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         syncFromHosting,
         testHostingConnection,
         clearCacheAndStartFresh: clearCacheAndHardReload,
+        firestoreStatus,
+        firestoreError,
+        syncToFirestore,
       }}
     >
       {children}

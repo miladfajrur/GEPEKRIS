@@ -2,6 +2,9 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/gepa9828/public_html
-    - /bin/mkdir -p $DEPLOYPATH
-    - /bin/cp -R dist/. $DEPLOYPATH/
-    - /bin/chmod 755 $DEPLOYPATH/data
+    - /bin/mkdir -p $DEPLOYPATH/data
+    - /bin/mkdir -p $DEPLOYPATH/api
+    - /bin/cp -rf dist/* $DEPLOYPATH/ 2>/dev/null || true
+    - /bin/cp -rf dist/.htaccess $DEPLOYPATH/ 2>/dev/null || true
+    - /bin/cp -rf dist/api/.htaccess $DEPLOYPATH/api/ 2>/dev/null || true
+    - /bin/chmod 755 $DEPLOYPATH/data 2>/dev/null || true

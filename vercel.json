@@ -1,18 +1,7 @@
 {
-  "redirects": [
-    {
-      "source": "/index.php",
-      "destination": "/",
-      "permanent": false
-    }
-  ],
   "rewrites": [
     {
-      "source": "/api/content.php",
-      "destination": "/api/content"
-    },
-    {
-      "source": "/((?!api/.*).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

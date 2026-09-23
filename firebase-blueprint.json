@@ -1,0 +1,135 @@
+{
+  "entities": {
+    "ChurchWebsiteContent": {
+      "title": "ChurchWebsiteContent",
+      "description": "Main church website configuration and content for GEPEKRIS Tretes",
+      "type": "object",
+      "properties": {
+        "info": {
+          "type": "object",
+          "description": "Church general contact and location info"
+        },
+        "hero": {
+          "type": "object",
+          "description": "Hero banner headline and schedule highlights"
+        },
+        "about": {
+          "type": "object",
+          "description": "About section details, history, and core values"
+        },
+        "services": {
+          "type": "array",
+          "description": "Weekly service schedule times and descriptions"
+        },
+        "ministries": {
+          "type": "array",
+          "description": "Church ministry commissions and descriptions"
+        },
+        "events": {
+          "type": "array",
+          "description": "Upcoming events and news articles"
+        },
+        "gallery": {
+          "type": "array",
+          "description": "Church documentation photo gallery items"
+        },
+        "mediaLibrary": {
+          "type": "array",
+          "description": "Uploaded media items and image library"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": ["info", "hero", "about", "services", "ministries", "events"]
+    },
+    "PrayerRequest": {
+      "title": "PrayerRequest",
+      "description": "Prayer request submitted by community members",
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Name or pseudonym of author"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Healing", "Family", "Work/Studies", "Guidance", "Thanksgiving"],
+          "description": "Category of prayer need"
+        },
+        "request": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Prayer request text"
+        },
+        "date": {
+          "type": "string",
+          "description": "Formatted date display"
+        },
+        "prayersCount": {
+          "type": "number",
+          "description": "Total prayer support clicks"
+        },
+        "isPrivate": {
+          "type": "boolean",
+          "description": "Confidential for pastors only"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp created"
+        }
+      },
+      "required": ["author", "category", "request", "prayersCount", "isPrivate"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "Inquiry submitted by visitors via contact form",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Sender name"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Sender email"
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Sender phone number"
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Inquiry message content"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Submission timestamp"
+        }
+      },
+      "required": ["name", "email", "message"]
+    }
+  },
+  "firestore": {
+    "/church_content/{contentId}": {
+      "schema": "ChurchWebsiteContent",
+      "description": "Stores current church website content documents (e.g. main)"
+    },
+    "/prayers/{prayerId}": {
+      "schema": "PrayerRequest",
+      "description": "Public and pastoral prayer wall requests"
+    },
+    "/contacts/{contactId}": {
+      "schema": "ContactMessage",
+      "description": "Contact messages sent to church secretariat"
+    }
+  }
+}

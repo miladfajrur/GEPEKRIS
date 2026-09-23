@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidChurchContent(data) {
+      return data.info is map &&
+             data.hero is map &&
+             data.about is map &&
+             data.services is list &&
+             data.ministries is list &&
+             data.events is list;
+    }
+
+    function isValidPrayer(data) {
+      return data.author is string && data.author.size() <= 100 &&
+             data.category is string && data.category.size() <= 50 &&
+             data.request is string && data.request.size() <= 2000 &&
+             data.prayersCount is number &&
+             data.isPrivate is bool;
+    }
+
+    function isValidContact(data) {
+      return data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.message is string && data.message.size() <= 3000;
+    }
+
+    // Church Website Content (e.g. 'main' document)
+    match /church_content/{contentId} {
+      allow read: if isValidId(contentId);
+      allow create, update: if isValidId(contentId) && isValidChurchContent(incoming());
+      allow delete: if false;
+    }
+
+    // Prayer Wall Collection
+    match /prayers/{prayerId} {
+      allow get: if isValidId(prayerId) && (!resource.data.isPrivate || isSignedIn());
+      allow list: if true;
+      allow create: if isValidId(prayerId) && isValidPrayer(incoming());
+      allow update: if isValidId(prayerId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['prayersCount']) &&
+                       incoming().prayersCount is number;
+      allow delete: if isSignedIn();
+    }
+
+    // Contact Inquiries
+    match /contacts/{contactId} {
+      allow create: if isValidId(contactId) && isValidContact(incoming());
+      allow read, update, delete: if isSignedIn();
+    }
+  }
+}

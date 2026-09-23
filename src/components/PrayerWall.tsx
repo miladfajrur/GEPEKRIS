@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, doc, addDoc, updateDoc, increment, onSnapshot } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, sanitizeForFirestore } from '../firebase';
 import { Language, PrayerRequest } from '../types';
 import { INITIAL_PRAYERS } from '../data/churchData';
 import { Heart, Plus, ShieldCheck, Lock, CheckCircle2, MessageCircleHeart, Sparkles, Send, X } from 'lucide-react';
@@ -19,14 +21,56 @@ export const PrayerWall: React.FC<PrayerWallProps> = ({ language }) => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
-  const handlePrayClick = (id: string) => {
+  // Real-time Firestore sync for prayers
+  useEffect(() => {
+    const path = 'prayers';
+    const unsubscribe = onSnapshot(
+      collection(db, 'prayers'),
+      (snapshot) => {
+        const remotePrayers: PrayerRequest[] = [];
+        snapshot.forEach((dSnap) => {
+          const d = dSnap.data();
+          if (!d.isPrivate) {
+            remotePrayers.push({
+              id: dSnap.id,
+              author: d.author || 'Jemaat',
+              category: d.category || 'Healing',
+              request: d.request || '',
+              date: d.date || 'Baru saja',
+              prayersCount: typeof d.prayersCount === 'number' ? d.prayersCount : 1,
+              isPrivate: !!d.isPrivate,
+            });
+          }
+        });
+        if (remotePrayers.length > 0) {
+          // Combine with initial prayers or display remote
+          setPrayers(remotePrayers);
+        }
+      },
+      (error) => {
+        try {
+          handleFirestoreError(error, OperationType.GET, path);
+        } catch {
+          // Keep local prayers as fallback
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const handlePrayClick = async (id: string) => {
+    setJustPrayedId(id);
+    setTimeout(() => setJustPrayedId(null), 1500);
+
+    // Optimistic UI update
     setPrayers((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const alreadyPrayed = item.prayedByMe;
           return {
             ...item,
-            prayersCount: alreadyPrayed ? item.prayersCount - 1 : item.prayersCount + 1,
+            prayersCount: alreadyPrayed ? Math.max(1, item.prayersCount - 1) : item.prayersCount + 1,
             prayedByMe: !alreadyPrayed,
           };
         }
@@ -34,11 +78,21 @@ export const PrayerWall: React.FC<PrayerWallProps> = ({ language }) => {
       })
     );
 
-    setJustPrayedId(id);
-    setTimeout(() => setJustPrayedId(null), 1500);
+    // Sync to Firestore if remote document
+    if (!id.startsWith('prayer-mock-')) {
+      try {
+        await updateDoc(doc(db, 'prayers', id), {
+          prayersCount: increment(1),
+        });
+      } catch (error) {
+        try {
+          handleFirestoreError(error, OperationType.UPDATE, `prayers/${id}`);
+        } catch {}
+      }
+    }
   };
 
-  const handleCreatePrayer = (e: React.FormEvent) => {
+  const handleCreatePrayer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!requestText.trim()) return;
 
@@ -46,7 +100,7 @@ export const PrayerWall: React.FC<PrayerWallProps> = ({ language }) => {
       id: `prayer-${Date.now()}`,
       author: authorName.trim() || (language === 'en' ? 'Anonymous Sister/Brother' : 'Jemaat Tanpa Nama'),
       category,
-      request: requestText,
+      request: requestText.trim(),
       date: language === 'en' ? 'Just now' : 'Baru saja',
       prayersCount: 1,
       isPrivate,
@@ -54,10 +108,27 @@ export const PrayerWall: React.FC<PrayerWallProps> = ({ language }) => {
     };
 
     if (!isPrivate) {
-      setPrayers([newPrayer, ...prayers]);
+      setPrayers((prev) => [newPrayer, ...prev]);
     }
 
     setSubmittedSuccess(true);
+
+    // Save to Firestore
+    try {
+      await addDoc(collection(db, 'prayers'), sanitizeForFirestore({
+        author: newPrayer.author,
+        category: newPrayer.category,
+        request: newPrayer.request,
+        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+        prayersCount: 1,
+        isPrivate: newPrayer.isPrivate,
+        createdAt: new Date().toISOString(),
+      }));
+    } catch (error) {
+      try {
+        handleFirestoreError(error, OperationType.CREATE, 'prayers');
+      } catch {}
+    }
   };
 
   const handleCloseModal = () => {

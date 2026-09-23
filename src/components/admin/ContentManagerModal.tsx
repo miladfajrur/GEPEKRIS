@@ -8,6 +8,7 @@ import {
   DEFAULT_ADMIN_PASSWORD,
   DEFAULT_CHURCH_CONTENT,
 } from '../../context/ChurchContentContext';
+import { testConnection } from '../../firebase';
 import { ImagePickerField, DEFAULT_HERO_PRESETS } from './ImagePickerField';
 import { validateImageUrlString } from '../../lib/imageValidation';
 import {
@@ -38,6 +39,8 @@ import {
   Copy,
   CheckCircle2,
   Globe,
+  Database,
+  Flame,
   Eye,
   EyeOff,
   Pencil,
@@ -47,6 +50,7 @@ import {
   Grid,
   List,
   Package,
+  Heart,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -91,13 +95,10 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     logoutAdmin,
     updateAdminPassword,
     resetAdminPassword,
-    hostingConfig,
-    updateHostingConfig,
-    resetHostingConfig,
-    syncToHosting,
-    syncFromHosting,
-    testHostingConnection,
     clearCacheAndStartFresh,
+    firestoreStatus,
+    firestoreError,
+    syncToFirestore,
   } = useChurchContent();
 
   const [activeTab, setActiveTab] = useState<
@@ -111,11 +112,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
 
   // Hosting State
   const [testingConnection, setTestingConnection] = useState(false);
-  const [syncingToHosting, setSyncingToHosting] = useState(false);
-  const [syncingFromHosting, setSyncingFromHosting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string; details?: any } | null>(null);
-  const [copiedCode, setCopiedCode] = useState(false);
-  const [showApiSecret, setShowApiSecret] = useState(false);
+  const [syncingToFirestore, setSyncingToFirestore] = useState(false);
 
   // Security Form State
   const [oldPassword, setOldPassword] = useState('');
@@ -292,179 +289,18 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     }
   };
 
-  const handleTestConnection = async () => {
-    setTestingConnection(true);
-    setTestResult(null);
-    const res = await testHostingConnection();
-    setTestingConnection(false);
-    setTestResult(res);
-    if (res.success) {
-      showToast('Koneksi ke hosting berhasil!');
+  const handleSyncToFirestore = async () => {
+    setSyncingToFirestore(true);
+    try {
+      const res = await syncToFirestore();
+      if (res?.success) {
+        showToast('✓ Berhasil disinkronkan ke Firebase Firestore!');
+      }
+    } catch (e: any) {
+      alert(`Gagal sinkron ke Firestore: ${e?.message || 'Error'}`);
+    } finally {
+      setSyncingToFirestore(false);
     }
-  };
-
-  const handleSyncToHosting = async () => {
-    setSyncingToHosting(true);
-    setTestResult(null);
-    const res = await syncToHosting();
-    setSyncingToHosting(false);
-    setTestResult(res);
-    if (res.success) {
-      showToast('Konten tersimpan di direktori hosting gepekristretes.org!');
-    }
-  };
-
-  const handleSyncFromHosting = async () => {
-    if (!confirm('Tarik data konten terbaru dari hosting gepekristretes.org? Konten lokal yang belum disimpan akan digantikan.')) {
-      return;
-    }
-    setSyncingFromHosting(true);
-    setTestResult(null);
-    const res = await syncFromHosting();
-    setSyncingFromHosting(false);
-    setTestResult(res);
-    if (res.success) {
-      showToast('Konten berhasil ditarik dari server!');
-    }
-  };
-
-  const handleDownloadContentPhp = () => {
-    const phpCode = `<?php
-/**
- * GEPEKRIS Tretes - Server Directory Storage API
- * File: public_html/api/content.php
- */
-
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Admin-Token");
-header("Content-Type: application/json; charset=UTF-8");
-
-if (\$_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
-
-define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
-
-\$baseDir = dirname(__DIR__);
-\$storageDir = \$baseDir . '/data';
-\$backupDir = \$storageDir . '/backups';
-\$dataFile = \$storageDir . '/church_content.json';
-
-if (!is_dir(\$storageDir)) { @mkdir(\$storageDir, 0755, true); }
-if (!is_dir(\$backupDir)) { @mkdir(\$backupDir, 0755, true); }
-
-\$action = isset(\$_GET['action']) ? trim(\$_GET['action']) : '';
-
-if (\$action === 'ping' || \$action === 'status') {
-    \$isWritable = is_writable(\$storageDir) || (!file_exists(\$storageDir) && is_writable(\$baseDir));
-    echo json_encode([
-        'status' => 'ok',
-        'message' => 'Koneksi ke server gepekristretes.org berhasil!',
-        'server_time' => date('Y-m-d H:i:s'),
-        'php_version' => PHP_VERSION,
-        'storage_directory' => \$storageDir,
-        'directory_writable' => \$isWritable,
-        'content_file_exists' => file_exists(\$dataFile),
-        'file_size_bytes' => file_exists(\$dataFile) ? filesize(\$dataFile) : 0,
-        'last_updated' => file_exists(\$dataFile) ? date('Y-m-d H:i:s', filemtime(\$dataFile)) : null,
-        'total_backups' => is_dir(\$backupDir) ? count(glob(\$backupDir . '/*.json')) : 0
-    ]);
-    exit();
-}
-
-if (\$_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (!file_exists(\$dataFile)) {
-        http_response_code(404);
-        echo json_encode([
-            'status' => 'not_found',
-            'message' => 'Berkas data belum dibuat di server.',
-            'storage_path' => \$dataFile
-        ]);
-        exit();
-    }
-    \$raw = file_get_contents(\$dataFile);
-    echo \$raw;
-    exit();
-}
-
-if (\$_SERVER['REQUEST_METHOD'] === 'POST') {
-    \$headers = getallheaders();
-    \$token = '';
-    if (isset(\$headers['X-Admin-Token'])) \$token = trim(\$headers['X-Admin-Token']);
-    elseif (isset(\$headers['x-admin-token'])) \$token = trim(\$headers['x-admin-token']);
-    elseif (isset(\$_SERVER['HTTP_X_ADMIN_TOKEN'])) \$token = trim(\$_SERVER['HTTP_X_ADMIN_TOKEN']);
-
-    \$rawInput = file_get_contents('php://input');
-    \$inputData = json_decode(\$rawInput, true);
-    if (empty(\$token) && isset(\$inputData['api_secret'])) \$token = trim(\$inputData['api_secret']);
-
-    if (\$token !== API_SECRET_KEY) {
-        http_response_code(401);
-        echo json_encode(['status' => 'unauthorized', 'message' => 'Kunci API Secret tidak valid']);
-        exit();
-    }
-
-    \$contentToSave = isset(\$inputData['content']) ? \$inputData['content'] : \$inputData;
-    if (!\$contentToSave || !is_array(\$contentToSave)) {
-        http_response_code(400);
-        echo json_encode(['status' => 'bad_request', 'message' => 'Format konten tidak valid']);
-        exit();
-    }
-
-    if (file_exists(\$dataFile)) {
-        @copy(\$dataFile, \$backupDir . '/content_' . date('Ymd_His') . '.json');
-    }
-
-    \$jsonStr = json_encode(\$contentToSave, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    \$bytes = file_put_contents(\$dataFile, \$jsonStr, LOCK_EX);
-
-    if (\$bytes === false) {
-        http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'Gagal menulis ke berkas storage. Cek izin CHMOD 755']);
-        exit();
-    }
-
-    echo json_encode([
-        'status' => 'success',
-        'message' => 'Konten berhasil disimpan ke direktori hosting gepekristretes.org!',
-        'storage_file' => \$dataFile,
-        'bytes_saved' => \$bytes,
-        'saved_at' => date('Y-m-d H:i:s')
-    ]);
-    exit();
-}
-
-http_response_code(405);
-echo json_encode(['status' => 'method_not_allowed']);
-`;
-
-    const blob = new Blob([phpCode], { type: 'application/x-php' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'content.php';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    showToast('File content.php siap diunggah ke cPanel!');
-  };
-
-  const handleCopyPhpCode = () => {
-    const code = `<?php
-// Letakkan di public_html/api/content.php pada hosting gepekristretes.org
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Admin-Token");
-header("Content-Type: application/json; charset=UTF-8");
-define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
-// ... Unduh berkas lengkap dengan tombol 'Unduh content.php'`;
-    navigator.clipboard.writeText(code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2500);
-    showToast('Kode berhasil disalin');
   };
 
   const handleApplyGepekrisPreset = () => {
@@ -488,24 +324,25 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
               <h2 className="text-lg font-bold text-gray-900 leading-tight">
                 Website Content Manager
               </h2>
-              <p className="text-xs text-gray-500">
-                Pengelola Konten &bull; Klik &ldquo;Publikasikan ke Hosting&rdquo; agar perubahan tampil untuk semua orang
+              <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Firebase Real-Time Aktif &bull; Perubahan langsung sinkron ke seluruh jemaat</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Direct Push / Save to Server Hosting Button */}
+            {/* Save to Firebase Firestore Button */}
             <Button
-              onClick={handleSyncToHosting}
-              disabled={syncingToHosting}
+              onClick={handleSyncToFirestore}
+              disabled={syncingToFirestore}
               size="sm"
-              className="bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-xs"
-              title="Publikasikan semua perubahan ke hosting server cPanel agar dapat dilihat oleh semua orang"
+              className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-xs"
+              title="Simpan dan sinkronkan data ke Firebase Firestore Database secara real-time"
             >
-              <Upload className={`w-3.5 h-3.5 ${syncingToHosting ? 'animate-bounce' : ''}`} />
-              <span className="hidden sm:inline">{syncingToHosting ? 'Menyimpan ke Hosting...' : 'Publikasikan ke Hosting'}</span>
-              <span className="sm:hidden">{syncingToHosting ? 'Menyimpan...' : 'Publikasi'}</span>
+              <Database className={`w-3.5 h-3.5 ${syncingToFirestore ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{syncingToFirestore ? 'Menyimpan...' : 'Simpan ke Firebase'}</span>
+              <span className="sm:hidden">{syncingToFirestore ? '...' : 'Simpan'}</span>
             </Button>
 
             {toastMessage && (
@@ -643,20 +480,20 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
               onClick={() => setActiveTab('hosting')}
               className={`flex items-center justify-between gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'hosting'
-                  ? 'bg-primary text-white shadow-xs'
+                  ? 'bg-amber-600 text-white shadow-xs'
                   : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
               }`}
             >
               <div className="flex items-center gap-2">
-                <Server className="w-4 h-4 shrink-0" />
-                <span>Hosting Server</span>
+                <Database className="w-4 h-4 shrink-0" />
+                <span>Database Firebase</span>
               </div>
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                 activeTab === 'hosting'
                   ? 'bg-white/20 text-white'
                   : 'bg-emerald-100 text-emerald-800'
               }`}>
-                gepekristretes.org
+                Real-Time
               </span>
             </button>
 
@@ -1589,22 +1426,13 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                   </div>
 
                   <Button
-                    onClick={async () => {
-                      setSyncingToHosting(true);
-                      const res = await syncToHosting();
-                      setSyncingToHosting(false);
-                      if (res.success) {
-                        showToast('✓ Berhasil disimpan ke hosting server!');
-                      } else {
-                        alert(`Gagal push ke hosting: ${res.message}`);
-                      }
-                    }}
-                    disabled={syncingToHosting}
+                    onClick={handleSyncToFirestore}
+                    disabled={syncingToFirestore}
                     className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-2 text-xs self-start sm:self-auto"
                     size="sm"
                   >
-                    <Server className={`w-3.5 h-3.5 ${syncingToHosting ? 'animate-spin' : ''}`} />
-                    <span>{syncingToHosting ? 'Menyimpan...' : 'Simpan ke Hosting (Push)'}</span>
+                    <Database className={`w-3.5 h-3.5 ${syncingToFirestore ? 'animate-spin' : ''}`} />
+                    <span>{syncingToFirestore ? 'Menyimpan...' : 'Simpan ke Firebase'}</span>
                   </Button>
                 </div>
 
@@ -2080,160 +1908,69 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900">
                       gepekristretes.org
                     </span>
-                    <span className="text-xs text-gray-500">• Server Directory Storage</span>
+                    <span className="text-xs text-gray-500">• Database & Server Storage</span>
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mt-1">
-                    Penyimpanan Direktori di Hosting gepekristretes.org
+                    Database Firestore & Penyimpanan Hosting
                   </h3>
                   <p className="text-xs text-gray-600">
-                    Hubungkan CMS website ini langsung ke penyimpanan direktori hosting Anda. Setiap perubahan jadwal, warta jemaat, dan pengumuman akan tersimpan permanen di folder server dan otomatis dimuat oleh seluruh jemaat.
+                    Website GEPEKRIS Tretes telah terhubung ke <strong>Firebase Firestore</strong> dan direktori hosting server. Setiap perubahan jadwal, warta jemaat, dan pokok doa tersimpan aman di cloud database dan termuat secara otomatis.
                   </p>
                 </div>
 
-                {/* Critical Explanation: Mengapa Vercel tidak berubah di HP orang lain */}
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 space-y-2">
-                  <div className="flex items-start gap-2.5">
-                    <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-amber-950 uppercase tracking-wide">
-                        Mengapa perubahan di Vercel tidak berubah di HP / perangkat orang lain?
-                      </h4>
-                      <p className="text-xs text-amber-900 leading-relaxed">
-                        <strong>Vercel adalah hosting statis (tanpa penyimpanan file permanen)</strong>. Saat Anda mengedit di panel admin ini saat website berada di Vercel, perubahannya hanya tersimpan di memori browser lokal perangkat Anda sendiri (<em>localStorage</em>). Pengunjung lain membuka halaman statis Vercel yang tidak memiliki akses ke browser Anda.
-                      </p>
-                      <p className="text-xs text-amber-900 leading-relaxed">
-                        <strong>Solusi Permanen (Hosting cPanel):</strong> Aplikasi ini sudah dibuat lengkap dengan backend PHP (<code>api/content.php</code>). Saat Anda upload ke cPanel, script ini akan menulis langsung berkas <code>data/church_content.json</code> di server cPanel. Begitu Anda klik <strong className="text-emerald-800">&ldquo;Publikasikan ke Hosting&rdquo;</strong>, <strong>semua jemaat dan pengunjung langsung melihat perubahan secara real-time!</strong>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Connection Status & Quick Sync Dashboard */}
-                <div className="p-5 bg-gradient-to-br from-emerald-50/70 via-teal-50/40 to-cyan-50/50 rounded-2xl border border-emerald-200/80 space-y-4">
+                {/* Firebase Firestore Status & Control Card */}
+                <div className="p-5 bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-yellow-50/60 rounded-2xl border border-amber-300 space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                        <Server className="w-5 h-5" />
+                      <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                        <Database className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                          <span>Status Sinkronisasi Hosting</span>
-                          {hostingConfig.lastSyncStatus === 'success' && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                              <CheckCircle2 className="w-3 h-3" /> Tersinkron
-                            </span>
-                          )}
-                          {hostingConfig.lastSyncStatus === 'syncing' && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300 animate-pulse">
-                              <RefreshCw className="w-3 h-3 animate-spin" /> Sedang Proses...
-                            </span>
-                          )}
-                          {hostingConfig.lastSyncStatus === 'error' && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300">
-                              <AlertCircle className="w-3 h-3" /> Perlu Cek
-                            </span>
-                          )}
-                          {hostingConfig.lastSyncStatus === 'idle' && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                              Siap Sinkron
-                            </span>
-                          )}
-                        </h4>
-                        <p className="text-xs text-gray-600 font-mono">
-                          {hostingConfig.serverUrl}
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-gray-900">Firebase Firestore Cloud</h4>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <CheckCircle2 className="w-3 h-3" /> Terhubung Aktif
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-0.5">
+                          Project ID: <strong className="font-mono text-amber-800">avian-balm-mtgzl</strong> &bull; Database: <span className="font-mono text-gray-600 text-[11px]">ai-studio-gracechurchcommu-bf0eab8e-bc30-41c4-91e0-15cdc523d875</span>
                         </p>
                       </div>
                     </div>
-
-                    <div className="text-xs text-gray-500 text-left sm:text-right">
-                      {hostingConfig.lastSyncTime ? (
-                        <span>
-                          Sinkron terakhir:{' '}
-                          {(() => {
-                            try {
-                              const d = new Date(hostingConfig.lastSyncTime);
-                              return isNaN(d.getTime())
-                                ? '-'
-                                : d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
-                            } catch {
-                              return '-';
-                            }
-                          })()}
-                        </span>
-                      ) : (
-                        <span className="italic text-gray-400">Belum pernah disinkronkan sesi ini</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Sync Actions Bar */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                     <Button
-                      onClick={handleSyncToHosting}
-                      disabled={syncingToHosting || testingConnection}
-                      className="cursor-pointer text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center gap-1.5 shadow-xs py-2"
+                      onClick={handleSyncToFirestore}
+                      disabled={syncingToFirestore}
+                      size="sm"
+                      className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-xs shrink-0"
                     >
-                      <Upload className={`w-3.5 h-3.5 ${syncingToHosting ? 'animate-bounce' : ''}`} />
-                      <span>{syncingToHosting ? 'Menyimpan...' : 'Simpan ke Hosting (Push)'}</span>
-                    </Button>
-
-                    <Button
-                      onClick={handleSyncFromHosting}
-                      disabled={syncingFromHosting || testingConnection}
-                      variant="outline"
-                      className="cursor-pointer text-xs font-semibold text-teal-800 border-teal-300 hover:bg-teal-100/60 flex items-center justify-center gap-1.5 py-2"
-                    >
-                      <Download className={`w-3.5 h-3.5 ${syncingFromHosting ? 'animate-bounce' : ''}`} />
-                      <span>{syncingFromHosting ? 'Mengunduh...' : 'Tarik dari Hosting (Pull)'}</span>
-                    </Button>
-
-                    <Button
-                      onClick={handleTestConnection}
-                      disabled={testingConnection || syncingToHosting}
-                      variant="outline"
-                      className="cursor-pointer text-xs font-semibold text-gray-700 border-gray-300 hover:bg-white flex items-center justify-center gap-1.5 py-2"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${testingConnection ? 'animate-spin' : ''}`} />
-                      <span>{testingConnection ? 'Menguji...' : 'Uji Koneksi (Ping)'}</span>
+                      <Database className={`w-3.5 h-3.5 ${syncingToFirestore ? 'animate-spin' : ''}`} />
+                      {syncingToFirestore ? 'Menyimpan...' : 'Sinkronkan ke Firestore'}
                     </Button>
                   </div>
-
-                  {/* Test or Sync Result Alert */}
-                  {testResult && (
-                    <div className={`p-3.5 rounded-xl border text-xs leading-relaxed animate-in fade-in flex items-start gap-2.5 ${
-                      testResult.success
-                        ? 'bg-emerald-100/90 text-emerald-900 border-emerald-300'
-                        : 'bg-amber-100/90 text-amber-900 border-amber-300'
-                    }`}>
-                      {testResult.success ? (
-                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-700 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-700 mt-0.5" />
-                      )}
-                      <div className="flex-1 space-y-1">
-                        <p className="font-semibold">{testResult.message}</p>
-                        {testResult.details && (
-                          <div className="mt-1 pt-1 border-t border-black/10 font-mono text-[11px] text-gray-800 space-y-0.5">
-                            {testResult.details.storage_directory && (
-                              <div>Direktori: <strong>{testResult.details.storage_directory}</strong></div>
-                            )}
-                            {testResult.details.directory_writable !== undefined && (
-                              <div>Izin Tulis Server: <strong className={testResult.details.directory_writable ? 'text-emerald-700' : 'text-red-700'}>
-                                {testResult.details.directory_writable ? 'Dapat Menulis (Writable)' : 'Perlu CHMOD 755'}
-                              </strong></div>
-                            )}
-                            {testResult.details.bytes_saved && (
-                              <div>Ukuran Terkirim: <strong>{testResult.details.bytes_saved} bytes</strong></div>
-                            )}
-                            {testResult.details.last_updated && (
-                              <div>Waktu File Server: <strong>{testResult.details.last_updated}</strong></div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  <p className="text-xs text-amber-900 bg-white/80 rounded-xl p-2.5 border border-amber-200">
+                    💡 <strong>Sinkronisasi Otomatis:</strong> Data website GEPEKRIS Tretes dan permohonan doa (Prayer Wall) kini tersimpan langsung di Firebase Firestore. Seluruh perubahan akan otomatis disinkronkan ke semua jemaat yang membuka website.
+                  </p>
                 </div>
+
+                {/* Real-time synchronization explanation */}
+                <div className="p-4 bg-emerald-50/80 rounded-2xl border border-emerald-300 space-y-2">
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wide">
+                        Penyimpanan Real-Time Aktif (Cloud Firestore)
+                      </h4>
+                      <p className="text-xs text-emerald-900 leading-relaxed">
+                        Seluruh data website (Jadwal, Warta, Komisi, Galeri Foto, dan Permohonan Doa) kini disimpan dan dipancarkan langsung melalui <strong>Google Cloud Firestore</strong>. Anda tidak perlu lagi mengunggah berkas zip atau mengatur PHP di cPanel.
+                      </p>
+                      <p className="text-xs text-emerald-900 leading-relaxed">
+                        Saat Anda menyimpan perubahan di panel admin ini, <strong>semua jemaat yang sedang membuka website di HP atau laptop akan langsung melihat perubahan secara instan</strong> (real-time) tanpa perlu refresh halaman.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+
 
                 {/* Preset Profile Shortcut */}
                 <div className="p-4 bg-amber-50/70 rounded-2xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2277,301 +2014,114 @@ define('API_SECRET_KEY', '${hostingConfig.apiSecret || 'gepekristretes2025'}');
                   </Button>
                 </div>
 
-                {/* Server Directory Configuration Form */}
-                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200/80 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-primary" />
-                    <h4 className="text-sm font-semibold text-gray-900">
-                      Konfigurasi Parameter Hosting & API
-                    </h4>
+                {/* Active Collections Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                        <FolderOpen className="w-4 h-4 text-amber-600" />
+                        <span>Koleksi church_content/main</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Live Data
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      Menyimpan seluruh konfigurasi konten publik gereja secara real-time:
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                      <div className="p-2 rounded-lg bg-stone-50 border border-stone-100">
+                        <span className="text-gray-500 text-[11px] block">Jadwal Ibadah</span>
+                        <strong className="text-stone-900 text-sm">{content.services.length}</strong>
+                      </div>
+                      <div className="p-2 rounded-lg bg-stone-50 border border-stone-100">
+                        <span className="text-gray-500 text-[11px] block">Komisi Pelayanan</span>
+                        <strong className="text-stone-900 text-sm">{content.ministries.length}</strong>
+                      </div>
+                      <div className="p-2 rounded-lg bg-stone-50 border border-stone-100">
+                        <span className="text-gray-500 text-[11px] block">Warta Kegiatan</span>
+                        <strong className="text-stone-900 text-sm">{content.events.length}</strong>
+                      </div>
+                      <div className="p-2 rounded-lg bg-stone-50 border border-stone-100">
+                        <span className="text-gray-500 text-[11px] block">Galeri Foto</span>
+                        <strong className="text-stone-900 text-sm">{content.gallery?.length || 0}</strong>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="space-y-3.5">
-                    {/* Server URL */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-semibold text-gray-700">
-                          URL Endpoint API Direktori (content.php)
-                        </label>
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            onClick={() => updateHostingConfig({ serverUrl: 'https://gepekristretes.org/api/content.php' })}
-                            className="text-[10px] text-primary hover:underline font-mono"
-                          >
-                            [Domain Asli]
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => updateHostingConfig({ serverUrl: '/api/content.php' })}
-                            className="text-[10px] text-primary hover:underline font-mono"
-                          >
-                            [Relatif /api/]
-                          </button>
-                        </div>
+                  <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                        <Heart className="w-4 h-4 text-rose-500" />
+                        <span>Koleksi prayers</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                        Interactive
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      Menyimpan permohonan doa interaktif (Prayer Wall) dari jemaat yang masuk secara langsung melalui website.
+                    </p>
+                    <div className="p-3 rounded-xl bg-stone-50 border border-stone-100 text-xs space-y-1">
+                      <div className="flex items-center justify-between text-[11px] text-stone-600">
+                        <span>Pembaruan Konten Terakhir:</span>
                       </div>
-                      <Input
-                        value={hostingConfig.serverUrl}
-                        onChange={(e) => updateHostingConfig({ serverUrl: e.target.value.trim() })}
-                        placeholder="https://gepekristretes.org/api/content.php"
-                        className="font-mono text-xs"
-                      />
-                      <p className="text-[11px] text-gray-500 mt-1">
-                        Alamat URL di mana file <code>content.php</code> dapat diakses dari browser.
+                      <p className="font-mono text-xs text-stone-800 font-semibold">
+                        {content.lastUpdated ? new Date(content.lastUpdated).toLocaleString('id-ID') : '-'}
                       </p>
-                    </div>
-
-                    {/* API Secret Token */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Kunci Rahasia API (API Secret Key)
-                      </label>
-                      <div className="relative">
-                        <Input
-                          type={showApiSecret ? "text" : "password"}
-                          value={hostingConfig.apiSecret}
-                          onChange={(e) => updateHostingConfig({ apiSecret: e.target.value.trim() })}
-                          placeholder="gepekristretes2025"
-                          className="font-mono text-xs pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowApiSecret(!showApiSecret)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                        >
-                          {showApiSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                      <p className="text-[11px] text-gray-500 mt-1">
-                        Kunci otentikasi pengamanan agar hanya admin yang dapat menulis data ke server hosting.
-                      </p>
-                    </div>
-
-                    {/* Server Storage Path */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">
-                          Target Lokasi Berkas JSON di Server
-                        </label>
-                        <Input
-                          value={hostingConfig.storagePath}
-                          onChange={(e) => updateHostingConfig({ storagePath: e.target.value })}
-                          className="font-mono text-xs bg-gray-100 text-gray-700"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">
-                          Folder Backup Otomatis
-                        </label>
-                        <Input
-                          disabled
-                          value="public_html/data/backups/"
-                          className="font-mono text-xs bg-gray-100 text-gray-500 cursor-not-allowed"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Automation Checkboxes */}
-                    <div className="space-y-2 pt-2 border-t border-gray-200/70">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={hostingConfig.autoLoad}
-                          onChange={(e) => updateHostingConfig({ autoLoad: e.target.checked })}
-                          className="rounded text-primary focus:ring-primary h-4 w-4"
-                        />
-                        <span className="text-xs text-gray-700">
-                          <strong>Otomatis muat konten server</strong> saat pengunjung membuka website gepekristretes.org
-                        </span>
-                      </label>
-
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={hostingConfig.enabled}
-                          onChange={(e) => updateHostingConfig({ enabled: e.target.checked })}
-                          className="rounded text-primary focus:ring-primary h-4 w-4"
-                        />
-                        <span className="text-xs text-gray-700">
-                          Aktifkan integrasi hosting gepekristretes.org
-                        </span>
-                      </label>
                     </div>
                   </div>
                 </div>
 
-                {/* Deployment Guide & File Download Card */}
-                <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-200/80 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <Globe className="w-5 h-5 text-blue-700" />
-                      <div>
-                        <h4 className="text-sm font-semibold text-blue-950">
-                          Panduan Deployment ke Hosting cPanel (Lengkap & Mudah)
-                        </h4>
-                        <p className="text-xs text-blue-800">
-                          Pilih salah satu dari 2 metode di bawah ini sesuai kebutuhan Anda:
-                        </p>
-                      </div>
-                    </div>
-                    <a
-                      href="/gepekristretes-guide.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 underline"
+                {/* Manual Action & Connection Test */}
+                <div className="p-5 bg-gradient-to-br from-stone-50 via-gray-50 to-amber-50/30 rounded-2xl border border-stone-200 space-y-3">
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    <span>Aksi & Uji Sambungan</span>
+                  </h4>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <Button
+                      onClick={handleSyncToFirestore}
+                      disabled={syncingToFirestore}
+                      size="sm"
+                      className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-xs"
                     >
-                      <span>Buka Panduan Lengkap</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
+                      <Database className={`w-3.5 h-3.5 ${syncingToFirestore ? 'animate-spin' : ''}`} />
+                      <span>{syncingToFirestore ? 'Menyimpan...' : 'Sinkronkan Sekarang ke Firebase'}</span>
+                    </Button>
 
-                  {/* Master ZIP Package Download Banner */}
-                  <div className="p-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 rounded-xl text-white space-y-3 shadow-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-5 h-5 text-amber-300" />
-                          <h5 className="font-bold text-sm text-white">Paket Berkas cPanel Siap Upload (cpanel_deploy.zip)</h5>
-                          <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold text-amber-200">
-                            Instant Deploy
-                          </span>
-                        </div>
-                        <p className="text-xs text-emerald-50 leading-relaxed max-w-xl">
-                          Berkas ZIP ini sudah berisi seluruh website siap saji (React HTML, CSS, JavaScript, API PHP <code>content.php</code>, <code>.htaccess</code>, dan database <code>church_content.json</code>). Tinggal upload ke <code>public_html/</code> di cPanel dan klik <strong>Extract</strong>!
-                        </p>
-                      </div>
-                      <a
-                        href="/cpanel_deploy.zip"
-                        download="cpanel_deploy.zip"
-                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs shadow-md transition-all cursor-pointer shrink-0"
-                      >
-                        <Download className="w-4 h-4 text-emerald-700" />
-                        <span>Unduh cpanel_deploy.zip</span>
-                      </a>
-                    </div>
-                  </div>
+                    <Button
+                      onClick={async () => {
+                        setTestingConnection(true);
+                        try {
+                          const ok = await testConnection();
+                          if (ok) {
+                            showToast('✓ Sambungan ke Firebase Firestore Berhasil & Responsif!');
+                          } else {
+                            showToast('Koneksi Firestore mengalami kendala.');
+                          }
+                        } finally {
+                          setTestingConnection(false);
+                        }
+                      }}
+                      disabled={testingConnection}
+                      variant="outline"
+                      size="sm"
+                      className="cursor-pointer text-xs flex items-center gap-1.5 border-stone-300 hover:bg-stone-100"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${testingConnection ? 'animate-spin' : ''}`} />
+                      <span>{testingConnection ? 'Memeriksa...' : 'Uji Koneksi (Ping)'}</span>
+                    </Button>
 
-                  {/* Method A: Full cPanel Hosting (Recommended) */}
-                  <div className="p-4 bg-white rounded-xl border border-blue-200 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                        REKOMENDASI
-                      </span>
-                      <h5 className="text-xs font-bold text-gray-900">
-                        METODE 1: Hosting Penuh di cPanel (Website & Data dalam 1 Hosting)
-                      </h5>
-                    </div>
-                    <p className="text-[11px] text-gray-600 leading-relaxed">
-                      Sangat praktis, tidak perlu Vercel lagi. Website React & sistem penyimpanan PHP berjalan langsung di hosting cPanel Anda.
-                    </p>
-                    <ol className="text-xs text-gray-700 space-y-2 list-decimal list-inside bg-gray-50 p-3 rounded-lg border border-gray-100 font-medium">
-                      <li>
-                        Jalankan perintah <code>npm run build</code> di komputer Anda untuk menghasilkan folder <code>dist/</code>.
-                      </li>
-                      <li>
-                        Buka cPanel &rarr; <strong>File Manager</strong> &rarr; buka folder <code>public_html/</code>.
-                      </li>
-                      <li>
-                        Upload seluruh berkas dan folder yang ada di dalam <strong>dist/</strong> ke dalam <code>public_html/</code> (termasuk <code>index.html</code>, <code>index.php</code>, <code>.htaccess</code>, folder <code>assets/</code>, folder <code>api/</code>, dan folder <code>data/</code>).
-                      </li>
-                      <li>
-                        Pastikan izin folder (CHMOD) <code>public_html/data/</code> adalah <strong>755</strong> (atau 777) agar PHP dapat menulis berkas data.
-                      </li>
-                      <li>
-                        Buka domain Anda, login Admin CMS, lalu klik tombol hijau <strong className="text-emerald-700">&ldquo;Publikasikan ke Hosting&rdquo;</strong> di pojok kanan atas modal ini.
-                      </li>
-                    </ol>
-                  </div>
-
-                  {/* Method B: Vercel Frontend + cPanel Backend */}
-                  <div className="p-4 bg-white rounded-xl border border-blue-200 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
-                        ALTERNATIF
-                      </span>
-                      <h5 className="text-xs font-bold text-gray-900">
-                        METODE 2: Website Tetap di Vercel, Data Tersimpan di cPanel
-                      </h5>
-                    </div>
-                    <p className="text-[11px] text-gray-600 leading-relaxed">
-                      Jika domain Anda diarahkan ke Vercel, Anda dapat menjadikan cPanel sebagai server API database:
-                    </p>
-                    <ol className="text-xs text-gray-700 space-y-1.5 list-decimal list-inside bg-gray-50 p-3 rounded-lg border border-gray-100 font-medium">
-                      <li>
-                        Upload file <code>content.php</code> ke folder <code>public_html/api/content.php</code> di hosting cPanel Anda.
-                      </li>
-                      <li>
-                        Pada formulir di atas, ubah <strong>URL Endpoint API</strong> menjadi URL cPanel Anda (contoh: <code>https://domain-cpanel-anda.com/api/content.php</code>).
-                      </li>
-                      <li>
-                        Klik <strong>Uji Koneksi (Ping)</strong>, lalu klik <strong>Publikasikan ke Hosting</strong>.
-                      </li>
-                    </ol>
-                  </div>
-
-                  {/* Download Helper Files */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                    <div className="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-1">
-                      <p className="font-semibold text-gray-900 flex items-center gap-1.5">
-                        <Download className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Unduh Script content.php</span>
-                      </p>
-                      <p className="text-[11px] text-gray-600">
-                        Script backend PHP untuk ditaruh di <code>public_html/api/content.php</code> di cPanel.
-                      </p>
-                      <Button
-                        onClick={handleDownloadContentPhp}
-                        size="sm"
-                        variant="outline"
-                        className="w-full mt-2 text-[11px] cursor-pointer border-blue-300 text-blue-700 hover:bg-blue-50"
-                      >
-                        <Download className="w-3 h-3 mr-1" /> Unduh content.php
-                      </Button>
-                    </div>
-
-                    <div className="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-1">
-                      <p className="font-semibold text-gray-900 flex items-center gap-1.5">
-                        <Download className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Unduh church_content.json Terkini</span>
-                      </p>
-                      <p className="text-[11px] text-gray-600">
-                        Salinan seluruh teks, jadwal, warta, dan foto untuk ditaruh di <code>public_html/data/</code>.
-                      </p>
-                      <Button
-                        onClick={handleExportJson}
-                        size="sm"
-                        variant="outline"
-                        className="w-full mt-2 text-[11px] cursor-pointer border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                      >
-                        <Download className="w-3 h-3 mr-1" /> Unduh church_content.json
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Code Snippet Box */}
-                  <div className="pt-2">
-                    <div className="flex items-center justify-between text-xs text-blue-900 mb-1">
-                      <span className="font-semibold">Kode PHP API (public_html/api/content.php):</span>
-                      <button
-                        type="button"
-                        onClick={handleCopyPhpCode}
-                        className="flex items-center gap-1 text-[11px] text-blue-700 hover:underline cursor-pointer"
-                      >
-                        {copiedCode ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                        <span>{copiedCode ? 'Tersalin!' : 'Salin Kode'}</span>
-                      </button>
-                    </div>
-                    <pre className="p-3 bg-gray-900 text-emerald-400 font-mono text-[11px] rounded-xl overflow-x-auto max-h-36">
-{`<?php
-// Endpoint API Penyimpanan Direktori GEPEKRIS Tretes
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Admin-Token");
-header("Content-Type: application/json; charset=UTF-8");
-define('API_SECRET_KEY', '${hostingConfig.apiSecret}');
-$dataFile = dirname(__DIR__) . '/data/church_content.json';
-// Otomatis menyimpan backup dan melayani permintaan sinkronisasi dari CMS.`}
-                    </pre>
+                    <Button
+                      onClick={handleExportJson}
+                      variant="outline"
+                      size="sm"
+                      className="cursor-pointer text-xs flex items-center gap-1.5 border-stone-300 hover:bg-stone-100 ml-auto"
+                    >
+                      <Download className="w-3.5 h-3.5 text-stone-600" />
+                      <span>Unduh Cadangan JSON (church_content.json)</span>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -2708,13 +2258,13 @@ $dataFile = dirname(__DIR__) . '/data/church_content.json';
             <Button
               size="sm"
               variant="outline"
-              onClick={handleSyncToHosting}
-              disabled={syncingToHosting}
-              className="cursor-pointer text-xs border-emerald-600 text-emerald-700 hover:bg-emerald-50 flex items-center gap-1.5"
-              title="Kirim dan simpan data ke server hosting gepekristretes.org"
+              onClick={handleSyncToFirestore}
+              disabled={syncingToFirestore}
+              className="cursor-pointer text-xs border-amber-600 text-amber-800 hover:bg-amber-50 flex items-center gap-1.5"
+              title="Sinkronkan data ke Cloud Firestore"
             >
-              <Server className="w-3.5 h-3.5" />
-              <span>{syncingToHosting ? 'Menyimpan ke Hosting...' : 'Simpan ke Hosting (Push)'}</span>
+              <Database className={`w-3.5 h-3.5 ${syncingToFirestore ? 'animate-spin' : ''}`} />
+              <span>{syncingToFirestore ? 'Menyimpan ke Firebase...' : 'Simpan ke Firebase'}</span>
             </Button>
             <Button size="sm" onClick={onClose} className="cursor-pointer bg-primary text-white hover:bg-primary/90">
               Selesai & Lihat Web
