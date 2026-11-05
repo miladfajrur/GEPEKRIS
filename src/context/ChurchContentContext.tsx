@@ -90,6 +90,13 @@ export interface ChurchMinistryItem {
   features: string[];
 }
 
+export interface ChurchDailyVerse {
+  verseReference: string;
+  verseText: string;
+  reflectionNote: string;
+  updatedDate?: string;
+}
+
 export interface ChurchEventItem {
   id: string;
   title: string;
@@ -103,6 +110,8 @@ export interface ChurchEventItem {
   image?: string;
   author?: string;
   slug?: string;
+  bibleVerse?: string;
+  bibleQuote?: string;
 }
 
 export interface ChurchGalleryItem {
@@ -158,11 +167,19 @@ export interface ChurchWebsiteContent {
   ministries: ChurchMinistryItem[];
   additionalMinistries?: ChurchAdditionalMinistryItem[];
   events: ChurchEventItem[];
+  dailyVerse?: ChurchDailyVerse;
   gallery?: ChurchGalleryItem[];
   giving?: ChurchGivingContent;
   mediaLibrary?: ChurchMediaItem[];
   lastUpdated?: string;
 }
+
+export const DEFAULT_DAILY_VERSE: ChurchDailyVerse = {
+  verseReference: "Mazmur 119:105",
+  verseText: "Firman-Mu itu pelita bagi kakiku dan terang bagi jalanku.",
+  reflectionNote: "Dalam setiap langkah dan keputusan hidup hari ini, biarlah kebenaran Firman Tuhan menuntun hati dan keluarga kita berjalan dalam damai sejahtera Kristus.",
+  updatedDate: "Renungan Harian Jemaat",
+};
 
 export function formatYouTubeEmbedUrl(url: string): string {
   if (!url) return '';
@@ -368,14 +385,31 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
   ],
   events: [
     {
+      id: "evt-renungan-1",
+      title: "Menemukan Damai Sejahtera Kristus di Tengah Badai Kehidupan",
+      date: "Renungan Pekan Ini",
+      time: "Bacaan 4 Menit",
+      location: "Mimbar Firman GEPEKRIS Tretes",
+      description: "Ketika kekuatiran dunia menekan hati kita, Tuhan Yesus mengundang setiap kita untuk datang kepada-Nya dan menerima kelegaan sejati.",
+      category: "Renungan & Firman Tuhan",
+      featured: true,
+      bibleVerse: "Yohanes 14:27",
+      bibleQuote: "Damai sejahtera Kutinggalkan bagimu. Damai sejahtera-Ku Kuberikan kepadamu, dan apa yang Kuberikan tidak seperti yang diberikan oleh dunia kepadamu. Janganlah gelisah dan gentar hatimu.",
+      image: "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&w=1200&q=80",
+      author: "Pelayan Firman GEPEKRIS Tretes",
+      content: `Sering kali kita mengukur damai sejahtera dari seberapa tenang keadaan di sekitar kita—ketika pekerjaan lancar, kesehatan prima, dan keluarga tanpa pergumulan. Namun Firman Tuhan dalam Injil Yohanes 14:27 mengingatkan kita bahwa damai sejahtera yang berasal dari Kristus berbeda dengan apa yang ditawarkan dunia.\n\nDamai sejahtera dari dunia bergantung pada situasi luar yang mudah berubah, sedangkan damai sejahtera Kristus berakar pada hadirat dan janji penyertaan Tuhan yang tidak pernah berubah. Sekalipun angin pergumulan menerpa, hati yang terpaut pada Firman-Nya tetap memiliki jangkar pengharapan yang teguh.\n\nHari ini, apapun beban atau pergumulan yang sedang Bapak, Ibu, dan Saudara hadapi, bawalah di dalam doa ke hadapan Tuhan. Percayalah bahwa Gembala Agung kita memegang kendali atas setiap musim kehidupan kita. Kiranya kasih dan damai sejahtera Kristus memerintah di dalam hati dan rumah tangga kita senantiasa. Tuhan Yesus memberkati.`
+    },
+    {
       id: "evt-1",
       title: "Kebaktian Perjamuan Kudus Awal Bulan",
       date: "Minggu Pertama Bulan Ini",
       time: "07:30 & 10:00 WIB",
       location: "Gedung Gereja GEPEKRIS Tretes",
-      description: "Mengingat pengorbanan dan karya penebusan Kristus melalui perjamuan kudus bersama.",
+      description: "Mengingat pengorbanan dan karya penebusan Kristus melalui perjamuan kudus bersama seluruh keluarga jemaat.",
       category: "Ibadah Khusus",
       featured: true,
+      bibleVerse: "1 Korintus 11:26",
+      bibleQuote: "Sebab setiap kali kamu makan roti ini dan minum cawan ini, kamu memberitakan kematian Tuhan sampai Ia datang.",
       image: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=1200&q=80",
       author: "Majelis Gereja GEPEKRIS Tretes",
       content: `Puji syukur kepada Tuhan Yesus Kristus, Kepala Gereja kita. Segenap jemaat dan simpatisan diundang untuk hadir dan bersekutu dalam Kebaktian Perjamuan Kudus Awal Bulan di Gereja Persekutuan Kristen (GEPEKRIS) Tretes.\n\nPerjamuan Kudus ini dilaksanakan dalam dua sesi ibadah umum (Kebaktian I Pkl. 07:30 WIB dan Kebaktian II Pkl. 10:00 WIB). Seluruh jemaat yang telah menerima sakramen baptisan kudus / sidi diharapkan mempersiapkan hati dengan doa dan pembacaan firman Tuhan.\n\nMari kita datang dengan kerinduan hati untuk mengingat kembali kasih pengorbanan Kristus di kayu salib, memperbaharui komitmen hidup kudus, serta mempererat tali persaudaraan antar jemaat dalam persekutuan tubuh Kristus. Bagi jemaat yang membutuhkan pelayanan perjamuan kudus di rumah bagi lansia yang sakit, silakan menghubungi sekretariat gereja atau koordinator diakonia.`
@@ -387,8 +421,10 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
       time: "Jumat - Minggu",
       location: "Wisma Retret Tretes, Prigen",
       description: "Menikmati waktu pembaharuan rohani, kebersamaan antar jemaat, dan firman yang mendalam di udara sejuk Tretes.",
-      category: "Retret",
+      category: "Warta Jemaat",
       featured: false,
+      bibleVerse: "Kolose 2:7",
+      bibleQuote: "Hendaklah kamu berakar di dalam Dia dan dibangun di atas Dia, hendaklah kamu bertambah teguh dalam iman yang telah diajarkan kepadamu, dan hendaklah hatimu melimpah dengan syukur.",
       image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80",
       author: "Panitia Pembinaan Rohani",
       content: `Sebagai bagian dari program pertumbuhan iman jemaat GEPEKRIS Tretes, gereja mengadakan Retret Pembinaan Rohani Keluarga dengan tema: 'Berakar Kuat, Berbuah Lebat'.\n\nKegiatan ini dirancang untuk seluruh kalangan usia—anak-anak, pemuda-remaja, hingga orang tua dan lansia. Selama tiga hari dua malam, jemaat akan diajak mendalami firman Tuhan dalam sesi pleno, kelompok sharing doa yang intim, workshop keluarga kristiani, serta malam puji-pujian dan keakraban di sejuknya hawa pegunungan Tretes.\n\nPendaftaran telah dibuka melalui sekretariat gereja. Tempat terbatas demi kenyamanan akomodasi. Mari luangkan waktu sejenak dari kesibukan rutinitas untuk disegarkan kembali dalam hadirat Tuhan bersama keluarga tercinta.`
@@ -402,6 +438,8 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
       description: "Pemberian paket sembako dan pelayanan kasih bagi masyarakat sekitar lingkungan gereja.",
       category: "Diakonia",
       featured: false,
+      bibleVerse: "Galatia 6:10",
+      bibleQuote: "Karena itu, selama masih ada kesempatan bagi kita, marilah kita berbuat baik kepada semua orang, tetapi terutama kepada kawan-kawan kita seiman.",
       image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80",
       author: "Komisi Diakonia & Sosial",
       content: `Gereja bukan hanya tempat beribadah di dalam gedung, tetapi juga terang dan garam di tengah masyarakat sekitar. Komisi Diakonia GEPEKRIS Tretes kembali menyelenggarakan 'Aksi Kasih Berbagi Berkat'.\n\nDalam aksi sosial ini, gereja menyalurkan paket bahan pokok (sembako), vitamin, serta pemeriksaan kesehatan dasar gratis bagi warga lansia dan keluarga prasejahtera di sekitar kawasan Prigen dan Tretes.\n\nBagi jemaat yang terbeban untuk mendukung pengadaan paket bahan pokok maupun tenaga sukarelawan medis / logistik, persembahan kasih dan partisipasi dapat dikoordinasikan langsung bersama tim Diakonia. Kiranya kasih Kristus terpancar nyata melalui pelayanan bersama ini.`
@@ -531,9 +569,10 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
       date: "Juli 2025"
     }
   ],
+  dailyVerse: DEFAULT_DAILY_VERSE,
   additionalMinistries: DEFAULT_ADDITIONAL_MINISTRIES,
   giving: DEFAULT_GIVING_CONTENT,
-  lastUpdated: "2026-09-23T04:00:00.000Z",
+  lastUpdated: "2026-10-05T04:00:00.000Z",
 };
 
 export interface HostingDirectoryConfig {
@@ -738,6 +777,7 @@ export const GEPEKRIS_TRETES_CONTENT: ChurchWebsiteContent = {
       date: "Juli 2025"
     }
   ],
+  dailyVerse: DEFAULT_DAILY_VERSE,
   additionalMinistries: DEFAULT_ADDITIONAL_MINISTRIES,
   giving: DEFAULT_GIVING_CONTENT,
 };
@@ -786,6 +826,7 @@ interface ContentContextType {
   addEvent: (item: Omit<ChurchEventItem, 'id'>) => void;
   deleteEvent: (id: string) => void;
   updateEventItem: (id: string, updated: Partial<ChurchEventItem>) => void;
+  updateDailyVerse: (data: Partial<ChurchDailyVerse>) => void;
   updateGallery: (gallery: ChurchGalleryItem[]) => void;
   addGalleryItem: (item: Omit<ChurchGalleryItem, 'id'>) => void;
   deleteGalleryItem: (id: string) => void;
@@ -908,9 +949,19 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
         if (e?.image !== undefined && e?.image !== null) item.image = e.image;
         if (e?.author !== undefined && e?.author !== null) item.author = e.author;
         if (e?.slug !== undefined && e?.slug !== null) item.slug = e.slug;
+        if (e?.bibleVerse !== undefined && e?.bibleVerse !== null) item.bibleVerse = e.bibleVerse;
+        if (e?.bibleQuote !== undefined && e?.bibleQuote !== null) item.bibleQuote = e.bibleQuote;
         return item;
       })
     : DEFAULT_CHURCH_CONTENT.events;
+
+  const rawDailyVerse = raw.dailyVerse && typeof raw.dailyVerse === 'object' ? raw.dailyVerse : {};
+  const dailyVerse: ChurchDailyVerse = {
+    verseReference: rawDailyVerse.verseReference || DEFAULT_DAILY_VERSE.verseReference,
+    verseText: rawDailyVerse.verseText || DEFAULT_DAILY_VERSE.verseText,
+    reflectionNote: rawDailyVerse.reflectionNote || DEFAULT_DAILY_VERSE.reflectionNote,
+    updatedDate: rawDailyVerse.updatedDate || DEFAULT_DAILY_VERSE.updatedDate,
+  };
 
   const gallery = Array.isArray(raw.gallery)
     ? raw.gallery.map((g: any, idx: number) => ({
@@ -951,6 +1002,7 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
     ministries,
     additionalMinistries,
     giving,
+    dailyVerse,
     events,
     gallery,
     mediaLibrary,
@@ -1762,48 +1814,21 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  // Auto-load latest content from gepekristretes.org if enabled
-  useEffect(() => {
-    if (hostingConfig.enabled && hostingConfig.autoLoad && hostingConfig.serverUrl) {
-      const fetchRemote = async () => {
-        try {
-          const fetchUrl = hostingConfig.serverUrl.includes('?') 
-            ? `${hostingConfig.serverUrl}&_t=${Date.now()}` 
-            : `${hostingConfig.serverUrl}?_t=${Date.now()}`;
-          const res = await fetch(fetchUrl, {
-            headers: { 'Accept': 'application/json' },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.info && data.hero) {
-              setContent(prev => ({
-                ...prev,
-                ...data,
-                info: { ...prev.info, ...(data.info || {}) },
-                hero: { ...prev.hero, ...(data.hero || {}) },
-                about: { ...prev.about, ...(data.about || {}) },
-              }));
-              updateHostingConfig({
-                lastSyncStatus: 'success',
-                lastSyncTime: new Date().toISOString(),
-                lastSyncError: null,
-              });
-            }
-          }
-        } catch {
-          // Silent fallback to local storage
-        }
-      };
-      fetchRemote();
-    }
-  }, []);
-
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTabType>('info');
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
 
   const openAdminAtTab = (tab: AdminTabType) => {
     setActiveAdminTab(tab);
     setIsAdminModalOpen(true);
+  };
+
+  const updateDailyVerse = (data: Partial<ChurchDailyVerse>) => {
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      dailyVerse: { ...(prev.dailyVerse || DEFAULT_DAILY_VERSE), ...data },
+      lastUpdated: new Date().toISOString(),
+    }));
   };
 
   const addAdditionalMinistry = (item: Omit<ChurchAdditionalMinistryItem, 'id'>) => {
@@ -1987,6 +2012,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addEvent,
         deleteEvent,
         updateEventItem,
+        updateDailyVerse,
         updateGallery,
         addGalleryItem,
         deleteGalleryItem,

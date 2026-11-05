@@ -41,6 +41,10 @@
           "type": "object",
           "description": "Church giving bank accounts, QRIS code, and fund designations"
         },
+        "dailyVerse": {
+          "type": "object",
+          "description": "Daily Bible verse highlight and brief reflection note"
+        },
         "mediaLibrary": {
           "type": "array",
           "description": "Uploaded media items and image library"

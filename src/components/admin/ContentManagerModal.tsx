@@ -3,6 +3,7 @@ import {
   useChurchContent,
   DEFAULT_ADMIN_PASSWORD,
   DEFAULT_CHURCH_CONTENT,
+  DEFAULT_DAILY_VERSE,
   formatYouTubeEmbedUrl,
 } from '../../context/ChurchContentContext';
 import { testConnection } from '../../firebase';
@@ -73,6 +74,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     addEvent,
     deleteEvent,
     updateEventItem,
+    updateDailyVerse,
     addGalleryItem,
     deleteGalleryItem,
     updateGalleryItem,
@@ -143,12 +145,14 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
   const [newFundName, setNewFundName] = useState('');
   const [newFundDesc, setNewFundDesc] = useState('');
 
-  // New Event Form State
+  // New Event / Renungan Form State
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
   const [newEventTime, setNewEventTime] = useState('');
   const [newEventLocation, setNewEventLocation] = useState('Gedung Gereja GEPEKRIS Tretes');
-  const [newEventCategory, setNewEventCategory] = useState('Ibadah Khusus');
+  const [newEventCategory, setNewEventCategory] = useState('Renungan & Firman Tuhan');
+  const [newEventBibleVerse, setNewEventBibleVerse] = useState('');
+  const [newEventBibleQuote, setNewEventBibleQuote] = useState('');
   const [newEventDesc, setNewEventDesc] = useState('');
   const [newEventContent, setNewEventContent] = useState('');
   const [newEventImage, setNewEventImage] = useState('');
@@ -304,21 +308,25 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
       time: newEventTime || '10:00 WIB',
       location: newEventLocation || 'Gedung Gereja GEPEKRIS Tretes',
       category: newEventCategory,
+      bibleVerse: newEventBibleVerse.trim(),
+      bibleQuote: newEventBibleQuote.trim(),
       description: newEventDesc,
       content: newEventContent || newEventDesc,
       image: newEventImage,
-      author: newEventAuthor || 'Pengurus Gereja GEPEKRIS Tretes',
+      author: newEventAuthor || 'Pelayan Firman & Majelis GEPEKRIS Tretes',
       featured: newEventFeatured,
     });
     setNewEventTitle('');
     setNewEventDate('');
     setNewEventTime('');
+    setNewEventBibleVerse('');
+    setNewEventBibleQuote('');
     setNewEventDesc('');
     setNewEventContent('');
     setNewEventImage('');
     setNewEventAuthor('');
     setNewEventFeatured(false);
-    showToast('Warta berita jemaat berhasil diterbitkan!');
+    showToast('Warta / tulisan Firman Tuhan berhasil diterbitkan!');
   };
 
   const handleExportJson = () => {
@@ -525,7 +533,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               }`}
             >
               <Calendar className="w-4 h-4 shrink-0" />
-              <span>Warta & Kegiatan ({content.events.length})</span>
+              <span>Warta & Firman ({content.events.length})</span>
             </button>
 
             <button
@@ -1405,39 +1413,107 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               </div>
             )}
 
-            {/* Tab 6: Events / Warta */}
+            {/* Tab 6: Events / Warta & Firman Tuhan */}
             {activeTab === 'events' && (
-              <div className="space-y-6 max-w-3xl">
+              <div className="space-y-8 max-w-3xl">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Warta Jemaat & Berita Kegiatan</h3>
-                  <p className="text-xs text-gray-500">Terbitkan pengumuman ibadah khusus, retret, diakonia, dan artikel warta gereja.</p>
+                  <h3 className="text-lg font-bold text-gray-900">Warta Jemaat, Renungan & Ayat Firman Harian</h3>
+                  <p className="text-xs text-gray-500">
+                    Kelola Banner Ayat Firman Harian di beranda serta terbitkan tulisan renungan Firman Tuhan, warta jemaat, dan kegiatan gereja yang siap dibagikan ke WhatsApp & sosial media.
+                  </p>
                 </div>
 
-                {/* Events list */}
+                {/* Bagian A: Banner Ayat Firman Harian (Daily Verse Banner) */}
+                <div className="p-5 bg-gradient-to-r from-amber-50/90 to-[#FAF6EE] rounded-2xl border border-amber-200 space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-amber-700" />
+                      <span>A. Banner Ayat Firman Harian (Tampil di Beranda)</span>
+                    </h4>
+                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-200/70 text-amber-900">
+                      Siap Dibagikan ke WA
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Pasal & Ayat Alkitab (Misal: Mazmur 119:105)
+                      </label>
+                      <Input
+                        value={(content.dailyVerse || DEFAULT_DAILY_VERSE).verseReference}
+                        onChange={(e) => updateDailyVerse({ verseReference: e.target.value })}
+                        placeholder="Contoh: Mazmur 119:105"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Label / Judul Banner
+                      </label>
+                      <Input
+                        value={(content.dailyVerse || DEFAULT_DAILY_VERSE).updatedDate || ''}
+                        onChange={(e) => updateDailyVerse({ updatedDate: e.target.value })}
+                        placeholder="Contoh: Firman Tuhan Hari Ini"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Kutipan Teks Ayat Alkitab
+                    </label>
+                    <Textarea
+                      rows={2}
+                      value={(content.dailyVerse || DEFAULT_DAILY_VERSE).verseText}
+                      onChange={(e) => updateDailyVerse({ verseText: e.target.value })}
+                      placeholder="Firman-Mu itu pelita bagi kakiku dan terang bagi jalanku."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Kalimat Renungan Singkat / Aplikasi Iman
+                    </label>
+                    <Textarea
+                      rows={2}
+                      value={(content.dailyVerse || DEFAULT_DAILY_VERSE).reflectionNote}
+                      onChange={(e) => updateDailyVerse({ reflectionNote: e.target.value })}
+                      placeholder="Kiranya kasih dan kebenaran Firman Tuhan senantiasa menuntun setiap langkah hidup..."
+                    />
+                  </div>
+                </div>
+
+                {/* Bagian B: Daftar Warta & Tulisan Firman Tuhan */}
                 <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-gray-900">
+                    B. Daftar Warta Jemaat & Tulisan Firman Tuhan ({content.events.length})
+                  </h4>
                   {content.events.map((evt) => (
                     <div
                       key={evt.id}
                       className="p-4 bg-gray-50 rounded-xl border border-gray-200"
                     >
                       {editingEventId === evt.id ? (
-                        <div className="space-y-3 bg-white p-3 rounded-lg border border-primary/30">
+                        <div className="space-y-3 bg-white p-3.5 rounded-lg border border-primary/30">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Warta / Kegiatan</label>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Warta / Renungan Firman</label>
                               <Input
                                 value={evt.title}
                                 onChange={(e) => updateEventItem(evt.id, { title: e.target.value })}
-                                placeholder="Judul Warta"
+                                placeholder="Judul Warta / Renungan"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Kategori</label>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Kategori Tulisan</label>
                               <select
                                 value={evt.category}
                                 onChange={(e) => updateEventItem(evt.id, { category: e.target.value })}
                                 className="w-full px-3 py-2 text-xs border rounded-md bg-white"
                               >
+                                <option value="Renungan & Firman Tuhan">Renungan & Firman Tuhan</option>
+                                <option value="Pengajaran Alkitab">Pengajaran Alkitab</option>
+                                <option value="Warta Jemaat">Warta Jemaat</option>
                                 <option value="Ibadah Khusus">Ibadah Khusus</option>
                                 <option value="Retret">Retret & Pembinaan</option>
                                 <option value="Diakonia">Diakonia & Kasih</option>
@@ -1447,9 +1523,35 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               </select>
                             </div>
                           </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-amber-50/60 rounded-lg border border-amber-200/70">
+                            <div>
+                              <label className="block text-xs font-semibold text-amber-900 mb-1">
+                                Ayat Alkitab Acuan (Opsional, misal: Yohanes 14:27)
+                              </label>
+                              <Input
+                                value={evt.bibleVerse || ''}
+                                onChange={(e) => updateEventItem(evt.id, { bibleVerse: e.target.value })}
+                                placeholder="Contoh: Yohanes 14:27 / Mazmur 23:1"
+                                className="bg-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-amber-900 mb-1">
+                                Kutipan Ayat Alkitab (Ditampilkan di kartu & pesan WA)
+                              </label>
+                              <Input
+                                value={evt.bibleQuote || ''}
+                                onChange={(e) => updateEventItem(evt.id, { bibleQuote: e.target.value })}
+                                placeholder="Kutipan singkat bunyi ayat Alkitab..."
+                                className="bg-white"
+                              />
+                            </div>
+                          </div>
+
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Tanggal</label>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Tanggal / Keterangan Hari</label>
                               <Input
                                 value={evt.date}
                                 onChange={(e) => updateEventItem(evt.id, { date: e.target.value })}
@@ -1457,7 +1559,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Waktu</label>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Waktu / Rubrik</label>
                               <Input
                                 value={evt.time}
                                 onChange={(e) => updateEventItem(evt.id, { time: e.target.value })}
@@ -1465,7 +1567,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               />
                             </div>
                             <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Lokasi</label>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Lokasi / Keterangan</label>
                               <Input
                                 value={evt.location}
                                 onChange={(e) => updateEventItem(evt.id, { location: e.target.value })}
@@ -1473,10 +1575,20 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               />
                             </div>
                           </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Penulis / Pengkhotbah / Komisi</label>
+                            <Input
+                              value={evt.author || ''}
+                              onChange={(e) => updateEventItem(evt.id, { author: e.target.value })}
+                              placeholder="Contoh: Pdt. & Pelayan Firman GEPEKRIS Tretes"
+                            />
+                          </div>
+
                           <div>
                             <ImagePickerField
-                              label="Foto Sampul Warta / Berita"
-                              description="Unggah foto warta atau tempel URL gambar."
+                              label="Foto Sampul Warta / Renungan"
+                              description="Unggah foto sampul atau tempel URL gambar."
                               currentValue={evt.image || ''}
                               onChange={(url) => updateEventItem(evt.id, { image: url })}
                               onToast={showToast}
@@ -1484,7 +1596,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Ringkasan Singkat</label>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Ringkasan Singkat (Tampil di Kartu & Share WA)</label>
                             <Input
                               value={evt.description}
                               onChange={(e) => updateEventItem(evt.id, { description: e.target.value })}
@@ -1492,12 +1604,12 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Isi Berita / Warta Lengkap</label>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Isi Lengkap Warta / Tulisan Firman Tuhan</label>
                             <Textarea
-                              rows={4}
+                              rows={5}
                               value={evt.content || evt.description}
                               onChange={(e) => updateEventItem(evt.id, { content: e.target.value })}
-                              placeholder="Detail teks warta lengkap..."
+                              placeholder="Detail teks warta atau renungan lengkap..."
                             />
                           </div>
                           <div className="flex items-center justify-between pt-1">
@@ -1508,13 +1620,13 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                                 onChange={(e) => updateEventItem(evt.id, { featured: e.target.checked })}
                                 className="rounded text-primary"
                               />
-                              <span>Jadikan Warta Utama (Disorot)</span>
+                              <span>Jadikan Sorotan Utama di Beranda</span>
                             </label>
                             <Button
                               size="sm"
                               onClick={() => {
                                 setEditingEventId(null);
-                                showToast('Warta / kegiatan diperbarui!');
+                                showToast('Warta / tulisan Firman berhasil diperbarui!');
                               }}
                               className="cursor-pointer text-xs"
                             >
@@ -1529,9 +1641,14 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
                                 {evt.category}
                               </span>
+                              {evt.bibleVerse && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">
+                                  📖 {evt.bibleVerse}
+                                </span>
+                              )}
                               {evt.featured && (
-                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
-                                  Warta Utama
+                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-600 text-white">
+                                  Sorotan Utama
                                 </span>
                               )}
                               <h4 className="font-semibold text-gray-900 text-sm">{evt.title}</h4>
@@ -1552,7 +1669,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               size="icon"
                               onClick={() => setEditingEventId(evt.id)}
                               className="text-gray-600 hover:text-primary hover:bg-primary/10 cursor-pointer"
-                              title="Edit warta ini"
+                              title="Edit tulisan ini"
                             >
                               <Pencil className="w-4 h-4" />
                             </Button>
@@ -1561,10 +1678,10 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               size="icon"
                               onClick={() => {
                                 deleteEvent(evt.id);
-                                showToast(`Warta "${evt.title}" dihapus`);
+                                showToast(`"${evt.title}" dihapus`);
                               }}
                               className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
-                              title="Hapus warta"
+                              title="Hapus tulisan"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -1575,30 +1692,33 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                   ))}
                 </div>
 
-                {/* Add New Event Form */}
+                {/* Add New Event / Devotional Article Form */}
                 <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200 mt-6">
                   <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <Plus className="w-4 h-4 text-primary" />
-                    <span>Terbitkan Warta / Kegiatan Baru</span>
+                    <span>C. Terbitkan Warta Jemaat atau Tulisan Firman Tuhan Baru</span>
                   </h4>
                   <form onSubmit={handleAddEvent} className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Warta / Acara *</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Warta / Renungan Firman *</label>
                         <Input
                           required
                           value={newEventTitle}
                           onChange={(e) => setNewEventTitle(e.target.value)}
-                          placeholder="Contoh: Ibadah Syukur HUT Gereja"
+                          placeholder="Contoh: Renungan: Bertumbuh dalam Kasih Kristus"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Kategori</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Kategori Tulisan</label>
                         <select
                           value={newEventCategory}
                           onChange={(e) => setNewEventCategory(e.target.value)}
                           className="w-full px-3 py-2 text-sm border rounded-md bg-white focus:outline-hidden"
                         >
+                          <option value="Renungan & Firman Tuhan">Renungan & Firman Tuhan</option>
+                          <option value="Pengajaran Alkitab">Pengajaran Alkitab</option>
+                          <option value="Warta Jemaat">Warta Jemaat</option>
                           <option value="Ibadah Khusus">Ibadah Khusus</option>
                           <option value="Retret">Retret & Pembinaan</option>
                           <option value="Diakonia">Diakonia & Kasih</option>
@@ -1606,6 +1726,29 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                           <option value="Pemuda & Remaja">Pemuda & Remaja</option>
                           <option value="Pengumuman">Pengumuman Jemaat</option>
                         </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-amber-200/80">
+                      <div>
+                        <label className="block text-xs font-semibold text-amber-900 mb-1">
+                          Ayat Alkitab Acuan (Opsional, misal: Filipi 4:6-7)
+                        </label>
+                        <Input
+                          value={newEventBibleVerse}
+                          onChange={(e) => setNewEventBibleVerse(e.target.value)}
+                          placeholder="Contoh: Filipi 4:6-7"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-amber-900 mb-1">
+                          Kutipan Ayat Alkitab (Ikut dibagikan ke WhatsApp)
+                        </label>
+                        <Input
+                          value={newEventBibleQuote}
+                          onChange={(e) => setNewEventBibleQuote(e.target.value)}
+                          placeholder="Janganlah hendaknya kamu kuatir tentang apa pun juga..."
+                        />
                       </div>
                     </div>
 
@@ -1620,15 +1763,15 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Jam / Waktu</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Jam / Waktu / Rubrik</label>
                         <Input
                           value={newEventTime}
                           onChange={(e) => setNewEventTime(e.target.value)}
-                          placeholder="Contoh: 09:00 WIB"
+                          placeholder="Contoh: Renungan Pekan Ini / 09:00 WIB"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Lokasi</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Lokasi / Keterangan</label>
                         <Input
                           value={newEventLocation}
                           onChange={(e) => setNewEventLocation(e.target.value)}
@@ -1638,7 +1781,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Ringkasan Singkat (Tampil di Kartu Depan)</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Ringkasan Singkat (Tampil di Kartu Depan & Pesan WA)</label>
                       <Textarea
                         rows={2}
                         value={newEventDesc}
@@ -1649,7 +1792,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
 
                     <div>
                       <ImagePickerField
-                        label="Foto Sampul Berita / Kegiatan"
+                        label="Foto Sampul Warta / Renungan"
                         description="Unggah dari perangkat atau tempel URL gambar."
                         currentValue={newEventImage}
                         onChange={(url) => setNewEventImage(url)}
@@ -1659,23 +1802,23 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Penulis / Komisi</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Penulis / Pelayan Firman / Komisi</label>
                       <Input
                         value={newEventAuthor}
                         onChange={(e) => setNewEventAuthor(e.target.value)}
-                        placeholder="Contoh: Majelis GEPEKRIS Tretes"
+                        placeholder="Contoh: Pdt. & Majelis GEPEKRIS Tretes"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Isi Artikel Warta Lengkap (Halaman Pembaca)
+                        Isi Lengkap Warta / Tulisan Renungan Firman Tuhan
                       </label>
                       <Textarea
-                        rows={5}
+                        rows={6}
                         value={newEventContent}
                         onChange={(e) => setNewEventContent(e.target.value)}
-                        placeholder="Tuliskan naskah berita lengkap di sini. Gunakan baris kosong antar paragraf..."
+                        placeholder="Tuliskan naskah renungan firman Tuhan atau warta lengkap di sini. Gunakan baris kosong antar paragraf..."
                       />
                     </div>
 
@@ -1688,12 +1831,12 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                         className="rounded text-primary"
                       />
                       <label htmlFor="featured-check" className="text-xs text-gray-700 cursor-pointer">
-                        Tandai sebagai Warta Utama (Disorot di halaman depan)
+                        Tandai sebagai Sorotan Utama (Disorot di halaman depan)
                       </label>
                     </div>
 
                     <Button type="submit" size="sm" className="cursor-pointer">
-                      Terbitkan Warta
+                      Terbitkan Warta / Renungan
                     </Button>
                   </form>
                 </div>

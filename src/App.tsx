@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { ServiceTimes } from './components/ServiceTimes';
+import { DailyVerseBanner } from './components/DailyVerseBanner';
 import { About } from './components/About';
 import { Ministries } from './components/Ministries';
 import { Events } from './components/Events';
@@ -21,7 +22,7 @@ import {
   useChurchContent,
   formatYouTubeEmbedUrl,
 } from './context/ChurchContentContext';
-import { X, Pencil, LogOut, FolderOpen, Landmark } from 'lucide-react';
+import { X, Pencil, LogOut, FolderOpen, Landmark, MessageCircle } from 'lucide-react';
 import { Button } from './components/ui/button';
 import {
   SEOHead,
@@ -330,6 +331,7 @@ function ChurchApp() {
         }}
         onOpenSermons={handleOpenSermons}
         onOpenPrayer={handleOpenPrayer}
+        onOpenGive={handleOpenGive}
       />
       
       {/* Permanent Regular Main Homepage */}
@@ -339,6 +341,7 @@ function ChurchApp() {
           onWatchOnline={() => setIsWatchOnlineOpen(true)}
         />
         <ServiceTimes />
+        <DailyVerseBanner />
         <About />
         <Ministries />
         <Events onReadArticle={(id) => handleOpenArticle(id)} />
@@ -557,6 +560,29 @@ function ChurchApp() {
             <span className="hidden sm:inline">Keluar</span>
           </button>
         </aside>
+      )}
+
+      {/* Floating WhatsApp Quick-Contact Button (Bottom-Right) */}
+      {!isNewsReaderOpen && (
+        <a
+          href={`https://api.whatsapp.com/send?phone=${(
+            content.info.whatsappNumber ||
+            content.info.phone ||
+            '6281234567890'
+          ).replace(/[^0-9]/g, '')}&text=${encodeURIComponent(
+            `Shalom Sekretariat ${content.info.name}, saya ingin bertanya mengenai informasi ibadah / pelayanan gereja.`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Hubungi Sekretariat via WhatsApp"
+          className="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-30 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-full shadow-lg border border-emerald-400/40 transition-all hover:scale-105"
+          title="Hubungi Sekretariat Gereja via WhatsApp"
+        >
+          <MessageCircle className="w-5 h-5 fill-white/10" />
+          <span className="text-xs font-bold tracking-wide hidden sm:inline">
+            Hubungi WA Gereja
+          </span>
+        </a>
       )}
     </div>
   );
