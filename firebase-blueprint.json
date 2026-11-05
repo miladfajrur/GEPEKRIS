@@ -25,6 +25,10 @@
           "type": "array",
           "description": "Church ministry commissions and descriptions"
         },
+        "additionalMinistries": {
+          "type": "array",
+          "description": "Additional community ministry groups and fellowships"
+        },
         "events": {
           "type": "array",
           "description": "Upcoming events and news articles"
@@ -32,6 +36,10 @@
         "gallery": {
           "type": "array",
           "description": "Church documentation photo gallery items"
+        },
+        "giving": {
+          "type": "object",
+          "description": "Church giving bank accounts, QRIS code, and fund designations"
         },
         "mediaLibrary": {
           "type": "array",

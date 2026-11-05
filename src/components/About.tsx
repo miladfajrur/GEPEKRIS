@@ -1,9 +1,9 @@
-import { Heart, Users, Book, Star, Shield } from 'lucide-react';
+import { Heart, Users, Book, Star, Shield, Pencil } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useChurchContent } from '../context/ChurchContentContext';
 
 export function About() {
-  const { content } = useChurchContent();
+  const { content, isAdmin, openAdminAtTab } = useChurchContent();
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -22,20 +22,32 @@ export function About() {
   };
 
   return (
-    <section id="about" className="py-16 bg-white border-b border-gray-200/60">
+    <section id="about" className="py-16 bg-white border-b border-gray-200/60 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Image */}
-          <div className="order-2 lg:order-1">
+          <div className="order-2 lg:order-1 relative">
             <ImageWithFallback
               src={content.about.image}
-              alt="Community gathering"
+              alt="Kebersamaan Jemaat"
               className="w-full h-96 object-cover rounded-xl shadow-lg"
             />
           </div>
 
           {/* Content */}
           <div className="order-1 lg:order-2">
+            {isAdmin && (
+              <div className="mb-3">
+                <button
+                  onClick={() => openAdminAtTab('about')}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm cursor-pointer transition-colors"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit Bagian Tentang Kami</span>
+                </button>
+              </div>
+            )}
+
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 tracking-tight">
               {content.about.heading}
             </h2>

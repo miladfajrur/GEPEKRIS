@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Pencil, Video } from 'lucide-react';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useChurchContent } from '../context/ChurchContentContext';
@@ -11,10 +11,9 @@ interface HeroProps {
 }
 
 export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
-  const { content } = useChurchContent();
+  const { content, isAdmin, openAdminAtTab } = useChurchContent();
   const heroRef = useRef<HTMLElement>(null);
 
-  // Scroll-linked parallax and fade out transitions for the hero section
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ['start start', 'end start'],
@@ -38,6 +37,26 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
       ref={heroRef}
       className="relative min-h-[90vh] md:h-screen flex items-center justify-center overflow-hidden"
     >
+      {/* Admin Quick Edit Shortcut */}
+      {isAdmin && (
+        <div className="absolute top-24 right-4 sm:right-8 z-30 flex items-center gap-2">
+          <button
+            onClick={() => openAdminAtTab('hero')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600/95 hover:bg-amber-500 text-white text-xs font-semibold shadow-lg backdrop-blur-md border border-amber-400/40 cursor-pointer transition-all"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            <span>Edit Banner Beranda</span>
+          </button>
+          <button
+            onClick={() => openAdminAtTab('info')}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-amber-200 text-xs font-semibold shadow-lg backdrop-blur-md border border-stone-700 cursor-pointer transition-all"
+          >
+            <Video className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Edit Link Streaming</span>
+          </button>
+        </div>
+      )}
+
       {/* Background Image with Parallax on Scroll */}
       <motion.div
         style={{ y: bgY, scale: bgScale }}
@@ -93,7 +112,7 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
             onClick={onPlanVisit}
             className="w-full sm:w-auto text-base sm:text-lg px-8 py-3.5 bg-white text-stone-900 hover:bg-amber-50 hover:text-stone-950 font-semibold cursor-pointer shadow-lg transition-transform hover:scale-105 active:scale-95"
           >
-            Plan Your Visit
+            Rencanakan Kunjungan
           </Button>
           <Button
             size="lg"
@@ -101,7 +120,7 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
             onClick={onWatchOnline}
             className="w-full sm:w-auto text-base sm:text-lg px-8 py-3.5 bg-white/10 border-white/40 text-white hover:bg-white hover:text-black cursor-pointer backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
           >
-            Watch Online
+            Tonton Ibadah Online
           </Button>
         </motion.div>
 
@@ -129,10 +148,10 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 0.8 }}
         className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 text-white/80 hover:text-white flex flex-col items-center gap-1 cursor-pointer transition-colors group"
-        aria-label="Scroll to Services"
+        aria-label="Gulir ke Jadwal Ibadah"
       >
         <span className="text-[11px] font-medium tracking-widest uppercase opacity-75 group-hover:opacity-100">
-          Scroll Down
+          Gulir ke Bawah
         </span>
         <motion.div
           animate={{ y: [0, 6, 0] }}

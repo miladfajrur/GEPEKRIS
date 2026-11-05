@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import {
   useChurchContent,
-  ChurchServiceItem,
-  ChurchMinistryItem,
-  ChurchEventItem,
-  ChurchGalleryItem,
   DEFAULT_ADMIN_PASSWORD,
   DEFAULT_CHURCH_CONTENT,
+  formatYouTubeEmbedUrl,
 } from '../../context/ChurchContentContext';
 import { testConnection } from '../../firebase';
 import { ImagePickerField, DEFAULT_HERO_PRESETS } from './ImagePickerField';
@@ -32,25 +29,18 @@ import {
   Key,
   ShieldCheck,
   AlertCircle,
-  Server,
-  HardDrive,
   RefreshCw,
-  ExternalLink,
-  Copy,
   CheckCircle2,
-  Globe,
   Database,
-  Flame,
-  Eye,
-  EyeOff,
   Pencil,
   FolderOpen,
   Smartphone,
   Search,
-  Grid,
-  List,
-  Package,
   Heart,
+  Landmark,
+  QrCode,
+  Video,
+  Share2,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -77,16 +67,23 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     addMinistry,
     deleteMinistry,
     updateMinistryItem,
+    addAdditionalMinistry,
+    updateAdditionalMinistry,
+    deleteAdditionalMinistry,
     addEvent,
     deleteEvent,
     updateEventItem,
-    updateGallery,
     addGalleryItem,
     deleteGalleryItem,
     updateGalleryItem,
-    addMediaItem,
+    updateGiving,
+    addBankAccount,
+    updateBankAccount,
+    deleteBankAccount,
+    addGivingFund,
+    updateGivingFund,
+    deleteGivingFund,
     deleteMediaItem,
-    updateMediaItem,
     getAllIndexedMedia,
     resetToDefaults,
     importContent,
@@ -96,21 +93,21 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     updateAdminPassword,
     resetAdminPassword,
     clearCacheAndStartFresh,
-    firestoreStatus,
-    firestoreError,
     syncToFirestore,
+    activeAdminTab,
+    setActiveAdminTab,
   } = useChurchContent();
 
-  const [activeTab, setActiveTab] = useState<
-    'info' | 'hero' | 'about' | 'services' | 'ministries' | 'events' | 'gallery' | 'media' | 'hosting' | 'backup' | 'security'
-  >('info');
+  const activeTab = activeAdminTab;
+  const setActiveTab = setActiveAdminTab;
 
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [mediaSearchQuery, setMediaSearchQuery] = useState('');
   const [mediaCategoryFilter, setMediaCategoryFilter] = useState<string>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
-  // Hosting State
+  // Hosting / Firebase State
   const [testingConnection, setTestingConnection] = useState(false);
   const [syncingToFirestore, setSyncingToFirestore] = useState(false);
 
@@ -131,6 +128,21 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
   const [newMinImage, setNewMinImage] = useState('');
   const [newMinFeatures, setNewMinFeatures] = useState('');
 
+  // New Additional Ministry Form State
+  const [newAddMinTitle, setNewAddMinTitle] = useState('');
+  const [newAddMinDesc, setNewAddMinDesc] = useState('');
+  const [newAddMinSchedule, setNewAddMinSchedule] = useState('Rutin Setiap Pekan / Bulan');
+  const [newAddMinLocation, setNewAddMinLocation] = useState('Gedung GEPEKRIS Tretes & Rumah Jemaat');
+
+  // New Bank Account Form State
+  const [newBankName, setNewBankName] = useState('');
+  const [newBankNumber, setNewBankNumber] = useState('');
+  const [newBankHolder, setNewBankHolder] = useState('GEPEKRIS Tretes');
+
+  // New Giving Fund Form State
+  const [newFundName, setNewFundName] = useState('');
+  const [newFundDesc, setNewFundDesc] = useState('');
+
   // New Event Form State
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
@@ -146,8 +158,11 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
   // Inline item editing state
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [editingMinistryId, setEditingMinistryId] = useState<string | null>(null);
+  const [editingAddMinistryId, setEditingAddMinistryId] = useState<string | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [editingGalleryId, setEditingGalleryId] = useState<string | null>(null);
+  const [editingBankId, setEditingBankId] = useState<string | null>(null);
+  const [editingFundId, setEditingFundId] = useState<string | null>(null);
 
   // New Gallery Photo Form State
   const [newGalTitle, setNewGalTitle] = useState('');
@@ -162,10 +177,18 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
   if (!isOpen || !isAdmin) return null;
 
   const showToast = (msg: string) => {
+    setErrorBanner(null);
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 3000);
+  };
+
+  const showError = (msg: string) => {
+    setErrorBanner(msg);
+    setTimeout(() => {
+      setErrorBanner(null);
+    }, 5000);
   };
 
   const handleUpdatePassword = (e: React.FormEvent) => {
@@ -192,11 +215,9 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
   };
 
   const handleResetPasswordToDefault = () => {
-    if (confirm(`Kembalikan kata sandi admin ke bawaan awal (${DEFAULT_ADMIN_PASSWORD})?`)) {
-      resetAdminPassword();
-      setSecurityStatus({ success: `Kata sandi berhasil dikembalikan ke bawaan: ${DEFAULT_ADMIN_PASSWORD}` });
-      showToast('Kata sandi direset ke default');
-    }
+    resetAdminPassword();
+    setSecurityStatus({ success: `Kata sandi berhasil dikembalikan ke bawaan: ${DEFAULT_ADMIN_PASSWORD}` });
+    showToast('Kata sandi direset ke bawaan');
   };
 
   const handleAddService = (e: React.FormEvent) => {
@@ -211,7 +232,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     setNewServiceName('');
     setNewServiceTimes('');
     setNewServiceDesc('');
-    showToast('New service schedule added!');
+    showToast('Jadwal ibadah baru berhasil ditambahkan!');
   };
 
   const handleAddMinistry = (e: React.FormEvent) => {
@@ -229,7 +250,49 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     setNewMinDesc('');
     setNewMinImage('');
     setNewMinFeatures('');
-    showToast('New ministry group added!');
+    showToast('Komisi / pelayanan utama berhasil ditambahkan!');
+  };
+
+  const handleAddAdditionalMinistry = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAddMinTitle.trim()) return;
+    addAdditionalMinistry({
+      title: newAddMinTitle.trim(),
+      description: newAddMinDesc.trim(),
+      schedule: newAddMinSchedule.trim() || 'Rutin Setiap Pekan / Bulan',
+      location: newAddMinLocation.trim() || 'Gedung GEPEKRIS Tretes & Rumah Jemaat',
+    });
+    setNewAddMinTitle('');
+    setNewAddMinDesc('');
+    setNewAddMinSchedule('Rutin Setiap Pekan / Bulan');
+    setNewAddMinLocation('Gedung GEPEKRIS Tretes & Rumah Jemaat');
+    showToast('Komisi tambahan berhasil ditambahkan!');
+  };
+
+  const handleAddBank = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBankName.trim() || !newBankNumber.trim()) return;
+    addBankAccount({
+      bankName: newBankName.trim(),
+      accountNumber: newBankNumber.trim(),
+      accountHolder: newBankHolder.trim() || 'GEPEKRIS Tretes',
+    });
+    setNewBankName('');
+    setNewBankNumber('');
+    setNewBankHolder('GEPEKRIS Tretes');
+    showToast('Rekening persembahan berhasil ditambahkan!');
+  };
+
+  const handleAddFund = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFundName.trim()) return;
+    addGivingFund({
+      name: newFundName.trim(),
+      description: newFundDesc.trim(),
+    });
+    setNewFundName('');
+    setNewFundDesc('');
+    showToast('Kategori persembahan berhasil ditambahkan!');
   };
 
   const handleAddEvent = (e: React.FormEvent) => {
@@ -266,12 +329,12 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     downloadAnchor.setAttribute('href', dataStr);
     downloadAnchor.setAttribute(
       'download',
-      `church-website-content-${new Date().toISOString().slice(0, 10)}.json`
+      `gepekris-tretes-backup-${new Date().toISOString().slice(0, 10)}.json`
     );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    showToast('Content backup file downloaded!');
+    showToast('Berkas cadangan JSON berhasil diunduh!');
   };
 
   const handleImportJson = () => {
@@ -279,13 +342,13 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
       const parsed = JSON.parse(importJsonText);
       const success = importContent(parsed);
       if (success) {
-        showToast('Website content restored successfully!');
+        showToast('Konten website berhasil dipulihkan!');
         setImportJsonText('');
       } else {
-        alert('Invalid JSON format for church content.');
+        showError('Format JSON tidak sesuai dengan struktur konten gereja.');
       }
-    } catch (err) {
-      alert('Error parsing JSON text. Please verify valid syntax.');
+    } catch {
+      showError('Gagal membaca kode JSON. Pastikan format JSON valid.');
     }
   };
 
@@ -297,36 +360,37 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
         showToast('✓ Berhasil disinkronkan ke Firebase Firestore!');
       }
     } catch (e: any) {
-      alert(`Gagal sinkron ke Firestore: ${e?.message || 'Error'}`);
+      showError(`Gagal sinkron ke Firestore: ${e?.message || 'Error'}`);
     } finally {
       setSyncingToFirestore(false);
     }
   };
 
   const handleApplyGepekrisPreset = () => {
-    if (confirm('Terapkan template profil resmi GEPEKRIS Tretes (Pasuruan)? Jadwal ibadah, visi, dan kontak gereja akan disesuaikan.')) {
-      applyGepekrisTretesPreset();
-      showToast('Profil GEPEKRIS Tretes berhasil diterapkan!');
-    }
+    applyGepekrisTretesPreset();
+    showToast('Profil resmi GEPEKRIS Tretes berhasil diterapkan!');
   };
 
+  const additionalMinistries = content.additionalMinistries || [];
+  const givingData = content.giving || DEFAULT_CHURCH_CONTENT.giving;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl border border-gray-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white rounded-2xl w-full max-w-6xl h-[92vh] flex flex-col shadow-2xl border border-gray-200 overflow-hidden">
         
         {/* Modal Top Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between bg-gray-50/90">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-bold shadow-xs">
               <Sparkles className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900 leading-tight">
-                Website Content Manager
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
+                Panel Pengelola Konten Website
               </h2>
-              <p className="text-xs text-gray-500 flex items-center gap-1.5">
+              <p className="text-[11px] sm:text-xs text-gray-500 flex items-center gap-1.5">
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Firebase Real-Time Aktif &bull; Perubahan langsung sinkron ke seluruh jemaat</span>
+                <span>Sinkronisasi Otomatis Firebase Real-Time Aktif</span>
               </p>
             </div>
           </div>
@@ -338,7 +402,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               disabled={syncingToFirestore}
               size="sm"
               className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-xs"
-              title="Simpan dan sinkronkan data ke Firebase Firestore Database secara real-time"
+              title="Simpan dan sinkronkan seluruh data ke Firebase Firestore sekarang"
             >
               <Database className={`w-3.5 h-3.5 ${syncingToFirestore ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">{syncingToFirestore ? 'Menyimpan...' : 'Simpan ke Firebase'}</span>
@@ -346,7 +410,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
             </Button>
 
             {toastMessage && (
-              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1.5 animate-in fade-in">
+              <span className="hidden md:inline-flex text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 items-center gap-1.5 animate-in fade-in">
                 <Check className="w-3.5 h-3.5" />
                 {toastMessage}
               </span>
@@ -362,24 +426,36 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               title="Keluar dari mode admin"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Logout Admin</span>
+              <span className="hidden sm:inline">Keluar Admin</span>
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-900"
+              className="text-gray-500 hover:text-gray-900 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
+        {/* Error or Mobile Toast Banner */}
+        {(errorBanner || toastMessage) && (
+          <div className={`px-6 py-2 text-xs font-medium flex items-center justify-between ${errorBanner ? 'bg-red-50 text-red-800 border-b border-red-200' : 'md:hidden bg-emerald-50 text-emerald-800 border-b border-emerald-200'}`}>
+            <span>{errorBanner || toastMessage}</span>
+            <button onClick={() => { setErrorBanner(null); setToastMessage(null); }} className="ml-2 font-bold">✕</button>
+          </div>
+        )}
+
         {/* Modal Body with Sidebar Tabs */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
           {/* Navigation Sidebar (Horizontal swipe on Mobile HP, Vertical on Desktop) */}
-          <div className="w-full md:w-60 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200/80 p-2 md:p-3 flex md:flex-col gap-1.5 md:gap-1 overflow-x-auto md:overflow-y-auto shrink-0 no-scrollbar">
+          <div className="w-full md:w-64 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200/80 p-2 md:p-3 flex md:flex-col gap-1.5 md:gap-1 overflow-x-auto md:overflow-y-auto shrink-0 no-scrollbar">
+            <div className="hidden md:block px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              Konten Halaman Utama
+            </div>
+
             <button
               onClick={() => setActiveTab('info')}
               className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
@@ -389,7 +465,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               }`}
             >
               <Building className="w-4 h-4 shrink-0" />
-              <span>General & Contact</span>
+              <span>Profil, Kontak & Streaming</span>
             </button>
 
             <button
@@ -401,19 +477,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               }`}
             >
               <ImageIcon className="w-4 h-4 shrink-0" />
-              <span>Hero Banner</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('about')}
-              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
-                activeTab === 'about'
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
-              }`}
-            >
-              <BookOpen className="w-4 h-4 shrink-0" />
-              <span>About & Values</span>
+              <span>Banner Utama (Hero)</span>
             </button>
 
             <button
@@ -429,6 +493,18 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('about')}
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
+                activeTab === 'about'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
+              }`}
+            >
+              <BookOpen className="w-4 h-4 shrink-0" />
+              <span>Tentang & Nilai Gereja</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('ministries')}
               className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
                 activeTab === 'ministries'
@@ -437,7 +513,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               }`}
             >
               <Users className="w-4 h-4 shrink-0" />
-              <span>Komisi & Pelayanan ({content.ministries.length})</span>
+              <span>Komisi & Pelayanan ({content.ministries.length + additionalMinistries.length})</span>
             </button>
 
             <button
@@ -449,7 +525,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               }`}
             >
               <Calendar className="w-4 h-4 shrink-0" />
-              <span>Warta Kegiatan ({content.events.length})</span>
+              <span>Warta & Kegiatan ({content.events.length})</span>
             </button>
 
             <button
@@ -463,6 +539,22 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               <Camera className="w-4 h-4 shrink-0" />
               <span>Galeri Foto ({content.gallery?.length || 0})</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('giving')}
+              className={`flex items-center gap-2 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all text-left cursor-pointer whitespace-nowrap shrink-0 md:w-full ${
+                activeTab === 'giving'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-gray-600 hover:bg-gray-200/60 hover:text-gray-900'
+              }`}
+            >
+              <Landmark className="w-4 h-4 shrink-0" />
+              <span>Persembahan & QRIS</span>
+            </button>
+
+            <div className="hidden md:block px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              Media & Sistem
+            </div>
 
             <button
               onClick={() => setActiveTab('media')}
@@ -506,7 +598,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               }`}
             >
               <RotateCcw className="w-4 h-4 shrink-0" />
-              <span>Backup & Reset</span>
+              <span>Cadangan & Reset</span>
             </button>
 
             <button
@@ -523,97 +615,203 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
           </div>
 
           {/* Tab Content Panel */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white">
+          <div className="flex-1 p-5 sm:p-6 overflow-y-auto bg-white">
             
-            {/* Tab 1: General Info & Contact */}
+            {/* Tab 1: General Info, Contact, Social Media & Streaming */}
             {activeTab === 'info' && (
-              <div className="space-y-6 max-w-2xl">
+              <div className="space-y-8 max-w-3xl">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Church Identity & Contact Details</h3>
-                  <p className="text-xs text-gray-500">Edit church name, address, email, and live stream settings.</p>
+                  <h3 className="text-lg font-bold text-gray-900">Profil Gereja, Kontak & Live Streaming</h3>
+                  <p className="text-xs text-gray-500">
+                    Kelola identitas gereja, nomor telepon/WhatsApp, tautan sosial media, peta Google Maps, dan video Live Streaming YouTube.
+                  </p>
                 </div>
 
-                <div className="space-y-4">
+                {/* Bagian 1: Identitas & Kontak */}
+                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <Building className="w-4 h-4 text-primary" />
+                    <span>Identitas & Sekretariat Gereja</span>
+                  </h4>
+
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Church Name</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Resmi Gereja</label>
                     <Input
                       value={content.info.name}
-                      onChange={(e) => {
-                        updateInfo({ name: e.target.value });
-                        showToast('Updated church name');
-                      }}
-                      placeholder="e.g. GEPEKRIS TRETES"
+                      onChange={(e) => updateInfo({ name: e.target.value })}
+                      placeholder="Contoh: GEPEKRIS TRETES"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Tagline / Mission Motto</label>
-                    <Input
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Slogan / Kalimat Misi Singkat</label>
+                    <Textarea
+                      rows={2}
                       value={content.info.tagline}
-                      onChange={(e) => {
-                        updateInfo({ tagline: e.target.value });
-                        showToast('Updated tagline');
-                      }}
-                      placeholder="A place where faith grows..."
+                      onChange={(e) => updateInfo({ tagline: e.target.value })}
+                      placeholder="Gereja Persekutuan Kristen Tretes — Bertumbuh dalam iman..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Telepon Sekretariat</label>
+                      <Input
+                        value={content.info.phone}
+                        onChange={(e) => updateInfo({ phone: e.target.value })}
+                        placeholder="0812-xxxx-xxxx"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Nomor WhatsApp Resmi</label>
+                      <Input
+                        value={content.info.whatsappNumber || ''}
+                        onChange={(e) => updateInfo({ whatsappNumber: e.target.value })}
+                        placeholder="6281234567890"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Email Resmi</label>
+                      <Input
+                        value={content.info.email}
+                        onChange={(e) => updateInfo({ email: e.target.value })}
+                        placeholder="sekretariat@gepekristretes.org"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Alamat Lengkap Gedung Gereja</label>
+                    <Input
+                      value={content.info.address}
+                      onChange={(e) => updateInfo({ address: e.target.value })}
+                      placeholder="Jl. Raya Tretes, Prigen, Pasuruan..."
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Office Phone</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Jam Operasional Sekretariat</label>
                       <Input
-                        value={content.info.phone}
-                        onChange={(e) => {
-                          updateInfo({ phone: e.target.value });
-                          showToast('Updated phone');
-                        }}
+                        value={content.info.officeHours}
+                        onChange={(e) => updateInfo({ officeHours: e.target.value })}
+                        placeholder="Selasa - Sabtu: 09:00 - 16:00 WIB"
                       />
                     </div>
-
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Contact Email</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Tautan Peta Google Maps Embed</label>
                       <Input
-                        value={content.info.email}
-                        onChange={(e) => {
-                          updateInfo({ email: e.target.value });
-                          showToast('Updated email');
-                        }}
+                        value={content.info.mapEmbedUrl}
+                        onChange={(e) => updateInfo({ mapEmbedUrl: e.target.value })}
+                        placeholder="https://maps.google.com/maps?q=..."
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bagian 2: Live Streaming YouTube */}
+                <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <Video className="w-4 h-4 text-red-600" />
+                      <span>Pengaturan Live Streaming Ibadah Online (YouTube)</span>
+                    </h4>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                      Tombol "Tonton Ibadah Online"
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Siaran Ibadah Online</label>
+                      <Input
+                        value={content.info.streamTitle || ''}
+                        onChange={(e) => updateInfo({ streamTitle: e.target.value })}
+                        placeholder="Contoh: Ibadah Raya Minggu Online"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Tautan Video / Live YouTube (Otomatis Dikonversi)
+                      </label>
+                      <Input
+                        value={content.info.streamUrl}
+                        onChange={(e) => updateInfo({ streamUrl: e.target.value })}
+                        onBlur={(e) => {
+                          const formatted = formatYouTubeEmbedUrl(e.target.value);
+                          if (formatted !== e.target.value) {
+                            updateInfo({ streamUrl: formatted });
+                            showToast('Link YouTube otomatis disesuaikan ke format Embed!');
+                          }
+                        }}
+                        placeholder="Tempel link YouTube watch?v=... atau youtu.be/..."
+                      />
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        Anda dapat menempelkan tautan YouTube biasa (misal <code className="bg-white px-1 rounded">https://youtube.com/watch?v=...</code> atau <code className="bg-white px-1 rounded">https://youtube.com/live/...</code>).
+                      </p>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Church Address</label>
-                    <Input
-                      value={content.info.address}
-                      onChange={(e) => {
-                        updateInfo({ address: e.target.value });
-                        showToast('Updated address');
-                      }}
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Deskripsi / Sambutan Jendela Streaming</label>
+                    <Textarea
+                      rows={2}
+                      value={content.info.streamDescription || ''}
+                      onChange={(e) => updateInfo({ streamDescription: e.target.value })}
+                      placeholder="Mari beribadah bersama keluarga besar GEPEKRIS Tretes..."
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Office Hours</label>
-                    <Input
-                      value={content.info.officeHours}
-                      onChange={(e) => {
-                        updateInfo({ officeHours: e.target.value });
-                        showToast('Updated office hours');
-                      }}
-                    />
-                  </div>
+                  {content.info.streamUrl && (
+                    <div className="pt-2">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">Pratinjau Video Streaming:</label>
+                      <div className="aspect-video max-w-md rounded-xl overflow-hidden bg-black border border-gray-300 shadow-xs">
+                        <iframe
+                          className="w-full h-full"
+                          src={formatYouTubeEmbedUrl(content.info.streamUrl)}
+                          title="Pratinjau Live Stream"
+                          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Live Stream Video URL (YouTube Embed)</label>
-                    <Input
-                      value={content.info.streamUrl}
-                      onChange={(e) => {
-                        updateInfo({ streamUrl: e.target.value });
-                        showToast('Updated stream video URL');
-                      }}
-                      placeholder="https://www.youtube-nocookie.com/embed/..."
-                    />
+                {/* Bagian 3: Tautan Sosial Media */}
+                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <Share2 className="w-4 h-4 text-primary" />
+                    <span>Tautan Sosial Media Resmi (Tampil di Footer)</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Halaman Facebook</label>
+                      <Input
+                        value={content.info.facebookUrl || ''}
+                        onChange={(e) => updateInfo({ facebookUrl: e.target.value })}
+                        placeholder="https://facebook.com/..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Profil Instagram</label>
+                      <Input
+                        value={content.info.instagramUrl || ''}
+                        onChange={(e) => updateInfo({ instagramUrl: e.target.value })}
+                        placeholder="https://instagram.com/..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Kanal YouTube</label>
+                      <Input
+                        value={content.info.youtubeUrl || ''}
+                        onChange={(e) => updateInfo({ youtubeUrl: e.target.value })}
+                        placeholder="https://youtube.com/@..."
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -623,42 +821,37 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
             {activeTab === 'hero' && (
               <div className="space-y-6 max-w-2xl">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Hero Section & Visual Banner</h3>
-                  <p className="text-xs text-gray-500">Customize the top headline, welcoming message, and hero photo.</p>
+                  <h3 className="text-lg font-bold text-gray-900">Banner Utama (Hero Beranda)</h3>
+                  <p className="text-xs text-gray-500">Sesuaikan judul sambutan utama, subjudul, catatan jadwal ibadah Minggu, dan foto latar beranda.</p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Hero Main Headline</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Sambutan Utama (Headline)</label>
                     <Input
                       value={content.hero.headline}
-                      onChange={(e) => {
-                        updateHero({ headline: e.target.value });
-                        showToast('Updated hero headline');
-                      }}
+                      onChange={(e) => updateHero({ headline: e.target.value })}
+                      placeholder="Selamat Datang di GEPEKRIS Tretes"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Hero Sub-headline</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Subjudul / Kalimat Sambutan</label>
                     <Textarea
                       rows={3}
                       value={content.hero.subheadline}
-                      onChange={(e) => {
-                        updateHero({ subheadline: e.target.value });
-                        showToast('Updated subheadline');
-                      }}
+                      onChange={(e) => updateHero({ subheadline: e.target.value })}
                     />
                   </div>
 
                   <ImagePickerField
-                    label="Foto Background Banner Hero"
-                    description="Pilih atau unggah foto latar belakang utama website. Tersedia opsi unggah dari perangkat (HP/Komputer), link URL eksternal, atau galeri preset gereja."
+                    label="Foto Latar Belakang Banner Utama (Hero)"
+                    description="Pilih atau unggah foto latar belakang utama website dari HP/komputer, link URL, atau galeri preset gereja."
                     currentValue={content.hero.bgImage}
                     defaultValue={DEFAULT_CHURCH_CONTENT.hero.bgImage}
                     onChange={(newUrl) => {
                       updateHero({ bgImage: newUrl });
-                      showToast('Background hero berhasil diperbarui!');
+                      showToast('Foto latar utama berhasil diperbarui!');
                     }}
                     onToast={showToast}
                     presets={DEFAULT_HERO_PRESETS}
@@ -667,23 +860,19 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Sunday Notice Title</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Kotak Info Ibadah</label>
                       <Input
                         value={content.hero.sundayNoteTitle}
-                        onChange={(e) => {
-                          updateHero({ sundayNoteTitle: e.target.value });
-                          showToast('Updated notice title');
-                        }}
+                        onChange={(e) => updateHero({ sundayNoteTitle: e.target.value })}
+                        placeholder="Jadwal Ibadah Raya Minggu"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Sunday Notice Times</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Rincian Jam Ibadah di Banner</label>
                       <Input
                         value={content.hero.sundayNoteTimes}
-                        onChange={(e) => {
-                          updateHero({ sundayNoteTimes: e.target.value });
-                          showToast('Updated notice times');
-                        }}
+                        onChange={(e) => updateHero({ sundayNoteTimes: e.target.value })}
+                        placeholder="Ibadah Umum: 07:30 WIB & 10:00 WIB..."
                       />
                     </div>
                   </div>
@@ -695,49 +884,40 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
             {activeTab === 'about' && (
               <div className="space-y-6 max-w-2xl">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">About Section & Core Values</h3>
-                  <p className="text-xs text-gray-500">Edit church history, mission paragraphs, and core values.</p>
+                  <h3 className="text-lg font-bold text-gray-900">Tentang Kami & Nilai Pelayanan</h3>
+                  <p className="text-xs text-gray-500">Edit sejarah singkat, visi misi gereja, foto komunitas, dan 4 pilar nilai utama.</p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Section Title</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Seksi Tentang Kami</label>
                     <Input
                       value={content.about.heading}
-                      onChange={(e) => {
-                        updateAbout({ heading: e.target.value });
-                        showToast('Updated section heading');
-                      }}
+                      onChange={(e) => updateAbout({ heading: e.target.value })}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Story Paragraph 1</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Paragraf Profil 1</label>
                     <Textarea
                       rows={3}
                       value={content.about.paragraph1}
-                      onChange={(e) => {
-                        updateAbout({ paragraph1: e.target.value });
-                        showToast('Updated paragraph 1');
-                      }}
+                      onChange={(e) => updateAbout({ paragraph1: e.target.value })}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Story Paragraph 2</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Paragraf Profil 2</label>
                     <Textarea
                       rows={3}
                       value={content.about.paragraph2}
-                      onChange={(e) => {
-                        updateAbout({ paragraph2: e.target.value });
-                        showToast('Updated paragraph 2');
-                      }}
+                      onChange={(e) => updateAbout({ paragraph2: e.target.value })}
                     />
                   </div>
 
                   <ImagePickerField
-                    label="Foto Tentang Kami / Komunitas"
-                    description="Foto kebersamaan jemaat atau aktivitas gereja pada bagian Tentang Kami."
+                    label="Foto Tentang Kami / Kebersamaan Jemaat"
+                    description="Foto gedung gereja atau kebersamaan jemaat pada bagian Tentang Kami."
                     currentValue={content.about.image}
                     defaultValue={DEFAULT_CHURCH_CONTENT.about.image}
                     onChange={(newUrl) => {
@@ -749,12 +929,12 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                   />
 
                   <div className="pt-2">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-3">4 Core Values</h4>
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3">4 Pilar Nilai Pelayanan</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {content.about.values.map((val, idx) => (
                         <div key={idx} className="p-3 bg-gray-50 rounded-xl border border-gray-200">
                           <label className="block text-[11px] font-bold text-gray-600 mb-1">
-                            Value #{idx + 1}
+                            Nilai #{idx + 1}
                           </label>
                           <Input
                             className="mb-2 h-8 text-xs font-semibold"
@@ -787,8 +967,8 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
             {activeTab === 'services' && (
               <div className="space-y-6 max-w-3xl">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Service Times & Schedules</h3>
-                  <p className="text-xs text-gray-500">Manage worship services displayed on the homepage.</p>
+                  <h3 className="text-lg font-bold text-gray-900">Jadwal Ibadah & Persekutuan</h3>
+                  <p className="text-xs text-gray-500">Kelola jadwal kebaktian rutin yang ditampilkan di halaman utama.</p>
                 </div>
 
                 {/* Existing Services List */}
@@ -809,11 +989,11 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Waktu / Jadwal (pisahkan koma jika lebih dari satu)</label>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Waktu / Jam Ibadah (pisahkan dengan koma jika lebih dari satu)</label>
                             <Input
                               value={Array.isArray(srv.times) ? srv.times.join(', ') : (srv.times || '')}
                               onChange={(e) => updateServiceItem(srv.id, { times: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
-                              placeholder="contoh: 07:30 WIB, 10:00 WIB"
+                              placeholder="Contoh: 07:30 WIB, 10:00 WIB"
                             />
                           </div>
                           <div>
@@ -865,10 +1045,10 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               size="icon"
                               onClick={() => {
                                 deleteService(srv.id);
-                                showToast(`Removed "${srv.name}"`);
+                                showToast(`Jadwal "${srv.name}" dihapus`);
                               }}
                               className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
-                              title="Delete this service"
+                              title="Hapus jadwal ini"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -880,216 +1060,357 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                 </div>
 
                 {/* Add New Service Form */}
-                <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 mt-6">
+                <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200 mt-6">
                   <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <Plus className="w-4 h-4 text-primary" />
-                    <span>Add New Service Schedule</span>
+                    <span>Tambah Jadwal Ibadah Baru</span>
                   </h4>
                   <form onSubmit={handleAddService} className="space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Service Name *</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Ibadah *</label>
                       <Input
                         required
                         value={newServiceName}
                         onChange={(e) => setNewServiceName(e.target.value)}
-                        placeholder="e.g. Saturday Youth Night"
+                        placeholder="Contoh: Ibadah Persekutuan Doa Malam"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Times (comma separated) *</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Jam Ibadah (pisahkan dengan koma) *</label>
                       <Input
                         required
                         value={newServiceTimes}
                         onChange={(e) => setNewServiceTimes(e.target.value)}
-                        placeholder="e.g. 5:00 PM, 7:00 PM"
+                        placeholder="Contoh: Kamis 18:30 WIB"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Keterangan Singkat</label>
                       <Input
                         value={newServiceDesc}
                         onChange={(e) => setNewServiceDesc(e.target.value)}
-                        placeholder="Brief description of the service..."
+                        placeholder="Penjelasan singkat mengenai ibadah ini..."
                       />
                     </div>
                     <Button type="submit" size="sm" className="cursor-pointer">
-                      Add Service
+                      Tambah Jadwal Ibadah
                     </Button>
                   </form>
                 </div>
               </div>
             )}
 
-            {/* Tab 5: Ministries */}
+            {/* Tab 5: Ministries & Additional Ministries */}
             {activeTab === 'ministries' && (
-              <div className="space-y-6 max-w-3xl">
+              <div className="space-y-8 max-w-4xl">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Ministries & Groups</h3>
-                  <p className="text-xs text-gray-500">Edit, add, or remove church ministries and departments.</p>
+                  <h3 className="text-lg font-bold text-gray-900">Komisi & Bidang Pelayanan Gereja</h3>
+                  <p className="text-xs text-gray-500">
+                    Kelola kartu pelayanan utama bergambar serta daftar komisi tambahan (Doa, Wanita, Pria, Usia Indah, dll).
+                  </p>
                 </div>
 
-                {/* Existing Ministries */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {content.ministries.map((min) => (
-                    <div
-                      key={min.id}
-                      className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col justify-between"
-                    >
-                      {editingMinistryId === min.id ? (
-                        <div className="space-y-3 bg-white p-3 rounded-lg border border-primary/30">
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Bidang Pelayanan</label>
-                            <Input
-                              value={min.title}
-                              onChange={(e) => updateMinistryItem(min.id, { title: e.target.value })}
-                              placeholder="Nama Pelayanan"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Deskripsi / Visi</label>
-                            <Textarea
-                              rows={2}
-                              value={min.description}
-                              onChange={(e) => updateMinistryItem(min.id, { description: e.target.value })}
-                              placeholder="Deskripsi pelayanan..."
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">URL Gambar Cover</label>
-                            <Input
-                              value={min.image}
-                              onChange={(e) => updateMinistryItem(min.id, { image: e.target.value })}
-                              placeholder="https://..."
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Fokus / Tag (pisahkan koma)</label>
-                            <Input
-                              value={min.features.join(', ')}
-                              onChange={(e) => updateMinistryItem(min.id, { features: e.target.value.split(',').map(f => f.trim()).filter(Boolean) })}
-                              placeholder="Fokus 1, Fokus 2"
-                            />
-                          </div>
-                          <div className="flex justify-end pt-1">
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setEditingMinistryId(null);
-                                showToast('Pelayanan diperbarui!');
-                              }}
-                              className="cursor-pointer text-xs"
-                            >
-                              Selesai Mengedit
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div>
-                            <div className="h-28 w-full rounded-lg overflow-hidden mb-2 bg-gray-200">
-                              <img
-                                src={min.image}
-                                alt={min.title}
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
+                {/* Bagian A: Pelayanan Utama Bergambar */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900">A. Bidang Pelayanan Utama ({content.ministries.length})</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {content.ministries.map((min) => (
+                      <div
+                        key={min.id}
+                        className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col justify-between"
+                      >
+                        {editingMinistryId === min.id ? (
+                          <div className="space-y-3 bg-white p-3 rounded-lg border border-primary/30">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Bidang Pelayanan</label>
+                              <Input
+                                value={min.title}
+                                onChange={(e) => updateMinistryItem(min.id, { title: e.target.value })}
+                                placeholder="Nama Pelayanan"
                               />
                             </div>
-                            <h4 className="font-semibold text-gray-900 text-sm mb-1">{min.title}</h4>
-                            <p className="text-xs text-gray-600 mb-2 leading-relaxed">{min.description}</p>
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {min.features.map((f, i) => (
-                                <span key={i} className="text-[10px] bg-white px-2 py-0.5 rounded border text-gray-600">
-                                  {f}
-                                </span>
-                              ))}
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Deskripsi / Visi</label>
+                              <Textarea
+                                rows={2}
+                                value={min.description}
+                                onChange={(e) => updateMinistryItem(min.id, { description: e.target.value })}
+                                placeholder="Deskripsi pelayanan..."
+                              />
+                            </div>
+                            <div>
+                              <ImagePickerField
+                                label="Foto Sampul Komisi"
+                                description="Unggah foto komisi dari HP/komputer atau gunakan tautan URL."
+                                currentValue={min.image}
+                                onChange={(url) => updateMinistryItem(min.id, { image: url })}
+                                onToast={showToast}
+                                aspectRatio="16:9"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Kegiatan / Fokus Utama (pisahkan koma)</label>
+                              <Input
+                                value={min.features.join(', ')}
+                                onChange={(e) => updateMinistryItem(min.id, { features: e.target.value.split(',').map(f => f.trim()).filter(Boolean) })}
+                                placeholder="Kegiatan 1, Kegiatan 2"
+                              />
+                            </div>
+                            <div className="flex justify-end pt-1">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setEditingMinistryId(null);
+                                  showToast('Data komisi diperbarui!');
+                                }}
+                                className="cursor-pointer text-xs"
+                              >
+                                Selesai Mengedit
+                              </Button>
                             </div>
                           </div>
+                        ) : (
+                          <>
+                            <div>
+                              <div className="h-32 w-full rounded-lg overflow-hidden mb-2.5 bg-gray-200">
+                                <img
+                                  src={min.image}
+                                  alt={min.title}
+                                  className="w-full h-full object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </div>
+                              <h4 className="font-semibold text-gray-900 text-sm mb-1">{min.title}</h4>
+                              <p className="text-xs text-gray-600 mb-2 leading-relaxed">{min.description}</p>
+                              <div className="flex flex-wrap gap-1 mb-3">
+                                {min.features.map((f, i) => (
+                                  <span key={i} className="text-[10px] bg-white px-2 py-0.5 rounded border text-gray-600">
+                                    {f}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
 
-                          <div className="pt-2 border-t border-gray-200 flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setEditingMinistryId(min.id)}
-                              className="text-gray-600 hover:text-primary hover:bg-primary/10 text-xs cursor-pointer"
-                            >
-                              <Pencil className="w-3.5 h-3.5 mr-1" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                deleteMinistry(min.id);
-                                showToast(`Removed "${min.title}"`);
-                              }}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                            <div className="pt-2 border-t border-gray-200 flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingMinistryId(min.id)}
+                                className="text-gray-600 hover:text-primary hover:bg-primary/10 text-xs cursor-pointer"
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  deleteMinistry(min.id);
+                                  showToast(`Komisi "${min.title}" dihapus`);
+                                }}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                Hapus
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add New Main Ministry Form */}
+                  <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200">
+                    <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <Plus className="w-4 h-4 text-primary" />
+                      <span>Tambah Bidang Pelayanan Utama Baru</span>
+                    </h4>
+                    <form onSubmit={handleAddMinistry} className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Komisi / Pelayanan *</label>
+                        <Input
+                          required
+                          value={newMinTitle}
+                          onChange={(e) => setNewMinTitle(e.target.value)}
+                          placeholder="Contoh: Komisi Musik & Pujian Penyembahan"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Deskripsi *</label>
+                        <Textarea
+                          rows={2}
+                          required
+                          value={newMinDesc}
+                          onChange={(e) => setNewMinDesc(e.target.value)}
+                          placeholder="Tujuan dan kegiatan komisi ini..."
+                        />
+                      </div>
+                      <div>
+                        <ImagePickerField
+                          label="Foto Sampul Pelayanan"
+                          description="Unggah foto dari perangkat atau masukkan URL gambar."
+                          currentValue={newMinImage}
+                          onChange={(url) => setNewMinImage(url)}
+                          onToast={showToast}
+                          aspectRatio="16:9"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Program / Kegiatan Utama (pisahkan koma)</label>
+                        <Input
+                          value={newMinFeatures}
+                          onChange={(e) => setNewMinFeatures(e.target.value)}
+                          placeholder="Paduan Suara, Musik Ibadah, Pelatihan"
+                        />
+                      </div>
+                      <Button type="submit" size="sm" className="cursor-pointer">
+                        Tambah Pelayanan Utama
+                      </Button>
+                    </form>
+                  </div>
                 </div>
 
-                {/* Add New Ministry Form */}
-                <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 mt-6">
-                  <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-primary" />
-                    <span>Add New Ministry</span>
-                  </h4>
-                  <form onSubmit={handleAddMinistry} className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Ministry Title *</label>
+                {/* Bagian B: Komisi & Pelayanan Lainnya */}
+                <div className="space-y-4 pt-4 border-t border-gray-200">
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900">B. Komisi & Pelayanan Lainnya ({additionalMinistries.length})</h4>
+                    <p className="text-xs text-gray-500">Daftar komisi yang tampil pada kotak bawah seksi Pelayanan (misal: Persekutuan Doa, Komisi Wanita, Komisi Pria, Lansia).</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {additionalMinistries.map((item) => (
+                      <div key={item.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        {editingAddMinistryId === item.id ? (
+                          <div className="space-y-2.5 bg-white p-3 rounded-lg border border-primary/30">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Komisi</label>
+                              <Input
+                                value={item.title}
+                                onChange={(e) => updateAdditionalMinistry(item.id, { title: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Deskripsi Singkat</label>
+                              <Textarea
+                                rows={2}
+                                value={item.description}
+                                onChange={(e) => updateAdditionalMinistry(item.id, { description: e.target.value })}
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Jadwal Kegiatan</label>
+                                <Input
+                                  value={item.schedule || ''}
+                                  onChange={(e) => updateAdditionalMinistry(item.id, { schedule: e.target.value })}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Lokasi</label>
+                                <Input
+                                  value={item.location || ''}
+                                  onChange={(e) => updateAdditionalMinistry(item.id, { location: e.target.value })}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end pt-1">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setEditingAddMinistryId(null);
+                                  showToast('Komisi lainnya diperbarui!');
+                                }}
+                                className="cursor-pointer text-xs"
+                              >
+                                Selesai
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h5 className="font-bold text-sm text-gray-900">{item.title}</h5>
+                              <p className="text-xs text-gray-600 mt-0.5">{item.description}</p>
+                              {(item.schedule || item.location) && (
+                                <p className="text-[11px] text-amber-800 mt-1.5 font-medium">
+                                  {item.schedule} &bull; {item.location}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setEditingAddMinistryId(item.id)}
+                                className="text-gray-500 hover:text-primary cursor-pointer"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  deleteAdditionalMinistry(item.id);
+                                  showToast(`"${item.title}" dihapus`);
+                                }}
+                                className="text-red-500 hover:text-red-700 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Form Tambah Komisi Lainnya */}
+                  <form onSubmit={handleAddAdditionalMinistry} className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+                    <h5 className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5 text-primary" />
+                      <span>Tambah Komisi / Pelayanan Lainnya</span>
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Input
                         required
-                        value={newMinTitle}
-                        onChange={(e) => setNewMinTitle(e.target.value)}
-                        placeholder="e.g. Creative Arts & Music"
+                        value={newAddMinTitle}
+                        onChange={(e) => setNewAddMinTitle(e.target.value)}
+                        placeholder="Nama Komisi (misal: Komisi Remaja)"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Description *</label>
-                      <Textarea
-                        rows={2}
+                      <Input
                         required
-                        value={newMinDesc}
-                        onChange={(e) => setNewMinDesc(e.target.value)}
-                        placeholder="Purpose and vision of this ministry..."
+                        value={newAddMinDesc}
+                        onChange={(e) => setNewAddMinDesc(e.target.value)}
+                        placeholder="Deskripsi singkat..."
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Cover Image URL</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Input
-                        value={newMinImage}
-                        onChange={(e) => setNewMinImage(e.target.value)}
-                        placeholder="https://images.unsplash.com/..."
+                        value={newAddMinSchedule}
+                        onChange={(e) => setNewAddMinSchedule(e.target.value)}
+                        placeholder="Jadwal (misal: Setiap Sabtu 16:00 WIB)"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Key Features (comma separated)</label>
                       <Input
-                        value={newMinFeatures}
-                        onChange={(e) => setNewMinFeatures(e.target.value)}
-                        placeholder="Worship Choir, Audio Engineering, Media"
+                        value={newAddMinLocation}
+                        onChange={(e) => setNewAddMinLocation(e.target.value)}
+                        placeholder="Lokasi kegiatan"
                       />
                     </div>
-                    <Button type="submit" size="sm" className="cursor-pointer">
-                      Add Ministry
+                    <Button type="submit" size="sm" variant="outline" className="cursor-pointer text-xs">
+                      Tambah Komisi Lainnya
                     </Button>
                   </form>
                 </div>
               </div>
             )}
 
-            {/* Tab 6: Events */}
+            {/* Tab 6: Events / Warta */}
             {activeTab === 'events' && (
               <div className="space-y-6 max-w-3xl">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Upcoming Church Events</h3>
-                  <p className="text-xs text-gray-500">Publish special services, retreats, and outreach activities.</p>
+                  <h3 className="text-lg font-bold text-gray-900">Warta Jemaat & Berita Kegiatan</h3>
+                  <p className="text-xs text-gray-500">Terbitkan pengumuman ibadah khusus, retret, diakonia, dan artikel warta gereja.</p>
                 </div>
 
                 {/* Events list */}
@@ -1101,13 +1422,30 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     >
                       {editingEventId === evt.id ? (
                         <div className="space-y-3 bg-white p-3 rounded-lg border border-primary/30">
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Warta / Kegiatan</label>
-                            <Input
-                              value={evt.title}
-                              onChange={(e) => updateEventItem(evt.id, { title: e.target.value })}
-                              placeholder="Judul Warta"
-                            />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Warta / Kegiatan</label>
+                              <Input
+                                value={evt.title}
+                                onChange={(e) => updateEventItem(evt.id, { title: e.target.value })}
+                                placeholder="Judul Warta"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Kategori</label>
+                              <select
+                                value={evt.category}
+                                onChange={(e) => updateEventItem(evt.id, { category: e.target.value })}
+                                className="w-full px-3 py-2 text-xs border rounded-md bg-white"
+                              >
+                                <option value="Ibadah Khusus">Ibadah Khusus</option>
+                                <option value="Retret">Retret & Pembinaan</option>
+                                <option value="Diakonia">Diakonia & Kasih</option>
+                                <option value="Persekutuan">Persekutuan</option>
+                                <option value="Pemuda & Remaja">Pemuda & Remaja</option>
+                                <option value="Pengumuman">Pengumuman Jemaat</option>
+                              </select>
+                            </div>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div>
@@ -1136,6 +1474,16 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                             </div>
                           </div>
                           <div>
+                            <ImagePickerField
+                              label="Foto Sampul Warta / Berita"
+                              description="Unggah foto warta atau tempel URL gambar."
+                              currentValue={evt.image || ''}
+                              onChange={(url) => updateEventItem(evt.id, { image: url })}
+                              onToast={showToast}
+                              aspectRatio="16:9"
+                            />
+                          </div>
+                          <div>
                             <label className="block text-xs font-semibold text-gray-700 mb-1">Ringkasan Singkat</label>
                             <Input
                               value={evt.description}
@@ -1146,13 +1494,22 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                           <div>
                             <label className="block text-xs font-semibold text-gray-700 mb-1">Isi Berita / Warta Lengkap</label>
                             <Textarea
-                              rows={3}
+                              rows={4}
                               value={evt.content || evt.description}
                               onChange={(e) => updateEventItem(evt.id, { content: e.target.value })}
                               placeholder="Detail teks warta lengkap..."
                             />
                           </div>
-                          <div className="flex justify-end pt-1">
+                          <div className="flex items-center justify-between pt-1">
+                            <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(evt.featured)}
+                                onChange={(e) => updateEventItem(evt.id, { featured: e.target.checked })}
+                                className="rounded text-primary"
+                              />
+                              <span>Jadikan Warta Utama (Disorot)</span>
+                            </label>
                             <Button
                               size="sm"
                               onClick={() => {
@@ -1168,18 +1525,18 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                       ) : (
                         <div className="flex items-start justify-between gap-4">
                           <div className="space-y-1 flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-primary/10 text-primary">
                                 {evt.category}
                               </span>
                               {evt.featured && (
                                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
-                                  Featured
+                                  Warta Utama
                                 </span>
                               )}
                               <h4 className="font-semibold text-gray-900 text-sm">{evt.title}</h4>
                             </div>
-                            <div className="text-xs text-gray-600 flex items-center gap-3">
+                            <div className="text-xs text-gray-600 flex items-center gap-3 flex-wrap">
                               <span>{evt.date}</span>
                               <span>•</span>
                               <span>{evt.time}</span>
@@ -1204,10 +1561,10 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                               size="icon"
                               onClick={() => {
                                 deleteEvent(evt.id);
-                                showToast(`Removed "${evt.title}"`);
+                                showToast(`Warta "${evt.title}" dihapus`);
                               }}
                               className="text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
-                              title="Delete event"
+                              title="Hapus warta"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -1219,98 +1576,100 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                 </div>
 
                 {/* Add New Event Form */}
-                <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 mt-6">
+                <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200 mt-6">
                   <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <Plus className="w-4 h-4 text-primary" />
-                    <span>Publish New Event</span>
+                    <span>Terbitkan Warta / Kegiatan Baru</span>
                   </h4>
                   <form onSubmit={handleAddEvent} className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Event Title *</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Warta / Acara *</label>
                         <Input
                           required
                           value={newEventTitle}
                           onChange={(e) => setNewEventTitle(e.target.value)}
-                          placeholder="e.g. Christmas Eve Candlelight"
+                          placeholder="Contoh: Ibadah Syukur HUT Gereja"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Category</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Kategori</label>
                         <select
                           value={newEventCategory}
                           onChange={(e) => setNewEventCategory(e.target.value)}
                           className="w-full px-3 py-2 text-sm border rounded-md bg-white focus:outline-hidden"
                         >
-                          <option value="Special Service">Special Service</option>
-                          <option value="Outreach">Outreach</option>
-                          <option value="Fellowship">Fellowship</option>
-                          <option value="Youth">Youth</option>
-                          <option value="Special Event">Special Event</option>
+                          <option value="Ibadah Khusus">Ibadah Khusus</option>
+                          <option value="Retret">Retret & Pembinaan</option>
+                          <option value="Diakonia">Diakonia & Kasih</option>
+                          <option value="Persekutuan">Persekutuan</option>
+                          <option value="Pemuda & Remaja">Pemuda & Remaja</option>
+                          <option value="Pengumuman">Pengumuman Jemaat</option>
                         </select>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Date *</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Hari & Tanggal *</label>
                         <Input
                           required
                           value={newEventDate}
                           onChange={(e) => setNewEventDate(e.target.value)}
-                          placeholder="e.g. December 24, 2024"
+                          placeholder="Contoh: Minggu, 12 Oktober 2025"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Time</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Jam / Waktu</label>
                         <Input
                           value={newEventTime}
                           onChange={(e) => setNewEventTime(e.target.value)}
-                          placeholder="e.g. 7:00 PM"
+                          placeholder="Contoh: 09:00 WIB"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Location</label>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Lokasi</label>
                         <Input
                           value={newEventLocation}
                           onChange={(e) => setNewEventLocation(e.target.value)}
-                          placeholder="e.g. Main Sanctuary"
+                          placeholder="Gedung Gereja GEPEKRIS Tretes"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Ringkasan Singkat (Muncul di Kartu Berita)</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Ringkasan Singkat (Tampil di Kartu Depan)</label>
                       <Textarea
                         rows={2}
                         value={newEventDesc}
                         onChange={(e) => setNewEventDesc(e.target.value)}
-                        placeholder="Ringkasan 1-2 kalimat untuk preview di halaman depan..."
+                        placeholder="Ringkasan 1-2 kalimat untuk kartu halaman depan..."
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Foto Berita (URL Gambar / Hosting)</label>
-                        <Input
-                          value={newEventImage}
-                          onChange={(e) => setNewEventImage(e.target.value)}
-                          placeholder="https://domainanda.com/uploads/foto.jpg"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Penulis / Komisi</label>
-                        <Input
-                          value={newEventAuthor}
-                          onChange={(e) => setNewEventAuthor(e.target.value)}
-                          placeholder="Contoh: Majelis GEPEKRIS Tretes"
-                        />
-                      </div>
+                    <div>
+                      <ImagePickerField
+                        label="Foto Sampul Berita / Kegiatan"
+                        description="Unggah dari perangkat atau tempel URL gambar."
+                        currentValue={newEventImage}
+                        onChange={(url) => setNewEventImage(url)}
+                        onToast={showToast}
+                        aspectRatio="16:9"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Penulis / Komisi</label>
+                      <Input
+                        value={newEventAuthor}
+                        onChange={(e) => setNewEventAuthor(e.target.value)}
+                        placeholder="Contoh: Majelis GEPEKRIS Tretes"
+                      />
                     </div>
 
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Isi Artikel Berita Lengkap (Tampilan Pembaca / Blogspot)
+                        Isi Artikel Warta Lengkap (Halaman Pembaca)
                       </label>
                       <Textarea
                         rows={5}
@@ -1329,12 +1688,288 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                         className="rounded text-primary"
                       />
                       <label htmlFor="featured-check" className="text-xs text-gray-700 cursor-pointer">
-                        Mark as Featured Event (highlighted banner)
+                        Tandai sebagai Warta Utama (Disorot di halaman depan)
                       </label>
                     </div>
 
                     <Button type="submit" size="sm" className="cursor-pointer">
-                      Publish Event
+                      Terbitkan Warta
+                    </Button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: Persembahan, Rekening Bank & QRIS */}
+            {activeTab === 'giving' && (
+              <div className="space-y-8 max-w-4xl">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Pengaturan Persembahan, Rekening Bank & QRIS</h3>
+                  <p className="text-xs text-gray-500">
+                    Kelola informasi rekening bank gereja, kode gambar QRIS, ayat firman Tuhan, dan daftar alokasi dana persembahan.
+                  </p>
+                </div>
+
+                {/* 1. Judul & Ayat Firman */}
+                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900">1. Judul & Ayat Pengantar Persembahan</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Judul Utama Seksi Persembahan</label>
+                      <Input
+                        value={givingData.heading}
+                        onChange={(e) => updateGiving({ heading: e.target.value })}
+                        placeholder="Memberi dengan Sukacita"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Subjudul / Keterangan Transparansi</label>
+                      <Input
+                        value={givingData.subheading}
+                        onChange={(e) => updateGiving({ subheading: e.target.value })}
+                        placeholder="Setiap persembahan dikelola dengan penuh tanggung jawab..."
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Ayat Kutipan Alkitab</label>
+                    <Textarea
+                      rows={2}
+                      value={givingData.scriptureQuote}
+                      onChange={(e) => updateGiving({ scriptureQuote: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Daftar Rekening Bank */}
+                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <Landmark className="w-4 h-4 text-primary" />
+                      <span>2. Rekening Bank Resmi Gereja ({givingData.bankAccounts.length})</span>
+                    </h4>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {givingData.bankAccounts.map((acc) => (
+                      <div key={acc.id} className="p-3.5 bg-white rounded-xl border border-gray-200">
+                        {editingBankId === acc.id ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Nama Bank</label>
+                                <Input
+                                  value={acc.bankName}
+                                  onChange={(e) => updateBankAccount(acc.id, { bankName: e.target.value })}
+                                  placeholder="BCA / Mandiri / BRI"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Nomor Rekening</label>
+                                <Input
+                                  value={acc.accountNumber}
+                                  onChange={(e) => updateBankAccount(acc.id, { accountNumber: e.target.value })}
+                                  placeholder="882-019-4821"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Atas Nama (a.n.)</label>
+                                <Input
+                                  value={acc.accountHolder}
+                                  onChange={(e) => updateBankAccount(acc.id, { accountHolder: e.target.value })}
+                                  placeholder="GEPEKRIS Tretes"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setEditingBankId(null);
+                                  showToast('Rekening bank diperbarui!');
+                                }}
+                                className="cursor-pointer text-xs"
+                              >
+                                Selesai
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="font-bold text-sm text-gray-900">{acc.bankName}</div>
+                              <div className="text-xs font-mono text-amber-800 font-semibold">{acc.accountNumber}</div>
+                              <div className="text-[11px] text-gray-500">a.n. {acc.accountHolder}</div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setEditingBankId(acc.id)}
+                                className="text-gray-500 hover:text-primary cursor-pointer"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  deleteBankAccount(acc.id);
+                                  showToast('Rekening dihapus');
+                                }}
+                                className="text-red-500 hover:text-red-700 cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Form Tambah Rekening */}
+                  <form onSubmit={handleAddBank} className="pt-2 border-t border-gray-200 space-y-3">
+                    <h5 className="text-xs font-bold text-gray-700">Tambah Rekening Bank Baru</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <Input
+                        required
+                        value={newBankName}
+                        onChange={(e) => setNewBankName(e.target.value)}
+                        placeholder="Nama Bank (misal: BRI)"
+                      />
+                      <Input
+                        required
+                        value={newBankNumber}
+                        onChange={(e) => setNewBankNumber(e.target.value)}
+                        placeholder="Nomor Rekening"
+                      />
+                      <Input
+                        value={newBankHolder}
+                        onChange={(e) => setNewBankHolder(e.target.value)}
+                        placeholder="Atas Nama (a.n.)"
+                      />
+                    </div>
+                    <Button type="submit" size="sm" variant="outline" className="cursor-pointer text-xs">
+                      <Plus className="w-3.5 h-3.5 mr-1" />
+                      Tambah Rekening
+                    </Button>
+                  </form>
+                </div>
+
+                {/* 3. Kode Gambar QRIS */}
+                <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <QrCode className="w-4 h-4 text-amber-800" />
+                    <span>3. Kode QRIS Gereja (E-Wallet & Mobile Banking)</span>
+                  </h4>
+
+                  <ImagePickerField
+                    label="Gambar Barcode QRIS Persembahan"
+                    description="Unggah gambar QRIS resmi gereja dari HP/komputer atau gunakan tautan URL gambar."
+                    currentValue={givingData.qrisImageUrl}
+                    defaultValue={DEFAULT_CHURCH_CONTENT.giving.qrisImageUrl}
+                    onChange={(url) => {
+                      updateGiving({ qrisImageUrl: url });
+                      showToast('Gambar QRIS berhasil diperbarui!');
+                    }}
+                    onToast={showToast}
+                    aspectRatio="1:1"
+                  />
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Petunjuk Bawah Gambar QRIS</label>
+                    <Input
+                      value={givingData.qrisLabel}
+                      onChange={(e) => updateGiving({ qrisLabel: e.target.value })}
+                      placeholder="Scan menggunakan BCA Mobile, Mandiri Livin, GoPay, OVO, Dana..."
+                    />
+                  </div>
+                </div>
+
+                {/* 4. Kategori Alokasi Dana Persembahan */}
+                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+                  <h4 className="text-sm font-bold text-gray-900">4. Kategori Alokasi Persembahan ({givingData.funds.length})</h4>
+                  <div className="space-y-2.5">
+                    {givingData.funds.map((fund) => (
+                      <div key={fund.id} className="p-3.5 bg-white rounded-xl border border-gray-200">
+                        {editingFundId === fund.id ? (
+                          <div className="space-y-2.5">
+                            <Input
+                              value={fund.name}
+                              onChange={(e) => updateGivingFund(fund.id, { name: e.target.value })}
+                              placeholder="Nama Kategori Persembahan"
+                            />
+                            <Textarea
+                              rows={2}
+                              value={fund.description}
+                              onChange={(e) => updateGivingFund(fund.id, { description: e.target.value })}
+                              placeholder="Penjelasan alokasi..."
+                            />
+                            <div className="flex justify-end">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setEditingFundId(null);
+                                  showToast('Kategori persembahan diperbarui!');
+                                }}
+                                className="cursor-pointer text-xs"
+                              >
+                                Selesai
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="font-bold text-sm text-gray-900">{fund.name}</div>
+                              <div className="text-xs text-gray-600 mt-0.5">{fund.description}</div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setEditingFundId(fund.id)}
+                                className="text-gray-500 hover:text-primary cursor-pointer"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  deleteGivingFund(fund.id);
+                                  showToast('Kategori persembahan dihapus');
+                                }}
+                                className="text-red-500 hover:text-red-700 cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <form onSubmit={handleAddFund} className="pt-2 border-t border-gray-200 space-y-2.5">
+                    <h5 className="text-xs font-bold text-gray-700">Tambah Kategori Alokasi Baru</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <Input
+                        required
+                        value={newFundName}
+                        onChange={(e) => setNewFundName(e.target.value)}
+                        placeholder="Nama Kategori (misal: Persembahan Syukur Tahunan)"
+                      />
+                      <Input
+                        value={newFundDesc}
+                        onChange={(e) => setNewFundDesc(e.target.value)}
+                        placeholder="Keterangan singkat..."
+                      />
+                    </div>
+                    <Button type="submit" size="sm" variant="outline" className="cursor-pointer text-xs">
+                      <Plus className="w-3.5 h-3.5 mr-1" />
+                      Tambah Kategori
                     </Button>
                   </form>
                 </div>
@@ -1345,27 +1980,27 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
             {activeTab === 'backup' && (
               <div className="space-y-6 max-w-2xl">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Backup & System Reset</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Cadangan Data (Backup) & Reset Sistem</h3>
                   <p className="text-xs text-gray-500">
-                    Export your custom content as a JSON file or restore default church data.
+                    Unduh seluruh data konten website sebagai berkas cadangan JSON atau kembalikan ke pengaturan awal.
                   </p>
                 </div>
 
                 <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
-                  <h4 className="text-sm font-semibold text-gray-900">Export / Download Backup</h4>
+                  <h4 className="text-sm font-semibold text-gray-900">Unduh Cadangan Data (Export JSON)</h4>
                   <p className="text-xs text-gray-600">
-                    Save all current church text, services, ministries, and events to a local JSON file.
+                    Simpan seluruh teks profil gereja, jadwal ibadah, komisi, warta, galeri, dan info persembahan ke berkas JSON di perangkat Anda.
                   </p>
                   <Button onClick={handleExportJson} className="cursor-pointer flex items-center gap-2">
                     <Download className="w-4 h-4" />
-                    <span>Download JSON Backup</span>
+                    <span>Unduh Berkas Cadangan JSON</span>
                   </Button>
                 </div>
 
                 <div className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
-                  <h4 className="text-sm font-semibold text-gray-900">Import / Restore Backup</h4>
+                  <h4 className="text-sm font-semibold text-gray-900">Pulihkan dari Cadangan (Import JSON)</h4>
                   <p className="text-xs text-gray-600">
-                    Paste content JSON code below to restore previous edits:
+                    Tempelkan kode JSON cadangan Anda di bawah ini untuk memulihkan konten:
                   </p>
                   <Textarea
                     rows={4}
@@ -1380,27 +2015,25 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     className="cursor-pointer flex items-center gap-2"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>Apply Imported Content</span>
+                    <span>Terapkan Konten dari JSON</span>
                   </Button>
                 </div>
 
                 <div className="p-5 bg-red-50/50 rounded-2xl border border-red-200/80 space-y-3">
-                  <h4 className="text-sm font-semibold text-red-900">Reset to Factory Defaults</h4>
+                  <h4 className="text-sm font-semibold text-red-900">Kembalikan ke Bawaan Awal (Reset)</h4>
                   <p className="text-xs text-red-700">
-                    Clear all customized browser edits and return to the original default church content.
+                    Kembalikan seluruh isi halaman ke template bawaan resmi GEPEKRIS Tretes.
                   </p>
                   <Button
                     variant="destructive"
                     onClick={() => {
-                      if (confirm('Are you sure you want to restore default content? Your local edits will be cleared.')) {
-                        resetToDefaults();
-                        showToast('Reset to original default content!');
-                      }
+                      resetToDefaults();
+                      showToast('Konten berhasil dikembalikan ke bawaan awal!');
                     }}
                     className="cursor-pointer flex items-center gap-2"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    <span>Reset Everything</span>
+                    <span>Reset ke Template Awal</span>
                   </Button>
                 </div>
               </div>
@@ -1452,12 +2085,12 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     onSubmit={(e) => {
                       e.preventDefault();
                       if (!newGalTitle.trim() || !newGalImageUrl.trim()) {
-                        alert('Mohon masukkan judul dan foto dokumentasi.');
+                        showError('Mohon masukkan judul dan pilih foto dokumentasi.');
                         return;
                       }
                       const imgValidation = validateImageUrlString(newGalImageUrl.trim());
                       if (!imgValidation.valid) {
-                        alert(imgValidation.error || 'Format gambar tidak valid. Gunakan format JPG atau PNG.');
+                        showError(imgValidation.error || 'Format gambar tidak valid. Gunakan format JPG atau PNG.');
                         return;
                       }
                       addGalleryItem({
@@ -1476,11 +2109,8 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     className="space-y-3"
                   >
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Foto Kegiatan (Pilih Berkas atau Tautan URL) *
-                      </label>
                       <ImagePickerField
-                        label="Pilih Foto Dokumentasi"
+                        label="Pilih Foto Dokumentasi *"
                         description="Unggah dari komputer/HP atau masukkan URL gambar."
                         currentValue={newGalImageUrl}
                         onChange={(url) => setNewGalImageUrl(url)}
@@ -1688,10 +2318,8 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
-                                      if (confirm(`Hapus foto "${item.title}"?`)) {
-                                        deleteGalleryItem(item.id);
-                                        showToast('Foto berhasil dihapus.');
-                                      }
+                                      deleteGalleryItem(item.id);
+                                      showToast('Foto berhasil dihapus.');
                                     }}
                                     className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                                   >
@@ -1734,7 +2362,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                   <div className="flex items-center gap-2 shrink-0">
                     <Button
                       onClick={() => setIsMediaModalOpen(true)}
-                      className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm"
+                      className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
                       <FolderOpen className="w-4 h-4" />
                       <span>Buka Pengelola Media Penuh</span>
@@ -1748,16 +2376,16 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     <Smartphone className="w-5 h-5" />
                   </div>
                   <div className="flex-1 text-xs text-amber-900">
-                    <p className="font-semibold text-amber-950">Ramah HP & Ringan untuk Hosting gepekristretes.org</p>
+                    <p className="font-semibold text-amber-950">Ramah HP & Tersimpan di Cloud Firebase</p>
                     <p className="text-amber-800 mt-0.5">
-                      Setiap foto yang diunggah dikompresi secara otomatis dengan format Web-Ready JPEG (maksimal 1400px edge, kompresi 85%), sehingga halaman website tetap kencang dibuka di HP jemaat dan hemat kuota hosting.
+                      Setiap foto yang diunggah dikompresi secara otomatis dengan format Web-Ready JPEG sehingga halaman website tetap cepat dibuka di HP jemaat.
                     </p>
                   </div>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setIsMediaModalOpen(true)}
-                    className="border-amber-300 text-amber-900 hover:bg-amber-100 text-xs shrink-0"
+                    className="border-amber-300 text-amber-900 hover:bg-amber-100 text-xs shrink-0 cursor-pointer"
                   >
                     Unggah Foto Baru
                   </Button>
@@ -1790,7 +2418,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                         key={cat.id}
                         type="button"
                         onClick={() => setMediaCategoryFilter(cat.id)}
-                        className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
+                        className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all cursor-pointer ${
                           mediaCategoryFilter === cat.id
                             ? 'bg-amber-600 text-white shadow-xs'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -1849,7 +2477,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                                 navigator.clipboard.writeText(item.url);
                                 showToast('Tautan gambar berhasil disalin!');
                               }}
-                              className="text-amber-700 hover:text-amber-800 font-medium"
+                              className="text-amber-700 hover:text-amber-800 font-medium cursor-pointer"
                             >
                               Salin URL
                             </button>
@@ -1860,7 +2488,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                                   updateHero({ bgImage: item.url });
                                   showToast(`Foto "${item.title}" dijadikan Hero Beranda!`);
                                 }}
-                                className="text-stone-600 hover:text-amber-700 px-1 py-0.5 rounded text-[10px]"
+                                className="text-stone-600 hover:text-amber-700 px-1 py-0.5 rounded text-[10px] cursor-pointer"
                                 title="Jadikan foto hero beranda"
                               >
                                 Hero
@@ -1871,7 +2499,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                                   updateAbout({ image: item.url });
                                   showToast(`Foto "${item.title}" dijadikan Foto Profil Gereja!`);
                                 }}
-                                className="text-stone-600 hover:text-sky-700 px-1 py-0.5 rounded text-[10px]"
+                                className="text-stone-600 hover:text-sky-700 px-1 py-0.5 rounded text-[10px] cursor-pointer"
                                 title="Jadikan foto profil tentang gereja"
                               >
                                 Profil
@@ -1880,12 +2508,10 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (confirm(`Hapus foto "${item.title}" dari pustaka?`)) {
-                                      deleteMediaItem(item.id);
-                                      showToast('Foto berhasil dihapus.');
-                                    }
+                                    deleteMediaItem(item.id);
+                                    showToast('Foto berhasil dihapus.');
                                   }}
-                                  className="text-red-500 hover:text-red-700 p-0.5 rounded"
+                                  className="text-red-500 hover:text-red-700 p-0.5 rounded cursor-pointer"
                                   title="Hapus foto"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -1900,21 +2526,21 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
               </div>
             )}
 
-            {/* Tab: Hosting & Server Directory (gepekristretes.org) */}
+            {/* Tab: Database Firebase */}
             {activeTab === 'hosting' && (
               <div className="space-y-6 max-w-3xl">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900">
-                      gepekristretes.org
+                      Firebase Cloud Firestore
                     </span>
-                    <span className="text-xs text-gray-500">• Database & Server Storage</span>
+                    <span className="text-xs text-gray-500">• Sinkronisasi Real-Time</span>
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mt-1">
-                    Database Firestore & Penyimpanan Hosting
+                    Status Database Firebase Firestore
                   </h3>
                   <p className="text-xs text-gray-600">
-                    Website GEPEKRIS Tretes telah terhubung ke <strong>Firebase Firestore</strong> dan direktori hosting server. Setiap perubahan jadwal, warta jemaat, dan pokok doa tersimpan aman di cloud database dan termuat secara otomatis.
+                    Seluruh perubahan jadwal ibadah, warta jemaat, komisi, persembahan, galeri foto, dan pokok doa tersimpan langsung di Google Cloud Firestore dan diperbarui secara real-time.
                   </p>
                 </div>
 
@@ -1933,7 +2559,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-gray-600 mt-0.5">
-                          Project ID: <strong className="font-mono text-amber-800">avian-balm-mtgzl</strong> &bull; Database: <span className="font-mono text-gray-600 text-[11px]">ai-studio-gracechurchcommu-bf0eab8e-bc30-41c4-91e0-15cdc523d875</span>
+                          Project ID: <strong className="font-mono text-amber-800">avian-balm-mtgzl</strong>
                         </p>
                       </div>
                     </div>
@@ -1948,29 +2574,9 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     </Button>
                   </div>
                   <p className="text-xs text-amber-900 bg-white/80 rounded-xl p-2.5 border border-amber-200">
-                    💡 <strong>Sinkronisasi Otomatis:</strong> Data website GEPEKRIS Tretes dan permohonan doa (Prayer Wall) kini tersimpan langsung di Firebase Firestore. Seluruh perubahan akan otomatis disinkronkan ke semua jemaat yang membuka website.
+                    <strong>Sinkronisasi Otomatis Aktif:</strong> Setiap kali Anda mengedit teks atau menambah item di panel ini, sistem otomatis menyimpannya ke Firebase Firestore dalam 1 detik.
                   </p>
                 </div>
-
-                {/* Real-time synchronization explanation */}
-                <div className="p-4 bg-emerald-50/80 rounded-2xl border border-emerald-300 space-y-2">
-                  <div className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wide">
-                        Penyimpanan Real-Time Aktif (Cloud Firestore)
-                      </h4>
-                      <p className="text-xs text-emerald-900 leading-relaxed">
-                        Seluruh data website (Jadwal, Warta, Komisi, Galeri Foto, dan Permohonan Doa) kini disimpan dan dipancarkan langsung melalui <strong>Google Cloud Firestore</strong>. Anda tidak perlu lagi mengunggah berkas zip atau mengatur PHP di cPanel.
-                      </p>
-                      <p className="text-xs text-emerald-900 leading-relaxed">
-                        Saat Anda menyimpan perubahan di panel admin ini, <strong>semua jemaat yang sedang membuka website di HP atau laptop akan langsung melihat perubahan secara instan</strong> (real-time) tanpa perlu refresh halaman.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-
 
                 {/* Preset Profile Shortcut */}
                 <div className="p-4 bg-amber-50/70 rounded-2xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1980,7 +2586,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                       <span>Template Profil Resmi GEPEKRIS Tretes</span>
                     </h4>
                     <p className="text-[11px] text-amber-800">
-                      Otomatis atur nama gereja ke GEPEKRIS Tretes, jadwal ibadah 07.30 & 10.00 WIB, alamat Tretes Prigen Pasuruan.
+                      Atur otomatis nama gereja ke GEPEKRIS Tretes, jadwal ibadah 07:30 & 10:00 WIB, dan alamat Tretes Prigen Pasuruan.
                     </p>
                   </div>
                   <Button
@@ -1997,10 +2603,10 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                   <div className="space-y-0.5">
                     <h4 className="text-xs font-bold text-sky-950 flex items-center gap-1.5">
                       <RefreshCw className="w-3.5 h-3.5 text-sky-600" />
-                      <span>Hapus Cache Browser & Mulai Baru</span>
+                      <span>Segarkan Cache Peramban</span>
                     </h4>
                     <p className="text-[11px] text-sky-800">
-                      Sistem otomatis membersihkan cache saat pertama kali dibuka. Klik tombol ini kapan saja untuk membersihkan sisa cache memori dan memuat data terbaru secara instan.
+                      Bersihkan sisa memori penyimpanan lokal peramban dan muat ulang data terbaru langsung dari Firebase.
                     </p>
                   </div>
                   <Button
@@ -2010,7 +2616,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     className="cursor-pointer text-xs border-sky-300 text-sky-700 hover:bg-sky-100 shrink-0 font-medium flex items-center gap-1.5"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Hapus Cache & Reload</span>
+                    <span>Bersihkan Cache & Muat Ulang</span>
                   </Button>
                 </div>
 
@@ -2020,15 +2626,12 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
                         <FolderOpen className="w-4 h-4 text-amber-600" />
-                        <span>Koleksi church_content/main</span>
+                        <span>Dokumen church_content/main</span>
                       </span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Live Data
+                        Aktif
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      Menyimpan seluruh konfigurasi konten publik gereja secara real-time:
-                    </p>
                     <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
                       <div className="p-2 rounded-lg bg-stone-50 border border-stone-100">
                         <span className="text-gray-500 text-[11px] block">Jadwal Ibadah</span>
@@ -2036,7 +2639,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                       </div>
                       <div className="p-2 rounded-lg bg-stone-50 border border-stone-100">
                         <span className="text-gray-500 text-[11px] block">Komisi Pelayanan</span>
-                        <strong className="text-stone-900 text-sm">{content.ministries.length}</strong>
+                        <strong className="text-stone-900 text-sm">{content.ministries.length + additionalMinistries.length}</strong>
                       </div>
                       <div className="p-2 rounded-lg bg-stone-50 border border-stone-100">
                         <span className="text-gray-500 text-[11px] block">Warta Kegiatan</span>
@@ -2053,14 +2656,14 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
                         <Heart className="w-4 h-4 text-rose-500" />
-                        <span>Koleksi prayers</span>
+                        <span>Koleksi Interaktif Jemaat</span>
                       </span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                        Interactive
+                        Real-Time
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 leading-relaxed">
-                      Menyimpan permohonan doa interaktif (Prayer Wall) dari jemaat yang masuk secara langsung melalui website.
+                      Menyimpan pokok doa jemaat (<code className="text-[11px]">prayers</code>) dan pesan sekretariat (<code className="text-[11px]">contacts</code>) secara langsung.
                     </p>
                     <div className="p-3 rounded-xl bg-stone-50 border border-stone-100 text-xs space-y-1">
                       <div className="flex items-center justify-between text-[11px] text-stone-600">
@@ -2098,7 +2701,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                           if (ok) {
                             showToast('✓ Sambungan ke Firebase Firestore Berhasil & Responsif!');
                           } else {
-                            showToast('Koneksi Firestore mengalami kendala.');
+                            showError('Koneksi Firestore mengalami kendala.');
                           }
                         } finally {
                           setTestingConnection(false);
@@ -2110,17 +2713,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                       className="cursor-pointer text-xs flex items-center gap-1.5 border-stone-300 hover:bg-stone-100"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${testingConnection ? 'animate-spin' : ''}`} />
-                      <span>{testingConnection ? 'Memeriksa...' : 'Uji Koneksi (Ping)'}</span>
-                    </Button>
-
-                    <Button
-                      onClick={handleExportJson}
-                      variant="outline"
-                      size="sm"
-                      className="cursor-pointer text-xs flex items-center gap-1.5 border-stone-300 hover:bg-stone-100 ml-auto"
-                    >
-                      <Download className="w-3.5 h-3.5 text-stone-600" />
-                      <span>Unduh Cadangan JSON (church_content.json)</span>
+                      <span>{testingConnection ? 'Memeriksa...' : 'Uji Koneksi Database'}</span>
                     </Button>
                   </div>
                 </div>
@@ -2133,7 +2726,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">Keamanan & Akses Admin</h3>
                   <p className="text-xs text-gray-500">
-                    Kelola kata sandi untuk melindungi editor konten agar hanya pengurus/admin yang dapat mengubah data website.
+                    Kelola kata sandi untuk melindungi panel pengelola konten agar hanya pengurus yang dapat mengubah data website.
                   </p>
                 </div>
 
@@ -2231,15 +2824,15 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                 <div className="p-5 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-2">
                   <h4 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-amber-700" />
-                    <span>Mode Admin Tersembunyi (Stealth Mode)</span>
+                    <span>Pintasan Cepat Mode Admin</span>
                   </h4>
                   <p className="text-xs text-amber-800 leading-relaxed">
-                    Mode dan bilah tombol admin disembunyikan sepenuhnya dari tampilan publik agar website tampil bersih dan anggun bagi para jemaat dan pengunjung umum. Anda dapat membuka kembali editor ini kapan saja menggunakan salah satu cara berikut:
+                    Saat Anda login sebagai Admin, setiap bagian halaman memiliki tombol pintas <strong>"Edit Seksi Ini"</strong> agar Anda bisa langsung mengedit bagian tersebut dengan cepat. Anda juga dapat membuka panel ini kapan saja melalui:
                   </p>
                   <ul className="text-xs text-amber-900 list-disc list-inside space-y-1 pt-1 font-medium">
                     <li>Pintasan Keyboard: Tekan <kbd className="px-1.5 py-0.5 bg-white border border-amber-300 rounded font-mono text-[11px] shadow-xs">Ctrl + Shift + A</kbd> (atau <kbd className="px-1.5 py-0.5 bg-white border border-amber-300 rounded font-mono text-[11px] shadow-xs">Cmd + Shift + A</kbd>).</li>
-                    <li>URL Rahasia: Ketikkan <span className="font-mono text-amber-950 font-semibold bg-white/70 px-1 py-0.5 rounded">#admin</span> di akhir tautan peramban Anda.</li>
-                    <li>Ikon Gembok Halus: Klik ikon gembok kecil di sudut kanan paling bawah (footer) website.</li>
+                    <li>URL Pintas: Tambahkan <span className="font-mono text-amber-950 font-semibold bg-white/70 px-1 py-0.5 rounded">#admin</span> di akhir alamat website.</li>
+                    <li>Tombol Admin di bagian paling bawah (Footer) website.</li>
                   </ul>
                 </div>
               </div>
@@ -2252,7 +2845,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
         <div className="px-6 py-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-gray-50/80 text-xs text-gray-500">
           <div className="flex items-center gap-2 text-emerald-700 font-medium">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Perubahan langsung tersimpan & tampil di web!</span>
+            <span>Perubahan otomatis tersimpan & tersinkronisasi ke Firebase!</span>
           </div>
           <div className="flex items-center gap-2">
             <Button

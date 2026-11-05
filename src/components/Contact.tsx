@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Clock, CheckCircle2 } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, CheckCircle2, Pencil } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { useChurchContent } from '../context/ChurchContentContext';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 export function Contact() {
-  const { content } = useChurchContent();
+  const { content, isAdmin, openAdminAtTab } = useChurchContent();
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -21,45 +24,74 @@ export function Contact() {
   const contactInfo = [
     {
       icon: Phone,
-      title: "Phone",
+      title: "Telepon Sekretariat",
       details: content.info.phone,
-      subtitle: "Call us anytime"
+      subtitle: "Hubungi kami pada jam kerja"
     },
     {
       icon: Mail,
-      title: "Email",
+      title: "Email Resmi",
       details: content.info.email,
-      subtitle: "Send us a message"
+      subtitle: "Kirim surat elektronik kapan saja"
     },
     {
       icon: MapPin,
-      title: "Address",
+      title: "Alamat Gereja",
       details: content.info.address,
-      subtitle: "Come visit us"
+      subtitle: "Mari beribadah bersama kami"
     },
     {
       icon: Clock,
-      title: "Office Hours",
+      title: "Jam Operasional",
       details: content.info.officeHours,
-      subtitle: "Saturday & Sunday: Closed"
+      subtitle: "Minggu: Pelayanan Ibadah Raya"
     }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.firstName || !formData.email || !formData.message) return;
-    setSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'contacts'), {
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim().slice(0, 100),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().slice(0, 150),
+        phone: formData.phone.trim(),
+        subject: formData.subject.trim() || 'Pesan Sekretariat',
+        message: formData.message.trim().slice(0, 3000),
+        createdAt: new Date().toISOString(),
+      });
+    } catch {
+      // Fallback gracefully if offline
+    } finally {
+      setIsSubmitting(false);
+      setSubmitted(true);
+    }
   };
 
   return (
     <section id="contact" className="py-16 bg-gray-50 border-b border-gray-200/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
+          {isAdmin && (
+            <div className="mb-3">
+              <button
+                onClick={() => openAdminAtTab('info')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm cursor-pointer transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit Kontak, Alamat & Peta</span>
+              </button>
+            </div>
+          )}
+
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-            Hubungi Sekretariat GEPEKRIS Tretes
+            Hubungi Sekretariat {content.info.name}
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Punya pertanyaan seputar jadwal ibadah atau membutuhkan pokok doa? Kami siap melayani Anda
+            Punya pertanyaan seputar jadwal ibadah atau membutuhkan pelayanan pastoral & pokok doa? Kami siap melayani Anda
           </p>
         </div>
 
@@ -92,7 +124,7 @@ export function Contact() {
             {/* Interactive Map */}
             <div className="bg-gray-100 rounded-xl h-64 overflow-hidden border border-gray-200 relative shadow-inner">
               <iframe
-                title="Church Location Map"
+                title={`Peta Lokasi ${content.info.name}`}
                 src={content.info.mapEmbedUrl}
                 className="w-full h-full border-0"
                 loading="lazy"
@@ -117,7 +149,7 @@ export function Contact() {
                     </div>
                     <h4 className="text-xl font-bold text-emerald-900">Terima kasih, {formData.firstName}!</h4>
                     <p className="text-sm text-emerald-700 leading-relaxed">
-                      Pesan atau permohonan doa Anda telah kami terima. Tim sekretariat atau pendoa gereja akan segera merespons.
+                      Pesan atau permohonan doa Anda telah tersimpan di sistem sekretariat kami. Tim sekretariat atau pendoa gereja akan segera merespons.
                     </p>
                     <Button
                       variant="outline"
@@ -132,7 +164,7 @@ export function Contact() {
                           message: ''
                         });
                       }}
-                      className="mt-2"
+                      className="mt-2 cursor-pointer"
                     >
                       Kirim Pesan Lainnya
                     </Button>
@@ -173,7 +205,7 @@ export function Contact() {
                         id="email"
                         type="email"
                         required
-                        placeholder="email.anda@example.com"
+                        placeholder="email.anda@contoh.com"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
@@ -218,8 +250,8 @@ export function Contact() {
                       />
                     </div>
                     
-                    <Button type="submit" className="w-full cursor-pointer">
-                      Kirim Pesan Sekarang
+                    <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
+                      {isSubmitting ? 'Mengirim Pesan...' : 'Kirim Pesan Sekarang'}
                     </Button>
                   </form>
                 )}

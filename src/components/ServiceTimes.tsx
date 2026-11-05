@@ -1,10 +1,10 @@
 import { motion } from 'motion/react';
-import { Clock, Calendar, Users, MapPin, ArrowRight } from 'lucide-react';
+import { Clock, Calendar, Users, MapPin, ArrowRight, Pencil } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import { useChurchContent } from '../context/ChurchContentContext';
 
 export function ServiceTimes() {
-  const { content } = useChurchContent();
+  const { content, isAdmin, openAdminAtTab } = useChurchContent();
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -19,7 +19,7 @@ export function ServiceTimes() {
   };
 
   return (
-    <section id="services" className="py-20 bg-gradient-to-b from-stone-50 via-gray-50 to-stone-100/70 border-b border-gray-200/60 overflow-hidden">
+    <section id="services" className="py-20 bg-gradient-to-b from-stone-50 via-gray-50 to-stone-100/70 border-b border-gray-200/60 overflow-hidden relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header with Scroll-triggered Fade & Slide In */}
         <motion.div
@@ -27,14 +27,26 @@ export function ServiceTimes() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-16"
+          className="text-center mb-16 relative"
         >
+          {isAdmin && (
+            <div className="mb-4">
+              <button
+                onClick={() => openAdminAtTab('services')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm cursor-pointer transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit Jadwal Ibadah</span>
+              </button>
+            </div>
+          )}
+
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 mb-3 tracking-wide uppercase">
             <Clock className="w-3.5 h-3.5" />
             <span>Jadwal Ibadah & Komunitas</span>
           </span>
           <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-            Jadwal Ibadah GEPEKRIS Tretes
+            Jadwal Ibadah {content.info.name}
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto font-light leading-relaxed">
             Mari bersekutu bersama kami dan alami kehangatan kasih Kristus dalam keluarga rohani

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, testConnection, sanitizeForFirestore } from '../firebase';
 import { validateContentPayloadForSync } from '../lib/imageValidation';
@@ -12,7 +12,44 @@ export interface ChurchGeneralInfo {
   email: string;
   officeHours: string;
   streamUrl: string;
+  streamTitle?: string;
+  streamDescription?: string;
   mapEmbedUrl: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  whatsappNumber?: string;
+}
+
+export interface ChurchBankAccount {
+  id: string;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+}
+
+export interface ChurchGivingFund {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface ChurchGivingContent {
+  heading: string;
+  subheading: string;
+  scriptureQuote: string;
+  bankAccounts: ChurchBankAccount[];
+  qrisImageUrl: string;
+  qrisLabel: string;
+  funds: ChurchGivingFund[];
+}
+
+export interface ChurchAdditionalMinistryItem {
+  id: string;
+  title: string;
+  description: string;
+  schedule?: string;
+  location?: string;
 }
 
 export interface ChurchHeroContent {
@@ -99,17 +136,130 @@ export interface ChurchMediaItem {
   source?: 'upload' | 'url' | 'system';
 }
 
+export type AdminTabType =
+  | 'info'
+  | 'hero'
+  | 'about'
+  | 'services'
+  | 'ministries'
+  | 'events'
+  | 'gallery'
+  | 'giving'
+  | 'media'
+  | 'hosting'
+  | 'backup'
+  | 'security';
+
 export interface ChurchWebsiteContent {
   info: ChurchGeneralInfo;
   hero: ChurchHeroContent;
   about: ChurchAboutContent;
   services: ChurchServiceItem[];
   ministries: ChurchMinistryItem[];
+  additionalMinistries?: ChurchAdditionalMinistryItem[];
   events: ChurchEventItem[];
   gallery?: ChurchGalleryItem[];
+  giving?: ChurchGivingContent;
   mediaLibrary?: ChurchMediaItem[];
   lastUpdated?: string;
 }
+
+export function formatYouTubeEmbedUrl(url: string): string {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (trimmed.includes('/embed/')) return trimmed;
+  // Match watch?v=VIDEO_ID
+  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (watchMatch && watchMatch[1]) {
+    return `https://www.youtube-nocookie.com/embed/${watchMatch[1]}`;
+  }
+  // Match youtu.be/VIDEO_ID
+  const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (shortMatch && shortMatch[1]) {
+    return `https://www.youtube-nocookie.com/embed/${shortMatch[1]}`;
+  }
+  // Match youtube.com/live/VIDEO_ID
+  const liveMatch = trimmed.match(/youtube\.com\/live\/([a-zA-Z0-9_-]{11})/);
+  if (liveMatch && liveMatch[1]) {
+    return `https://www.youtube-nocookie.com/embed/${liveMatch[1]}`;
+  }
+  return trimmed;
+}
+
+export const DEFAULT_GIVING_CONTENT: ChurchGivingContent = {
+  heading: "Memberi dengan Sukacita",
+  subheading: "Persembahan & Kemurahan Hati",
+  scriptureQuote: "“Hendaklah masing-masing memberikan menurut kerelaan hatinya, jangan dengan sedih hati atau karena paksaan, sebab Allah mengasihi orang yang memberi dengan sukacita.” — 2 Korintus 9:7",
+  bankAccounts: [
+    {
+      id: "bank-1",
+      bankName: "BCA (Bank Central Asia)",
+      accountNumber: "882-019-4821",
+      accountHolder: "GEPEKRIS Tretes",
+    },
+    {
+      id: "bank-2",
+      bankName: "Bank Mandiri",
+      accountNumber: "123-00-984712-3",
+      accountHolder: "GEPEKRIS Tretes",
+    },
+  ],
+  qrisImageUrl: "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=GEPEKRIS-TRETES-PERSEMBAHAN",
+  qrisLabel: "Scan kode QRIS di atas menggunakan BCA Mobile, Livin' by Mandiri, BRImo, GoPay, OVO, Dana, atau ShopeePay",
+  funds: [
+    {
+      id: "tithe",
+      name: "Perpuluhan & Kas Pelayanan",
+      description: "Mendukung operasional ibadah mingguan, pemeliharaan jemaat, dan pelayanan pastoral gereja.",
+    },
+    {
+      id: "outreach",
+      name: "Pelayanan Diakonia & Kasih",
+      description: "Penyaluran paket sembako kasih, kunjungan jemaat lansia/sakit, dan bantuan sosial masyarakat.",
+    },
+    {
+      id: "building",
+      name: "Dana Pemeliharaan Gedung & Inventaris",
+      description: "Perawatan ruang ibadah utama, tata suara multimedia, serta ruang kelas Sekolah Minggu.",
+    },
+    {
+      id: "missions",
+      name: "Misi & Pekabaran Injil",
+      description: "Mendukung pelayanan hamba Tuhan, persekutuan doa, dan penginjilan di daerah sekitar.",
+    },
+  ],
+};
+
+export const DEFAULT_ADDITIONAL_MINISTRIES: ChurchAdditionalMinistryItem[] = [
+  {
+    id: "add-min-1",
+    title: "Persekutuan Doa & PA",
+    description: "Pendalaman Alkitab dan doa syafaat bersama secara bergilir di gedung gereja & rumah jemaat",
+    schedule: "Setiap Rabu Pkl. 18:30 WIB",
+    location: "Gedung GEPEKRIS Tretes & Rumah Jemaat",
+  },
+  {
+    id: "add-min-2",
+    title: "Komisi Wanita (PW)",
+    description: "Membangun iman, doa, dan kebersamaan yang hangat bagi ibu-ibu serta wanita kristiani",
+    schedule: "Setiap Jumat Pkl. 16:00 WIB",
+    location: "Ruang Persekutuan GEPEKRIS Tretes",
+  },
+  {
+    id: "add-min-3",
+    title: "Komisi Pria (PKB)",
+    description: "Penguatan peran pria dan kepala keluarga kristiani sebagai imam dalam rumah tangga",
+    schedule: "Sabtu Minggu Ke-2 & Ke-4 Pkl. 18:00 WIB",
+    location: "Gedung GEPEKRIS Tretes",
+  },
+  {
+    id: "add-min-4",
+    title: "Komisi Usia Indah (Lansia)",
+    description: "Persekutuan kasih, pujian penyembahan, dan perhatian kesehatan bagi opa dan oma",
+    schedule: "Sabtu Minggu Pertama Pkl. 09:00 WIB",
+    location: "Gedung GEPEKRIS Tretes",
+  },
+];
 
 export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
   info: {
@@ -120,7 +270,13 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
     email: "sekretariat@gepekristretes.org",
     officeHours: "Selasa - Sabtu: 09:00 - 16:00 WIB",
     streamUrl: "https://www.youtube-nocookie.com/embed/live_stream?channel=gepekristretes",
+    streamTitle: "Ibadah Raya Minggu Online (Live Streaming)",
+    streamDescription: "Mari beribadah bersama keluarga jemaat GEPEKRIS Tretes. Jika siaran langsung belum dimulai, Anda dapat menyaksikan rekaman ibadah terakhir di bawah ini.",
     mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.578619623724!2d112.6288!3d-7.6974!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwNDEnNTAuNiJTIDExMsKwMzcnNDMuNyJF!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid",
+    facebookUrl: "https://facebook.com/gepekristretes",
+    instagramUrl: "https://instagram.com/gepekristretes",
+    youtubeUrl: "https://youtube.com/@gepekristretes",
+    whatsappNumber: "6281234567890",
   },
   hero: {
     headline: "Selamat Datang di GEPEKRIS Tretes",
@@ -375,6 +531,8 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
       date: "Juli 2025"
     }
   ],
+  additionalMinistries: DEFAULT_ADDITIONAL_MINISTRIES,
+  giving: DEFAULT_GIVING_CONTENT,
   lastUpdated: "2026-09-23T04:00:00.000Z",
 };
 
@@ -580,6 +738,8 @@ export const GEPEKRIS_TRETES_CONTENT: ChurchWebsiteContent = {
       date: "Juli 2025"
     }
   ],
+  additionalMinistries: DEFAULT_ADDITIONAL_MINISTRIES,
+  giving: DEFAULT_GIVING_CONTENT,
 };
 
 export const DEFAULT_HOSTING_CONFIG: HostingDirectoryConfig = {
@@ -612,6 +772,16 @@ interface ContentContextType {
   addMinistry: (item: Omit<ChurchMinistryItem, 'id'>) => void;
   deleteMinistry: (id: string) => void;
   updateMinistryItem: (id: string, updated: Partial<ChurchMinistryItem>) => void;
+  addAdditionalMinistry: (item: Omit<ChurchAdditionalMinistryItem, 'id'>) => void;
+  updateAdditionalMinistry: (id: string, updated: Partial<ChurchAdditionalMinistryItem>) => void;
+  deleteAdditionalMinistry: (id: string) => void;
+  updateGiving: (data: Partial<ChurchGivingContent>) => void;
+  addBankAccount: (item: Omit<ChurchBankAccount, 'id'>) => void;
+  updateBankAccount: (id: string, updated: Partial<ChurchBankAccount>) => void;
+  deleteBankAccount: (id: string) => void;
+  addGivingFund: (item: Omit<ChurchGivingFund, 'id'>) => void;
+  updateGivingFund: (id: string, updated: Partial<ChurchGivingFund>) => void;
+  deleteGivingFund: (id: string) => void;
   updateEvents: (events: ChurchEventItem[]) => void;
   addEvent: (item: Omit<ChurchEventItem, 'id'>) => void;
   deleteEvent: (id: string) => void;
@@ -633,6 +803,11 @@ interface ContentContextType {
   logoutAdmin: () => void;
   updateAdminPassword: (oldPass: string, newPass: string) => { success: boolean; message: string };
   resetAdminPassword: () => void;
+  activeAdminTab: AdminTabType;
+  setActiveAdminTab: (tab: AdminTabType) => void;
+  isAdminModalOpen: boolean;
+  setIsAdminModalOpen: (open: boolean) => void;
+  openAdminAtTab: (tab: AdminTabType) => void;
   hostingConfig: HostingDirectoryConfig;
   updateHostingConfig: (config: Partial<HostingDirectoryConfig>) => void;
   resetHostingConfig: () => void;
@@ -682,6 +857,40 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
         features: Array.isArray(m?.features) ? m.features : (typeof m?.features === 'string' ? [m.features] : []),
       }))
     : DEFAULT_CHURCH_CONTENT.ministries;
+
+  const additionalMinistries = Array.isArray(raw.additionalMinistries)
+    ? raw.additionalMinistries.map((am: any, idx: number) => ({
+        id: am?.id || `add-min-${idx + 1}`,
+        title: am?.title || `Komisi ${idx + 1}`,
+        description: am?.description || '',
+        schedule: am?.schedule || 'Rutin Setiap Pekan / Bulan',
+        location: am?.location || 'Gedung GEPEKRIS Tretes & Rumah Jemaat',
+      }))
+    : DEFAULT_ADDITIONAL_MINISTRIES;
+
+  const rawGiving = raw.giving && typeof raw.giving === 'object' ? raw.giving : {};
+  const giving: ChurchGivingContent = {
+    heading: rawGiving.heading || DEFAULT_GIVING_CONTENT.heading,
+    subheading: rawGiving.subheading || DEFAULT_GIVING_CONTENT.subheading,
+    scriptureQuote: rawGiving.scriptureQuote || DEFAULT_GIVING_CONTENT.scriptureQuote,
+    qrisImageUrl: rawGiving.qrisImageUrl || DEFAULT_GIVING_CONTENT.qrisImageUrl,
+    qrisLabel: rawGiving.qrisLabel || DEFAULT_GIVING_CONTENT.qrisLabel,
+    bankAccounts: Array.isArray(rawGiving.bankAccounts)
+      ? rawGiving.bankAccounts.map((b: any, idx: number) => ({
+          id: b?.id || `bank-${idx + 1}`,
+          bankName: b?.bankName || 'Bank',
+          accountNumber: b?.accountNumber || '',
+          accountHolder: b?.accountHolder || 'GEPEKRIS Tretes',
+        }))
+      : DEFAULT_GIVING_CONTENT.bankAccounts,
+    funds: Array.isArray(rawGiving.funds)
+      ? rawGiving.funds.map((f: any, idx: number) => ({
+          id: f?.id || `fund-${idx + 1}`,
+          name: f?.name || 'Kas Pelayanan',
+          description: f?.description || '',
+        }))
+      : DEFAULT_GIVING_CONTENT.funds,
+  };
 
   const events = Array.isArray(raw.events)
     ? raw.events.map((e: any, idx: number) => {
@@ -740,6 +949,8 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
     about: { ...DEFAULT_CHURCH_CONTENT.about, ...(raw.about || {}) },
     services,
     ministries,
+    additionalMinistries,
+    giving,
     events,
     gallery,
     mediaLibrary,
@@ -768,7 +979,12 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return DEFAULT_CHURCH_CONTENT;
   });
 
+  const pendingSyncRef = useRef<boolean>(false);
+  const lastLocalEditTimeRef = useRef<number>(0);
+
   const markLocalEdits = () => {
+    pendingSyncRef.current = true;
+    lastLocalEditTimeRef.current = Date.now();
     try {
       localStorage.setItem('church_has_local_edits', 'true');
       localStorage.setItem('church_last_edit_time', new Date().toISOString());
@@ -791,6 +1007,27 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [content]);
 
+  // Debounced auto-save to Firestore whenever Admin edits content
+  useEffect(() => {
+    if (!pendingSyncRef.current) return;
+    const timer = setTimeout(async () => {
+      pendingSyncRef.current = false;
+      setFirestoreStatus('syncing');
+      try {
+        const cleanPayload = sanitizeForFirestore(content);
+        await setDoc(doc(db, 'church_content', 'main'), cleanPayload);
+        setFirestoreStatus('connected');
+        setFirestoreError(null);
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        setFirestoreStatus('error');
+        setFirestoreError(errMsg);
+      }
+    }, 900);
+
+    return () => clearTimeout(timer);
+  }, [content]);
+
   // Sync across open browser tabs in real time
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -809,57 +1046,6 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Background fetch latest content from server on initial app load with strict anti-cache
-  useEffect(() => {
-    let isCancelled = false;
-
-    const fetchRemoteContent = async () => {
-      // Try endpoints: data/church_content.json and api/content.php with anti-cache timestamp
-      const endpoints = [
-        `/data/church_content.json?_t=${Date.now()}`,
-        `/api/content.php?_t=${Date.now()}`,
-        `/api/content?_t=${Date.now()}`,
-      ];
-
-      for (const endpoint of endpoints) {
-        if (isCancelled) break;
-        try {
-          const res = await fetch(endpoint, {
-            cache: 'no-store',
-            headers: {
-              'Accept': 'application/json',
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0',
-            },
-          }).catch(() => null);
-
-          if (res && res.ok) {
-            const remoteRaw = await res.json().catch(() => null);
-            if (remoteRaw && remoteRaw.info && remoteRaw.hero) {
-              if (isCancelled) break;
-
-              const remoteJson = normalizeChurchContent(remoteRaw);
-              setContent(remoteJson);
-              try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteJson));
-              } catch {}
-              break;
-            }
-          }
-        } catch {
-          // Continue to next endpoint fallback
-        }
-      }
-    };
-
-    fetchRemoteContent();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
   const [firestoreStatus, setFirestoreStatus] = useState<'connected' | 'syncing' | 'error' | 'idle'>('idle');
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
 
@@ -875,6 +1061,11 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       doc(db, 'church_content', 'main'),
       (docSnap) => {
         if (!isMounted) return;
+        // Avoid overwriting active typing in the admin panel
+        if (pendingSyncRef.current || Date.now() - lastLocalEditTimeRef.current < 1500) {
+          setFirestoreStatus('connected');
+          return;
+        }
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data && data.info && data.hero) {
@@ -1607,10 +1798,158 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, []);
 
+  const [activeAdminTab, setActiveAdminTab] = useState<AdminTabType>('info');
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
+
+  const openAdminAtTab = (tab: AdminTabType) => {
+    setActiveAdminTab(tab);
+    setIsAdminModalOpen(true);
+  };
+
+  const addAdditionalMinistry = (item: Omit<ChurchAdditionalMinistryItem, 'id'>) => {
+    markLocalEdits();
+    const newItem: ChurchAdditionalMinistryItem = {
+      ...item,
+      id: `add-min-${Date.now()}`,
+    };
+    setContent((prev) => ({
+      ...prev,
+      additionalMinistries: [...(prev.additionalMinistries || DEFAULT_ADDITIONAL_MINISTRIES), newItem],
+      lastUpdated: new Date().toISOString(),
+    }));
+  };
+
+  const updateAdditionalMinistry = (id: string, updated: Partial<ChurchAdditionalMinistryItem>) => {
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      additionalMinistries: (prev.additionalMinistries || DEFAULT_ADDITIONAL_MINISTRIES).map((m) =>
+        m.id === id ? { ...m, ...updated } : m
+      ),
+      lastUpdated: new Date().toISOString(),
+    }));
+  };
+
+  const deleteAdditionalMinistry = (id: string) => {
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      additionalMinistries: (prev.additionalMinistries || DEFAULT_ADDITIONAL_MINISTRIES).filter((m) => m.id !== id),
+      lastUpdated: new Date().toISOString(),
+    }));
+  };
+
+  const updateGiving = (data: Partial<ChurchGivingContent>) => {
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      giving: { ...(prev.giving || DEFAULT_GIVING_CONTENT), ...data },
+      lastUpdated: new Date().toISOString(),
+    }));
+  };
+
+  const addBankAccount = (item: Omit<ChurchBankAccount, 'id'>) => {
+    markLocalEdits();
+    const newItem: ChurchBankAccount = {
+      ...item,
+      id: `bank-${Date.now()}`,
+    };
+    setContent((prev) => {
+      const currentGiving = prev.giving || DEFAULT_GIVING_CONTENT;
+      return {
+        ...prev,
+        giving: {
+          ...currentGiving,
+          bankAccounts: [...currentGiving.bankAccounts, newItem],
+        },
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+  };
+
+  const updateBankAccount = (id: string, updated: Partial<ChurchBankAccount>) => {
+    markLocalEdits();
+    setContent((prev) => {
+      const currentGiving = prev.giving || DEFAULT_GIVING_CONTENT;
+      return {
+        ...prev,
+        giving: {
+          ...currentGiving,
+          bankAccounts: currentGiving.bankAccounts.map((b) => (b.id === id ? { ...b, ...updated } : b)),
+        },
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+  };
+
+  const deleteBankAccount = (id: string) => {
+    markLocalEdits();
+    setContent((prev) => {
+      const currentGiving = prev.giving || DEFAULT_GIVING_CONTENT;
+      return {
+        ...prev,
+        giving: {
+          ...currentGiving,
+          bankAccounts: currentGiving.bankAccounts.filter((b) => b.id !== id),
+        },
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+  };
+
+  const addGivingFund = (item: Omit<ChurchGivingFund, 'id'>) => {
+    markLocalEdits();
+    const newItem: ChurchGivingFund = {
+      ...item,
+      id: `fund-${Date.now()}`,
+    };
+    setContent((prev) => {
+      const currentGiving = prev.giving || DEFAULT_GIVING_CONTENT;
+      return {
+        ...prev,
+        giving: {
+          ...currentGiving,
+          funds: [...currentGiving.funds, newItem],
+        },
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+  };
+
+  const updateGivingFund = (id: string, updated: Partial<ChurchGivingFund>) => {
+    markLocalEdits();
+    setContent((prev) => {
+      const currentGiving = prev.giving || DEFAULT_GIVING_CONTENT;
+      return {
+        ...prev,
+        giving: {
+          ...currentGiving,
+          funds: currentGiving.funds.map((f) => (f.id === id ? { ...f, ...updated } : f)),
+        },
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+  };
+
+  const deleteGivingFund = (id: string) => {
+    markLocalEdits();
+    setContent((prev) => {
+      const currentGiving = prev.giving || DEFAULT_GIVING_CONTENT;
+      return {
+        ...prev,
+        giving: {
+          ...currentGiving,
+          funds: currentGiving.funds.filter((f) => f.id !== id),
+        },
+        lastUpdated: new Date().toISOString(),
+      };
+    });
+  };
+
   const importContent = (newContent: ChurchWebsiteContent) => {
     try {
       if (newContent && newContent.info && newContent.hero) {
-        setContent(newContent);
+        setContent(normalizeChurchContent(newContent));
         return true;
       }
     } catch (e) {
@@ -1634,6 +1973,16 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addMinistry,
         deleteMinistry,
         updateMinistryItem,
+        addAdditionalMinistry,
+        updateAdditionalMinistry,
+        deleteAdditionalMinistry,
+        updateGiving,
+        addBankAccount,
+        updateBankAccount,
+        deleteBankAccount,
+        addGivingFund,
+        updateGivingFund,
+        deleteGivingFund,
         updateEvents,
         addEvent,
         deleteEvent,
@@ -1654,6 +2003,11 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         logoutAdmin,
         updateAdminPassword,
         resetAdminPassword,
+        activeAdminTab,
+        setActiveAdminTab,
+        isAdminModalOpen,
+        setIsAdminModalOpen,
+        openAdminAtTab,
         hostingConfig,
         updateHostingConfig,
         resetHostingConfig,

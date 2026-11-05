@@ -1,52 +1,54 @@
 import React, { useState } from 'react';
 import { Language, GivingPledge } from '../types';
-import { Heart, QrCode, CreditCard, Landmark, Check, Copy, Shield, Sparkles, FileText, X } from 'lucide-react';
+import {
+  Heart,
+  QrCode,
+  CreditCard,
+  Landmark,
+  Check,
+  Copy,
+  Shield,
+  Sparkles,
+  FileText,
+  X,
+  Pencil,
+} from 'lucide-react';
+import { useChurchContent, DEFAULT_GIVING_CONTENT } from '../context/ChurchContentContext';
 
 interface GivingSectionProps {
   language: Language;
 }
 
 export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
-  const [selectedFund, setSelectedFund] = useState('tithe');
+  const { content, isAdmin, openAdminAtTab } = useChurchContent();
+  const givingData = content.giving || DEFAULT_GIVING_CONTENT;
+  const funds =
+    givingData.funds && givingData.funds.length > 0
+      ? givingData.funds
+      : DEFAULT_GIVING_CONTENT.funds;
+  const bankAccounts =
+    givingData.bankAccounts && givingData.bankAccounts.length > 0
+      ? givingData.bankAccounts
+      : DEFAULT_GIVING_CONTENT.bankAccounts;
+
+  const [selectedFund, setSelectedFund] = useState(funds[0]?.id || 'fund-1');
   const [selectedAmount, setSelectedAmount] = useState<number>(250000);
   const [customAmount, setCustomAmount] = useState('');
   const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('one-time');
   const [paymentMethod, setPaymentMethod] = useState<'qris' | 'bank_transfer' | 'credit_card'>('qris');
   const [donorName, setDonorName] = useState('');
   const [donorEmail, setDonorEmail] = useState('');
-  
+
   // Modals & Feedback
   const [copiedBank, setCopiedBank] = useState<string | null>(null);
   const [receiptPledge, setReceiptPledge] = useState<GivingPledge | null>(null);
+  const [receiptSaved, setReceiptSaved] = useState(false);
 
   const presetAmounts = [50000, 100000, 250000, 500000, 1000000];
 
-  const funds = [
-    {
-      id: 'tithe',
-      name: language === 'en' ? 'General Ministry & Tithe' : 'Perpuluhan & Kas Pelayanan',
-      desc: language === 'en' ? 'Sustaining worship services, pastoral care, and daily church operations.' : 'Mendukung operasional ibadah, pemeliharaan jemaat, dan kelangsungan gereja.',
-    },
-    {
-      id: 'outreach',
-      name: language === 'en' ? 'Community Care & Diakonia' : 'Pelayanan Diakonia & Kasih',
-      desc: language === 'en' ? 'Feeding families in need, free medical clinics, and crisis relief assistance.' : 'Paket sembako, pengobatan gratis kaum pra-sejahtera, dan bantuan bencana.',
-    },
-    {
-      id: 'building',
-      name: language === 'en' ? 'Building & Sanctuary Fund' : 'Dana Pengembangan Gedung',
-      desc: language === 'en' ? 'Upgrading facilities, youth auditorium acoustics, and classroom spaces.' : 'Perluasan ruang ibadah pemuda, fasilitas anak, dan pemeliharaan gedung.',
-    },
-    {
-      id: 'missions',
-      name: language === 'en' ? 'Missions & Church Planting' : 'Misi & Perintisan Jemaat',
-      desc: language === 'en' ? 'Supporting remote pastors and education in underserved regional areas.' : 'Mendukung hamba Tuhan di pelosok desa dan pendidikan anak asuh.',
-    },
-  ];
-
-  const handleCopyAccount = (bankName: string, accNumber: string) => {
-    navigator.clipboard.writeText(accNumber);
-    setCopiedBank(bankName);
+  const handleCopyAccount = (bankId: string, accNumber: string) => {
+    navigator.clipboard.writeText(accNumber.replace(/[^0-9]/g, '') || accNumber);
+    setCopiedBank(bankId);
     setTimeout(() => setCopiedBank(null), 2500);
   };
 
@@ -56,19 +58,20 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
     e.preventDefault();
     if (finalAmount <= 0) return;
 
-    const currentFundObj = funds.find((f) => f.id === selectedFund);
+    const currentFundObj = funds.find((f) => f.id === selectedFund) || funds[0];
     const pledge: GivingPledge = {
       id: `give-${Date.now()}`,
       donorName: donorName.trim() || (language === 'en' ? 'Faithful Partner' : 'Sahabat Seiman'),
       amount: finalAmount,
       currency: 'IDR',
-      fund: currentFundObj ? currentFundObj.name : 'General Fund',
+      fund: currentFundObj ? currentFundObj.name : 'Perpuluhan & Kas Pelayanan',
       frequency,
       paymentMethod,
       date: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }),
       receiptNumber: `GC-${Math.floor(100000 + Math.random() * 900000)}`,
     };
 
+    setReceiptSaved(false);
     setReceiptPledge(pledge);
   };
 
@@ -77,21 +80,31 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
   };
 
   return (
-    <section id="give" className="py-16 md:py-24 bg-[#FAF8F5] border-b border-stone-200">
+    <section id="give" className="py-12 md:py-16 bg-[#FAF8F5] border-b border-stone-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          {isAdmin && (
+            <div className="mb-3">
+              <button
+                onClick={() => openAdminAtTab('giving')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm cursor-pointer transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit Rekening Bank & QRIS</span>
+              </button>
+            </div>
+          )}
+
           <span className="text-xs font-bold uppercase tracking-widest text-amber-800 bg-amber-100/80 px-3 py-1 rounded-full">
-            {language === 'en' ? 'Stewardship & Generosity' : 'Persembahan & Kemurahan Hati'}
+            Persembahan & Kemurahan Hati
           </span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-serif-display font-bold text-stone-900">
-            {language === 'en' ? 'Giving with a Joyful Heart' : 'Memberi dengan Sukacita'}
+            {givingData.heading || 'Memberi dengan Sukacita'}
           </h2>
           <p className="mt-3 text-stone-600 text-base sm:text-lg">
-            {language === 'en'
-              ? '“Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver.” — 2 Cor 9:7'
-              : '“Hendaklah masing-masing memberikan menurut kerelaan hatinya, jangan dengan sedih hati atau karena paksaan, sebab Allah mengasihi orang yang memberi dengan sukacita.” — 2 Kor 9:7'}
+            {givingData.scriptureQuote}
           </p>
         </div>
 
@@ -103,16 +116,15 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold mb-4">
                 <Shield className="w-3.5 h-3.5" />
-                <span>{language === 'en' ? '100% Transparent Financials' : 'Akuntabel & Transparan'}</span>
+                <span>Akuntabel & Transparan</span>
               </div>
 
               <h3 className="font-serif-display text-2xl font-bold text-white mb-3">
-                {language === 'en' ? 'Where Your Gift Goes' : 'Alokasi Persembahan'}
+                Alokasi Persembahan
               </h3>
               <p className="text-xs text-stone-400 leading-relaxed mb-6">
-                {language === 'en'
-                  ? 'Your tithes and offerings directly transform lives through hospital care, community nourishment, and uplifting weekly worship.'
-                  : 'Setiap persembahan dikelola dengan penuh tanggung jawab dan integritas untuk memberkati jemaat serta masyarakat luas.'}
+                {givingData.subheading ||
+                  'Setiap persembahan dikelola dengan penuh tanggung jawab dan integritas untuk memberkati jemaat serta masyarakat luas.'}
               </p>
 
               <div className="space-y-3">
@@ -130,7 +142,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                       <span className="text-xs font-bold text-stone-200">{f.name}</span>
                       {selectedFund === f.id && <Check className="w-3.5 h-3.5 text-amber-400" />}
                     </div>
-                    <p className="text-[11px] text-stone-400 mt-1 leading-snug">{f.desc}</p>
+                    <p className="text-[11px] text-stone-400 mt-1 leading-snug">{f.description}</p>
                   </div>
                 ))}
               </div>
@@ -139,9 +151,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
             <div className="pt-6 mt-6 border-t border-stone-800 text-[11px] text-stone-400 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
               <span>
-                {language === 'en'
-                  ? 'Annual financial audit reports are published for our church family.'
-                  : 'Laporan keuangan diaudit secara independen demi keterbukaan jemaat.'}
+                Laporan keuangan gereja diaudit secara berkala demi keterbukaan jemaat.
               </span>
             </div>
           </div>
@@ -153,7 +163,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
               {/* Frequency toggle */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-2">
-                  {language === 'en' ? 'Giving Frequency' : 'Frekuensi Persembahan'}
+                  Frekuensi Persembahan
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -165,7 +175,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                         : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
                     }`}
                   >
-                    {language === 'en' ? 'One-Time Offering' : 'Satu Kali (Persembahan)'}
+                    Satu Kali (Persembahan)
                   </button>
                   <button
                     type="button"
@@ -176,7 +186,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                         : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
                     }`}
                   >
-                    {language === 'en' ? 'Monthly Commitment' : 'Komitmen Bulanan'}
+                    Komitmen Bulanan
                   </button>
                 </div>
               </div>
@@ -184,7 +194,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
               {/* Amount Selection */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-2">
-                  {language === 'en' ? 'Select or Enter Amount (IDR)' : 'Pilih atau Masukkan Nominal (Rp)'}
+                  Pilih atau Masukkan Nominal (Rp)
                 </label>
                 <div className="grid grid-cols-3 gap-2 mb-2.5">
                   {presetAmounts.map((amt) => (
@@ -215,7 +225,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                         : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
                     }`}
                   >
-                    {language === 'en' ? 'Custom' : 'Lainnya'}
+                    Nominal Lain
                   </button>
                 </div>
 
@@ -228,7 +238,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                       setCustomAmount(e.target.value);
                       setSelectedAmount(0);
                     }}
-                    placeholder={language === 'en' ? 'Enter custom amount...' : 'Masukkan nominal khusus...'}
+                    placeholder="Masukkan nominal khusus..."
                     className="w-full pl-10 pr-4 py-2 text-sm bg-stone-50 border border-stone-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-700/30"
                   />
                 </div>
@@ -237,7 +247,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
               {/* Payment Method Selector */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-2">
-                  {language === 'en' ? 'Payment Method' : 'Metode Pembayaran'}
+                  Metode Persembahan
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -263,7 +273,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                     }`}
                   >
                     <Landmark className="w-4 h-4 text-amber-800" />
-                    <span className="text-[11px]">Bank Transfer</span>
+                    <span className="text-[11px]">Transfer Bank</span>
                   </button>
 
                   <button
@@ -276,7 +286,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                     }`}
                   >
                     <CreditCard className="w-4 h-4 text-amber-800" />
-                    <span className="text-[11px]">Card / Debit</span>
+                    <span className="text-[11px]">Kartu Debit</span>
                   </button>
                 </div>
               </div>
@@ -284,54 +294,46 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
               {/* Dynamic Payment Method View */}
               {paymentMethod === 'bank_transfer' && (
                 <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-stone-200">
-                    <div>
-                      <span className="font-bold text-stone-800">BCA (Bank Central Asia)</span>
-                      <div className="text-stone-600 font-mono text-xs">882-019-4821</div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyAccount('BCA', '8820194821')}
-                      className="px-2 py-1 text-[11px] font-semibold text-amber-800 hover:bg-amber-50 rounded flex items-center gap-1 cursor-pointer"
+                  {bankAccounts.map((acc) => (
+                    <div
+                      key={acc.id}
+                      className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-stone-200"
                     >
-                      {copiedBank === 'BCA' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedBank === 'BCA' ? 'Copied' : 'Copy'}</span>
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-stone-200">
-                    <div>
-                      <span className="font-bold text-stone-800">Bank Mandiri</span>
-                      <div className="text-stone-600 font-mono text-xs">123-00-984712-3</div>
+                      <div>
+                        <span className="font-bold text-stone-800">{acc.bankName}</span>
+                        <div className="text-stone-700 font-mono text-xs font-semibold">{acc.accountNumber}</div>
+                        <div className="text-[11px] text-stone-500">a.n. {acc.accountHolder}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyAccount(acc.id, acc.accountNumber)}
+                        className="px-2.5 py-1.5 text-[11px] font-semibold text-amber-800 hover:bg-amber-50 rounded-lg border border-amber-200/70 flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedBank === acc.id ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                        <span>{copiedBank === acc.id ? 'Tersalin' : 'Salin'}</span>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyAccount('Mandiri', '123009847123')}
-                      className="px-2 py-1 text-[11px] font-semibold text-amber-800 hover:bg-amber-50 rounded flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedBank === 'Mandiri' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedBank === 'Mandiri' ? 'Copied' : 'Copy'}</span>
-                    </button>
-                  </div>
-                  <div className="text-[11px] text-stone-500">
-                    a.n. <strong>GEPEKRIS Tretes</strong>
-                  </div>
+                  ))}
                 </div>
               )}
 
               {paymentMethod === 'qris' && (
-                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-center">
-                  <div className="w-28 h-28 bg-white p-2 rounded-xl border border-stone-300 mx-auto mb-2 flex items-center justify-center shadow-xs">
+                <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 text-center">
+                  <div className="w-36 h-36 bg-white p-2 rounded-xl border border-stone-300 mx-auto mb-2 flex items-center justify-center shadow-xs overflow-hidden">
                     <img
-                      src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=GEPEKRIS-TRETES-PERSEMBAHAN"
-                      alt="QRIS Giving Code GEPEKRIS Tretes"
+                      src={givingData.qrisImageUrl || DEFAULT_GIVING_CONTENT.qrisImageUrl}
+                      alt={`QRIS ${content.info.name}`}
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-contain"
                     />
                   </div>
                   <p className="text-[11px] text-stone-600 font-medium">
-                    {language === 'en'
-                      ? 'Scan with any Indonesian banking app (BCA, Mandiri, BRI, CIMB) or GoPay / OVO / Dana'
-                      : 'Scan menggunakan BCA Mobile, Mandiri Livin, GoPay, OVO, Dana, atau ShopeePay'}
+                    {givingData.qrisLabel ||
+                      'Scan menggunakan BCA Mobile, Mandiri Livin, BRI, GoPay, OVO, Dana, atau ShopeePay'}
                   </p>
                 </div>
               )}
@@ -340,25 +342,25 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    {language === 'en' ? 'Donor Name (Optional)' : 'Nama Pemberi (Opsional)'}
+                    Nama Pemberi (Opsional)
                   </label>
                   <input
                     type="text"
                     value={donorName}
                     onChange={(e) => setDonorName(e.target.value)}
-                    placeholder={language === 'en' ? 'Leave blank for anonymous' : 'Kosongkan jika ingin anonim'}
+                    placeholder="Kosongkan jika ingin NN / Anonim"
                     className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-700/30"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    {language === 'en' ? 'Email for E-Receipt' : 'Email untuk Bukti Tanda Terima'}
+                    Email untuk Tanda Terima
                   </label>
                   <input
                     type="email"
                     value={donorEmail}
                     onChange={(e) => setDonorEmail(e.target.value)}
-                    placeholder="email@example.com"
+                    placeholder="email@contoh.com"
                     className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-700/30"
                   />
                 </div>
@@ -371,11 +373,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                 className="w-full py-3 rounded-xl bg-amber-800 hover:bg-amber-900 text-white font-bold text-sm shadow-sm hover:shadow transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Heart className="w-4 h-4 fill-amber-200 text-amber-200" />
-                <span>
-                  {language === 'en'
-                    ? `Confirm Giving of ${formatIDR(finalAmount)}`
-                    : `Konfirmasi Persembahan ${formatIDR(finalAmount)}`}
-                </span>
+                <span>Konfirmasi Persembahan {formatIDR(finalAmount)}</span>
               </button>
             </form>
           </div>
@@ -398,7 +396,7 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
                   <FileText className="w-7 h-7" />
                 </div>
                 <h3 className="font-serif-display text-2xl font-bold text-stone-900">
-                  {language === 'en' ? 'Offering Receipt' : 'Tanda Terima Persembahan'}
+                  Tanda Terima Persembahan
                 </h3>
                 <p className="text-xs text-stone-500 font-mono mt-1">
                   No: {receiptPledge.receiptNumber} • {receiptPledge.date}
@@ -408,48 +406,56 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
               {/* Receipt details card */}
               <div className="bg-stone-50 p-5 rounded-2xl border border-dashed border-stone-300 space-y-3 text-xs mb-6">
                 <div className="flex justify-between">
-                  <span className="text-stone-500">{language === 'en' ? 'Donor:' : 'Pemberi:'}</span>
+                  <span className="text-stone-500">Pemberi:</span>
                   <span className="font-bold text-stone-900">{receiptPledge.donorName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-500">{language === 'en' ? 'Designation:' : 'Alokasi Dana:'}</span>
+                  <span className="text-stone-500">Alokasi Dana:</span>
                   <span className="font-bold text-stone-900">{receiptPledge.fund}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-500">{language === 'en' ? 'Method:' : 'Metode:'}</span>
+                  <span className="text-stone-500">Metode:</span>
                   <span className="font-medium text-stone-800 uppercase">{receiptPledge.paymentMethod}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-500">{language === 'en' ? 'Type:' : 'Jenis:'}</span>
-                  <span className="font-medium text-stone-800 capitalize">{receiptPledge.frequency}</span>
+                  <span className="text-stone-500">Jenis:</span>
+                  <span className="font-medium text-stone-800">
+                    {receiptPledge.frequency === 'monthly' ? 'Komitmen Bulanan' : 'Satu Kali'}
+                  </span>
                 </div>
                 <div className="pt-2 border-t border-stone-200 flex justify-between items-center">
-                  <span className="font-bold text-stone-800 text-sm">{language === 'en' ? 'Total Amount:' : 'Jumlah Total:'}</span>
+                  <span className="font-bold text-stone-800 text-sm">Jumlah Total:</span>
                   <span className="font-bold text-amber-900 text-base">{formatIDR(receiptPledge.amount)}</span>
                 </div>
               </div>
 
-              <p className="text-center text-xs text-stone-600 italic mb-6">
-                {language === 'en'
-                  ? '“May the Lord bless your faithfulness and multiply seed for sowing.”'
-                  : '“Kiranya Tuhan memberkati kesetiaan Anda dan melipatgandakan benih yang Anda tabur.”'}
+              <p className="text-center text-xs text-stone-600 italic mb-5">
+                “Kiranya Tuhan memberkati kesetiaan Anda dan melipatgandakan benih yang Anda tabur.”
               </p>
+
+              {receiptSaved && (
+                <div className="mb-4 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium text-center">
+                  ✓ Nomor tanda terima telah disalin ke papan klip Anda.
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    alert(language === 'en' ? 'Receipt copied / downloaded.' : 'Tanda terima telah disimpan.');
-                    setReceiptPledge(null);
+                    navigator.clipboard.writeText(
+                      `Tanda Terima Persembahan ${content.info.name} - No: ${receiptPledge.receiptNumber} - ${formatIDR(receiptPledge.amount)} (${receiptPledge.fund})`
+                    );
+                    setReceiptSaved(true);
                   }}
                   className="w-full py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white font-medium text-xs transition-colors cursor-pointer"
                 >
-                  {language === 'en' ? 'Save / Print Receipt' : 'Simpan Tanda Terima'}
+                  Salin Bukti Tanda Terima
                 </button>
                 <button
                   onClick={() => setReceiptPledge(null)}
                   className="w-full py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-xs font-medium transition-colors cursor-pointer"
                 >
-                  {language === 'en' ? 'Close' : 'Tutup'}
+                  Tutup
                 </button>
               </div>
             </div>

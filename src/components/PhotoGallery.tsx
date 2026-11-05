@@ -38,8 +38,15 @@ const CATEGORIES = [
 ];
 
 export function PhotoGallery() {
-  const { content, isAdmin, addGalleryItem, updateGalleryItem, deleteGalleryItem, syncToHosting } =
-    useChurchContent();
+  const {
+    content,
+    isAdmin,
+    addGalleryItem,
+    updateGalleryItem,
+    deleteGalleryItem,
+    syncToFirestore,
+    openAdminAtTab,
+  } = useChurchContent();
 
   const galleryItems = content.gallery || [];
 
@@ -123,9 +130,9 @@ export function PhotoGallery() {
 
   const handleDeleteItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Hapus foto dokumentasi kegiatan ini?')) {
-      deleteGalleryItem(id);
-    }
+    deleteGalleryItem(id);
+    setSyncStatus('✓ Foto dihapus & tersinkronisasi ke Firebase');
+    setTimeout(() => setSyncStatus(null), 3500);
   };
 
   // Compress and handle file upload for real-time Firebase storage
@@ -225,13 +232,13 @@ export function PhotoGallery() {
     setIsModalOpen(false);
   };
 
-  const handleQuickSyncToHosting = async () => {
+  const handleQuickSyncToFirestore = async () => {
     setIsSyncing(true);
-    setSyncStatus('Menyimpan ke server hosting...');
+    setSyncStatus('Menyimpan ke Firebase Firestore...');
     try {
-      const res = await syncToHosting();
+      const res = await syncToFirestore();
       if (res.success) {
-        setSyncStatus('✓ Berhasil tersimpan di server hosting');
+        setSyncStatus('✓ Berhasil tersimpan secara real-time di Firebase Firestore');
       } else {
         setSyncStatus(`Gagal menyimpan: ${res.message}`);
       }
@@ -260,31 +267,41 @@ export function PhotoGallery() {
               Galeri Kegiatan Gereja
             </h2>
             <p className="mt-2 text-base sm:text-lg text-stone-600 max-w-2xl">
-              Dokumentasi sukacita ibadah, persekutuan, pelayanan kasih, dan kebersamaan keluarga jemaat GEPEKRIS Tretes.
+              Dokumentasi sukacita ibadah, persekutuan, pelayanan kasih, dan kebersamaan keluarga jemaat {content.info.name}.
             </p>
           </div>
 
           {/* Admin Controls */}
           {isAdmin && (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
               <Button
                 onClick={handleOpenAddModal}
-                className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer shadow-sm flex items-center gap-2"
+                className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer shadow-sm flex items-center gap-2 text-xs"
                 size="sm"
               >
                 <Plus className="w-4 h-4" />
-                <span>Tambah Foto Dokumentasi</span>
+                <span>Tambah Foto</span>
               </Button>
 
               <Button
                 variant="outline"
-                onClick={handleQuickSyncToHosting}
+                onClick={() => openAdminAtTab('gallery')}
+                className="cursor-pointer border-amber-300 text-amber-900 hover:bg-amber-50 flex items-center gap-1.5 text-xs"
+                size="sm"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Kelola di Panel</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={handleQuickSyncToFirestore}
                 disabled={isSyncing}
-                className="cursor-pointer border-amber-300 text-amber-900 hover:bg-amber-50"
+                className="cursor-pointer border-amber-300 text-amber-900 hover:bg-amber-50 text-xs"
                 size="sm"
               >
                 <CloudUpload className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Push ke Hosting</span>
+                <span className="hidden sm:inline">Simpan ke Firebase</span>
               </Button>
             </div>
           )}

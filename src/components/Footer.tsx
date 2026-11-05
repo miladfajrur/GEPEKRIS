@@ -2,7 +2,7 @@ import {
   Facebook,
   Instagram,
   Youtube,
-  Twitter,
+  MessageCircle,
   Heart,
   Lock,
   Pencil,
@@ -28,18 +28,54 @@ export function Footer({
   onOpenAdmin,
   onOpenAdminLogin 
 }: FooterProps) {
-  const { content, isAdmin, logoutAdmin, clearCacheAndStartFresh } = useChurchContent();
+  const { content, isAdmin, logoutAdmin, clearCacheAndStartFresh, openAdminAtTab } = useChurchContent();
+
+  const cleanWa = (content.info.whatsappNumber || content.info.phone || '').replace(/[^0-9]/g, '');
+  const waHref = cleanWa
+    ? `https://wa.me/${cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : cleanWa}`
+    : 'https://wa.me/6281234567890';
 
   const socialLinks = [
-    { name: 'Facebook', icon: Facebook, href: 'https://facebook.com' },
-    { name: 'Instagram', icon: Instagram, href: 'https://instagram.com' },
-    { name: 'YouTube', icon: Youtube, href: 'https://youtube.com' },
-    { name: 'Twitter', icon: Twitter, href: 'https://twitter.com' }
+    {
+      name: 'Facebook',
+      icon: Facebook,
+      href: content.info.facebookUrl || 'https://facebook.com',
+    },
+    {
+      name: 'Instagram',
+      icon: Instagram,
+      href: content.info.instagramUrl || 'https://instagram.com',
+    },
+    {
+      name: 'YouTube',
+      icon: Youtube,
+      href: content.info.youtubeUrl || 'https://youtube.com',
+    },
+    {
+      name: 'WhatsApp',
+      icon: MessageCircle,
+      href: waHref,
+    },
   ];
 
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {isAdmin && (
+          <div className="mb-6 pb-4 border-b border-gray-800 flex items-center justify-between">
+            <span className="text-xs text-amber-300 font-medium">
+              Pintasan Admin: Informasi gereja, kontak & sosial media di bawah ini dapat diedit penuh
+            </span>
+            <button
+              onClick={() => openAdminAtTab('info')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold cursor-pointer transition-colors"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span>Edit Info & Sosial Media</span>
+            </button>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-4 gap-8">
           {/* Church Info */}
           <div className="md:col-span-2">
@@ -49,28 +85,28 @@ export function Footer({
             </p>
             <div className="text-gray-300 space-y-1 text-sm">
               <p>{content.info.address}</p>
-              <p>{content.info.phone}</p>
-              <p>{content.info.email}</p>
+              <p>Telp/WA: {content.info.phone}</p>
+              <p>Email: {content.info.email}</p>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Tautan Cepat */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-200">Quick Links</h4>
+            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-200">Tautan Cepat</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <a href="#about" className="text-gray-300 hover:text-white transition-colors">
-                  About Us
+                  Tentang Kami
                 </a>
               </li>
               <li>
                 <a href="#services" className="text-gray-300 hover:text-white transition-colors">
-                  Service Times
+                  Jadwal Ibadah
                 </a>
               </li>
               <li>
                 <a href="#ministries" className="text-gray-300 hover:text-white transition-colors">
-                  Ministries
+                  Komisi & Pelayanan
                 </a>
               </li>
               <li>
@@ -85,25 +121,25 @@ export function Footer({
               </li>
               <li>
                 <a href="#contact" className="text-gray-300 hover:text-white transition-colors">
-                  Contact
+                  Hubungi Kami
                 </a>
               </li>
               {onOpenGive && (
                 <li>
                   <button
                     onClick={onOpenGive}
-                    className="text-gray-300 hover:text-white transition-colors cursor-pointer"
+                    className="text-amber-300 hover:text-amber-200 font-medium transition-colors cursor-pointer"
                   >
-                    Give Online
+                    Persembahan & QRIS
                   </button>
                 </li>
               )}
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Layanan Jemaat */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-200">Resources</h4>
+            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-200">Layanan Jemaat</h4>
             <ul className="space-y-2 text-sm">
               {onOpenSermons && (
                 <li>
@@ -111,7 +147,7 @@ export function Footer({
                     onClick={onOpenSermons}
                     className="text-gray-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    Sermons & Media
+                    Khotbah & Renungan
                   </button>
                 </li>
               )}
@@ -121,7 +157,7 @@ export function Footer({
                     onClick={onOpenPrayer}
                     className="text-gray-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    Prayer Requests
+                    Pokok Doa Jemaat
                   </button>
                 </li>
               )}
@@ -131,18 +167,18 @@ export function Footer({
                     onClick={onPlanVisit}
                     className="text-gray-300 hover:text-white transition-colors cursor-pointer"
                   >
-                    Plan Your Visit
+                    Rencanakan Kunjungan
                   </button>
                 </li>
               )}
               <li>
                 <a href="#contact" className="text-gray-300 hover:text-white transition-colors">
-                  Volunteer
+                  Bergabung Melayani
                 </a>
               </li>
               <li>
                 <a href="#about" className="text-gray-300 hover:text-white transition-colors">
-                  Staff Directory
+                  Visi & Nilai Gereja
                 </a>
               </li>
             </ul>
@@ -153,8 +189,8 @@ export function Footer({
         <div className="mt-8 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-              <h4 className="font-semibold mb-2 text-sm">Follow Us</h4>
-              <div className="flex space-x-4">
+              <h4 className="font-semibold mb-2 text-sm">Ikuti Sosial Media Kami</h4>
+              <div className="flex space-x-3">
                 {socialLinks.map((social) => {
                   const IconComponent = social.icon;
                   return (
@@ -163,8 +199,9 @@ export function Footer({
                       href={social.href}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg bg-gray-800"
+                      className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-gray-800 hover:bg-gray-700"
                       aria-label={social.name}
+                      title={social.name}
                     >
                       <IconComponent className="h-5 w-5" />
                     </a>
@@ -174,7 +211,7 @@ export function Footer({
             </div>
 
             <div className="text-center md:text-right text-sm">
-              <h4 className="font-semibold mb-1 text-gray-200">Sunday Worship</h4>
+              <h4 className="font-semibold mb-1 text-gray-200">Ibadah Raya Minggu</h4>
               <p className="text-gray-300">{content.hero.sundayNoteTimes}</p>
             </div>
           </div>
@@ -190,7 +227,7 @@ export function Footer({
 
           <div className="flex items-center gap-3">
             <p className="text-gray-500 text-[11px] hidden md:inline">
-              Portal Resmi GEPEKRIS Tretes • Pasuruan, Jawa Timur
+              Portal Resmi {content.info.name} • Pasuruan, Jawa Timur
             </p>
 
             <span className="text-gray-700 hidden md:inline">•</span>
@@ -205,17 +242,17 @@ export function Footer({
                   className="hover:text-amber-200 underline underline-offset-2 cursor-pointer font-medium flex items-center gap-1"
                 >
                   <Pencil className="w-3 h-3" />
-                  <span>CMS Editor</span>
+                  <span>Panel Admin</span>
                 </button>
                 <span className="text-stone-600">|</span>
                 <button
                   type="button"
                   onClick={clearCacheAndStartFresh}
                   className="text-stone-400 hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1"
-                  title="Hapus Cache & Mulai Baru (Reload)"
+                  title="Bersihkan Cache & Muat Ulang"
                 >
                   <RefreshCw className="w-2.5 h-2.5" />
-                  <span className="text-[10px]">Bersihkan Cache</span>
+                  <span className="text-[10px]">Segarkan Cache</span>
                 </button>
                 <span className="text-stone-600">|</span>
                 <button

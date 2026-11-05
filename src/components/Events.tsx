@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, MapPin, CheckCircle, BookOpen, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle, BookOpen, ArrowRight, Pencil } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { useChurchContent, ChurchEventItem } from '../context/ChurchContentContext';
+import { useChurchContent } from '../context/ChurchContentContext';
 
 interface EventsProps {
   onReadArticle?: (eventId: string) => void;
@@ -12,7 +12,7 @@ interface EventsProps {
 export function Events({ onReadArticle }: EventsProps) {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
-  const { content } = useChurchContent();
+  const { content, isAdmin, openAdminAtTab } = useChurchContent();
 
   const categoryColors: Record<string, string> = {
     "Special Service": "bg-purple-100 text-purple-800",
@@ -20,8 +20,11 @@ export function Events({ onReadArticle }: EventsProps) {
     "Outreach": "bg-green-100 text-green-800",
     "Diakonia": "bg-emerald-100 text-emerald-800",
     "Fellowship": "bg-blue-100 text-blue-800",
+    "Persekutuan": "bg-blue-100 text-blue-800",
     "Retret": "bg-amber-100 text-amber-800",
     "Youth": "bg-orange-100 text-orange-800",
+    "Pemuda & Remaja": "bg-orange-100 text-orange-800",
+    "Pengumuman": "bg-sky-100 text-sky-800",
     "Special Event": "bg-red-100 text-red-800"
   };
 
@@ -44,20 +47,33 @@ export function Events({ onReadArticle }: EventsProps) {
               Berita & Acara Terkini
             </h2>
             <p className="text-base text-gray-600 max-w-2xl mt-2">
-              Informasi lengkap kegiatan, warta jemaat, dan jadwal persekutuan di GEPEKRIS Tretes
+              Informasi lengkap kegiatan, warta jemaat, dan jadwal persekutuan di {content.info.name}
             </p>
           </div>
 
-          {onReadArticle && content.events.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={() => onReadArticle(content.events[0].id)}
-              className="cursor-pointer self-start sm:self-auto gap-2 border-primary/30 text-primary hover:bg-primary/5"
-            >
-              <span>Buka Halaman Warta Lengkap</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {isAdmin && (
+              <Button
+                onClick={() => openAdminAtTab('events')}
+                size="sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-1.5 text-xs"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Kelola Warta & Kegiatan</span>
+              </Button>
+            )}
+
+            {onReadArticle && content.events.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => onReadArticle(content.events[0].id)}
+                className="cursor-pointer self-start sm:self-auto gap-2 border-primary/30 text-primary hover:bg-primary/5"
+              >
+                <span>Buka Halaman Warta Lengkap</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -118,11 +134,11 @@ export function Events({ onReadArticle }: EventsProps) {
           ))}
         </div>
 
-        {/* Call to Action */}
+        {/* Call to Action (Bahasa Indonesia) */}
         <div className="mt-12 text-center bg-gray-50 rounded-xl p-8 border border-gray-100 max-w-2xl mx-auto">
-          <h3 className="text-2xl font-semibold mb-2 text-gray-900">Stay Updated</h3>
+          <h3 className="text-2xl font-semibold mb-2 text-gray-900">Berlangganan Warta Jemaat</h3>
           <p className="text-gray-600 mb-6 text-sm">
-            Get the latest news and event announcements delivered to your inbox
+            Dapatkan pengumuman kegiatan, warta mingguan, dan renungan terbaru langsung ke alamat email Anda
           </p>
           
           {!subscribed ? (
@@ -132,17 +148,17 @@ export function Events({ onReadArticle }: EventsProps) {
                 required
                 value={newsletterEmail}
                 onChange={(e) => setNewsletterEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="Masukkan alamat email Anda"
                 className="px-4 py-2 border rounded-md text-sm bg-white focus:outline-hidden focus:ring-2 focus:ring-primary flex-1"
               />
               <Button type="submit" size="lg" className="cursor-pointer">
-                Subscribe to Newsletter
+                Berlangganan Warta
               </Button>
             </form>
           ) : (
             <div className="p-4 bg-emerald-50 text-emerald-800 rounded-lg text-sm inline-flex items-center gap-2 font-medium">
               <CheckCircle className="w-5 h-5 text-emerald-600" />
-              <span>Thank you! You are subscribed to church newsletters.</span>
+              <span>Terima kasih! Email Anda telah terdaftar untuk menerima warta jemaat.</span>
             </div>
           )}
         </div>
