@@ -82,10 +82,11 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
           viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="inline-block px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium tracking-wide uppercase bg-white/15 backdrop-blur-md border border-white/20 text-amber-200 mb-6 shadow-xs">
-            {content.info.name}
-          </span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight leading-[1.1] text-balance">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-stone-900/60 backdrop-blur-md border border-amber-200/30 text-amber-200/90 text-xs sm:text-sm uppercase tracking-widest font-medium mb-6 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span>{content.info.name}</span>
+          </div>
+          <h1 className="font-serif-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight leading-[1.15] text-balance mb-6 text-white drop-shadow-sm">
             {content.hero.headline}
           </h1>
         </motion.div>
@@ -95,7 +96,7 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="text-lg sm:text-xl md:text-2xl mb-8 font-light text-stone-100 max-w-2xl mx-auto leading-relaxed text-pretty"
+          className="text-base sm:text-lg md:text-xl mb-9 font-light text-stone-200 max-w-2xl mx-auto leading-relaxed text-pretty"
         >
           {content.hero.subheadline}
         </motion.p>
@@ -110,7 +111,7 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
           <Button
             size="lg"
             onClick={onPlanVisit}
-            className="w-full sm:w-auto text-base sm:text-lg px-8 py-3.5 bg-white text-stone-900 hover:bg-amber-50 hover:text-stone-950 font-semibold cursor-pointer shadow-lg transition-transform hover:scale-105 active:scale-95"
+            className="w-full sm:w-auto text-sm sm:text-base px-8 py-3.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold cursor-pointer shadow-lg transition-all rounded-xl border border-amber-300/40"
           >
             Rencanakan Kunjungan
           </Button>
@@ -118,7 +119,7 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
             size="lg"
             variant="outline"
             onClick={onWatchOnline}
-            className="w-full sm:w-auto text-base sm:text-lg px-8 py-3.5 bg-white/10 border-white/40 text-white hover:bg-white hover:text-black cursor-pointer backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
+            className="w-full sm:w-auto text-sm sm:text-base px-8 py-3.5 bg-stone-900/60 border-stone-400/40 text-stone-100 hover:bg-stone-900/80 hover:text-white cursor-pointer backdrop-blur-md transition-all rounded-xl"
           >
             Tonton Ibadah Online
           </Button>
@@ -130,35 +131,35 @@ export function Hero({ onPlanVisit, onWatchOnline }: HeroProps) {
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.7, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-12 bg-white/15 backdrop-blur-md rounded-2xl p-6 inline-block border border-white/20 shadow-xl max-w-xl mx-auto"
+          className="mt-12 bg-stone-950/60 backdrop-blur-md rounded-2xl p-6 sm:p-7 inline-block border border-amber-200/20 shadow-2xl max-w-xl mx-auto text-center"
         >
-          <h3 className="text-base sm:text-lg font-semibold mb-1 text-white tracking-wide">
+          <div className="text-[11px] uppercase tracking-widest font-semibold text-amber-300/90 mb-1.5">
+            Ibadah Hari Minggu
+          </div>
+          <h3 className="font-serif-display text-lg sm:text-xl font-medium mb-1.5 text-white tracking-wide">
             {content.hero.sundayNoteTitle}
           </h3>
-          <p className="text-stone-200 text-sm sm:text-base leading-snug">
+          <p className="text-stone-300 text-sm sm:text-base font-light leading-snug">
             {content.hero.sundayNoteTimes}
           </p>
         </motion.div>
       </motion.div>
 
-      {/* Dynamic Scroll Down Indicator */}
+      {/* Scroll Down Indicator */}
       <motion.button
         onClick={scrollToServices}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.8 }}
+        transition={{ delay: 0.8, duration: 0.8 }}
         className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 text-white/80 hover:text-white flex flex-col items-center gap-1 cursor-pointer transition-colors group"
         aria-label="Gulir ke Jadwal Ibadah"
       >
         <span className="text-[11px] font-medium tracking-widest uppercase opacity-75 group-hover:opacity-100">
           Gulir ke Bawah
         </span>
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-        >
+        <div className="group-hover:translate-y-1 transition-transform duration-300">
           <ChevronDown className="w-5 h-5 text-amber-300" />
-        </motion.div>
+        </div>
       </motion.button>
     </section>
   );

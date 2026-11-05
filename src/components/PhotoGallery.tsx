@@ -44,6 +44,7 @@ export function PhotoGallery() {
     addGalleryItem,
     updateGalleryItem,
     deleteGalleryItem,
+    clearDefaultImages,
     syncToFirestore,
     openAdminAtTab,
   } = useChurchContent();
@@ -254,19 +255,18 @@ export function PhotoGallery() {
     activeLightboxIndex !== null ? filteredItems[activeLightboxIndex] : null;
 
   return (
-    <section id="gallery" className="py-20 bg-stone-50/70 border-t border-stone-200/60 relative">
+    <section id="gallery" className="py-20 bg-[#FAF8F5] border-t border-stone-200/80 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 mb-3 border border-amber-200">
-              <Camera className="w-3.5 h-3.5 text-amber-700" />
-              <span>DOKUMENTASI & GALERI</span>
+            <div className="text-xs uppercase tracking-widest font-semibold text-amber-800/90 mb-2">
+              Dokumentasi & Arsip Visual
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+            <h2 className="font-serif-display text-3xl sm:text-4xl md:text-5xl font-medium text-stone-900 tracking-tight">
               Galeri Kegiatan Gereja
             </h2>
-            <p className="mt-2 text-base sm:text-lg text-stone-600 max-w-2xl">
+            <p className="mt-2.5 text-base text-stone-600 max-w-2xl font-light leading-relaxed">
               Dokumentasi sukacita ibadah, persekutuan, pelayanan kasih, dan kebersamaan keluarga jemaat {content.info.name}.
             </p>
           </div>
@@ -303,6 +303,22 @@ export function PhotoGallery() {
                 <CloudUpload className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Simpan ke Firebase</span>
               </Button>
+
+              {galleryItems.length > 0 && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    clearDefaultImages();
+                    setSyncStatus('✓ Seluruh gambar bawaan dibersihkan!');
+                  }}
+                  className="cursor-pointer text-stone-500 hover:text-red-600 hover:bg-red-50 text-xs"
+                  size="sm"
+                  title="Kosongkan galeri agar hanya berisi foto upload terbaru"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                  <span className="hidden lg:inline">Bersihkan Galeri</span>
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -357,19 +373,44 @@ export function PhotoGallery() {
           })}
         </div>
 
-        {/* Photo Grid */}
+        {/* Photo Grid or Elegant Clean Zero-State */}
         {filteredItems.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center max-w-md mx-auto">
-            <Camera className="w-12 h-12 text-stone-400 mx-auto mb-3 stroke-1" />
-            <h3 className="text-lg font-bold text-stone-800 mb-1">Belum Ada Dokumentasi</h3>
-            <p className="text-sm text-stone-500 mb-6">
-              Belum ada foto yang diunggah untuk kategori "{selectedCategory}".
-            </p>
-            {isAdmin && (
-              <Button onClick={handleOpenAddModal} className="cursor-pointer" size="sm">
-                <Plus className="w-4 h-4 mr-1.5" />
-                Unggah Foto Pertama
-              </Button>
+          <div className="bg-gradient-to-b from-[#FAF6EE] to-white rounded-3xl border border-amber-200/80 p-10 sm:p-14 text-center max-w-xl mx-auto shadow-xs space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-amber-100/80 text-amber-900 flex items-center justify-center mx-auto border border-amber-200">
+              <Camera className="w-8 h-8 text-amber-800" />
+            </div>
+            <div>
+              <h3 className="font-serif-display text-2xl font-bold text-stone-900 mb-1.5">
+                Galeri Foto Siap Diisi Dokumentasi Asli
+              </h3>
+              <p className="text-sm text-stone-600 leading-relaxed max-w-md mx-auto">
+                Gambar bawaan telah dibersihkan agar website selalu ringan dan tidak memakan memori. Galeri akan otomatis diperbarui setiap kali foto kegiatan diunggah atau ditambahkan melalui link URL terbaru.
+              </p>
+            </div>
+            {isAdmin ? (
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Button
+                  onClick={handleOpenAddModal}
+                  className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer px-5 font-semibold text-xs shadow-xs"
+                  size="sm"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  <span>Unggah Foto Dokumentasi Pertama</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => openAdminAtTab('gallery')}
+                  className="cursor-pointer border-stone-200 text-stone-700 hover:bg-stone-50 text-xs"
+                  size="sm"
+                >
+                  <Pencil className="w-3.5 h-3.5 mr-1 text-amber-700" />
+                  <span>Kelola di Panel Admin</span>
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-amber-800/80 font-medium italic pt-2">
+                Dokumentasi foto kegiatan ibadah & persekutuan akan segera ditampilkan oleh tim multimedia gereja.
+              </p>
             )}
           </div>
         ) : (

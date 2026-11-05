@@ -52,11 +52,11 @@ export const DailyVerseBanner: React.FC = () => {
           className="bg-white rounded-3xl p-6 sm:p-10 border border-amber-200/80 shadow-md relative overflow-hidden"
         >
           {/* Top Accent Ribbon */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-600 via-primary to-amber-500" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-amber-600/80" />
 
           {/* Header Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-100/90 text-amber-900 text-xs font-bold uppercase tracking-wider border border-amber-200">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF8F5] text-amber-900 text-xs font-semibold uppercase tracking-widest border border-stone-200">
               <Sparkles className="w-3.5 h-3.5 text-amber-700" />
               <span>{dailyVerse.updatedDate || 'Ayat Firman Hari Ini'}</span>
             </div>
@@ -74,11 +74,11 @@ export const DailyVerseBanner: React.FC = () => {
 
           {/* Verse Quote */}
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <blockquote className="font-serif-display text-2xl sm:text-3xl md:text-4xl font-bold text-stone-900 leading-snug tracking-tight">
+            <blockquote className="font-serif-display text-2xl sm:text-3xl md:text-4xl font-medium text-stone-900 leading-snug tracking-tight">
               “{dailyVerse.verseText}”
             </blockquote>
 
-            <div className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-amber-800 bg-amber-50 px-4 py-1 rounded-full border border-amber-200/70">
+            <div className="inline-flex items-center gap-2 text-sm sm:text-base font-semibold text-amber-900 bg-[#FAF8F5] px-4 py-1.5 rounded-xl border border-stone-200">
               <BookOpen className="w-4 h-4 text-amber-700" />
               <span>{dailyVerse.verseReference}</span>
             </div>

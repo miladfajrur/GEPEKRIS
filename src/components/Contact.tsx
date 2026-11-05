@@ -72,9 +72,9 @@ export function Contact() {
   };
 
   return (
-    <section id="contact" className="py-16 bg-gray-50 border-b border-gray-200/60">
+    <section id="contact" className="py-20 bg-[#FAF8F5] border-b border-stone-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div className="text-center mb-14">
           {isAdmin && (
             <div className="mb-3">
               <button
@@ -87,10 +87,13 @@ export function Contact() {
             </div>
           )}
 
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+          <div className="text-xs uppercase tracking-widest font-semibold text-amber-800/90 mb-2">
+            Pelayanan Sekretariat & Pastoral
+          </div>
+          <h2 className="font-serif-display text-3xl md:text-5xl font-medium text-stone-900 mb-4 tracking-tight">
             Hubungi Sekretariat {content.info.name}
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-stone-600 max-w-2xl mx-auto font-light leading-relaxed">
             Punya pertanyaan seputar jadwal ibadah atau membutuhkan pelayanan pastoral & pokok doa? Kami siap melayani Anda
           </p>
         </div>
@@ -98,21 +101,23 @@ export function Contact() {
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Contact Information */}
           <div>
-            <h3 className="text-2xl font-semibold mb-6 text-gray-900">Informasi Kontak & Lokasi</h3>
-            <div className="grid sm:grid-cols-2 gap-6 mb-8">
+            <h3 className="font-serif-display text-2xl font-medium mb-6 text-stone-900">
+              Informasi Kontak & Lokasi
+            </h3>
+            <div className="grid sm:grid-cols-2 gap-5 mb-8">
               {contactInfo.map((info) => {
                 const IconComponent = info.icon;
                 return (
-                  <Card key={info.title} className="hover:shadow-md transition-shadow bg-white">
+                  <Card key={info.title} className="hover:shadow-md transition-shadow bg-white border border-stone-200/90 rounded-2xl">
                     <CardContent className="p-6">
                       <div className="flex items-start">
-                        <div className="mr-4 mt-0.5">
-                          <IconComponent className="h-6 w-6 text-primary" />
+                        <div className="mr-4 mt-0.5 p-2.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200/60 shrink-0">
+                          <IconComponent className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-semibold mb-1 text-gray-900">{info.title}</h4>
-                          <p className="text-gray-900 text-sm mb-1">{info.details}</p>
-                          <p className="text-xs text-gray-500">{info.subtitle}</p>
+                          <h4 className="font-serif-display font-semibold mb-1 text-stone-900">{info.title}</h4>
+                          <p className="text-stone-800 text-sm mb-1 font-medium">{info.details}</p>
+                          <p className="text-xs text-stone-500 font-light">{info.subtitle}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -122,25 +127,27 @@ export function Contact() {
             </div>
 
             {/* Interactive Map */}
-            <div className="bg-gray-100 rounded-xl h-64 overflow-hidden border border-gray-200 relative shadow-inner">
+            <div className="bg-stone-100 rounded-2xl h-64 overflow-hidden border border-stone-200/90 relative shadow-inner">
               <iframe
                 title={`Peta Lokasi ${content.info.name}`}
                 src={content.info.mapEmbedUrl}
                 className="w-full h-full border-0"
                 loading="lazy"
               />
-              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm text-xs font-semibold text-gray-800 flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-primary" />
-                <span>{content.info.address}</span>
+              <div className="absolute bottom-3 left-3 bg-stone-950/85 text-stone-100 px-3.5 py-1.5 rounded-xl shadow-sm text-xs font-medium flex items-center gap-1.5 border border-stone-700">
+                <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="truncate max-w-xs">{content.info.address}</span>
               </div>
             </div>
           </div>
 
           {/* Contact Form */}
           <div>
-            <Card className="bg-white">
-              <CardContent className="p-6">
-                <h3 className="text-2xl font-semibold mb-6 text-gray-900">Kirim Pesan / Permohonan Doa</h3>
+            <Card className="bg-white border border-stone-200/90 rounded-2xl shadow-2xs">
+              <CardContent className="p-6 sm:p-8">
+                <h3 className="font-serif-display text-2xl font-medium mb-6 text-stone-900">
+                  Kirim Pesan / Permohonan Doa
+                </h3>
                 
                 {submitted ? (
                   <div className="p-8 text-center bg-emerald-50 rounded-xl border border-emerald-200 space-y-3">

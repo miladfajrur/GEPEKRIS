@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="bg-stone-900 text-stone-200 text-xs py-1.5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>
               {language === 'en'
                 ? 'Join us this Sunday at 09:00 & 17:00 WIB in person or on YouTube Live'

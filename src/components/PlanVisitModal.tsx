@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
-import { CheckCircle2, Sparkles, Coffee, X, MapPin } from 'lucide-react';
+import { CheckCircle2, Coffee, X, MapPin } from 'lucide-react';
 import { useChurchContent } from '../context/ChurchContentContext';
 
 interface PlanVisitModalProps {
@@ -63,16 +63,15 @@ export const PlanVisitModal: React.FC<PlanVisitModalProps> = ({
 
         {!isSuccess ? (
           <>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-              <span>Penyambutan Jemaat & Tamu Baru</span>
+            <div className="text-xs uppercase tracking-widest font-semibold text-amber-800/90 mb-2">
+              Penyambutan Jemaat & Tamu Baru
             </div>
             
-            <h3 className="font-serif-display text-2xl sm:text-3xl font-bold text-stone-900 mb-2">
+            <h3 className="font-serif-display text-2xl sm:text-3xl font-medium text-stone-900 mb-2 tracking-tight">
               Rencanakan Kunjungan Anda
             </h3>
             
-            <p className="text-xs sm:text-sm text-stone-600 mb-6 leading-relaxed">
+            <p className="text-xs sm:text-sm text-stone-600 mb-6 leading-relaxed font-light">
               Pertama kali beribadah di {content.info.name}? Beri tahu kami rencana kehadiran Anda agar tim penyambut jemaat kami dapat menyambut hangat, menyiapkan tempat duduk, dan mendampingi Anda.
             </p>
 

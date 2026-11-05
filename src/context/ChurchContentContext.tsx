@@ -445,130 +445,8 @@ export const DEFAULT_CHURCH_CONTENT: ChurchWebsiteContent = {
       content: `Gereja bukan hanya tempat beribadah di dalam gedung, tetapi juga terang dan garam di tengah masyarakat sekitar. Komisi Diakonia GEPEKRIS Tretes kembali menyelenggarakan 'Aksi Kasih Berbagi Berkat'.\n\nDalam aksi sosial ini, gereja menyalurkan paket bahan pokok (sembako), vitamin, serta pemeriksaan kesehatan dasar gratis bagi warga lansia dan keluarga prasejahtera di sekitar kawasan Prigen dan Tretes.\n\nBagi jemaat yang terbeban untuk mendukung pengadaan paket bahan pokok maupun tenaga sukarelawan medis / logistik, persembahan kasih dan partisipasi dapat dikoordinasikan langsung bersama tim Diakonia. Kiranya kasih Kristus terpancar nyata melalui pelayanan bersama ini.`
     },
   ],
-  mediaLibrary: [
-    {
-      id: "med-hero-1",
-      title: "Gedung & Altar Utama GEPEKRIS Tretes",
-      url: "https://images.unsplash.com/photo-1724398932316-e0d488b96e15?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjBzYW5jdHVhcnklMjBpbnRlcmlvciUyMHBlYWNlZnVsfGVufDF8fHx8MTc1NjM2MTYzMnww&ixlib=rb-4.1.0&q=80&w=1080",
-      category: "hero",
-      description: "Foto latar beranda utama dan ruang kebaktian Minggu",
-      uploadedAt: "2025-01-10T08:00:00.000Z",
-      source: "system",
-    },
-    {
-      id: "med-about-1",
-      title: "Persekutuan Kasih & Kebersamaan Jemaat",
-      url: "https://images.unsplash.com/photo-1658734029438-d97357737bf9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwY29tbXVuaXR5JTIwcGVvcGxlJTIwdG9nZXRoZXJ8ZW58MXx8fHwxNzU2MzYxNjU4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      category: "about",
-      description: "Dokumentasi kebersamaan dan persekutuan erat jemaat Tretes",
-      uploadedAt: "2025-01-12T09:30:00.000Z",
-      source: "system",
-    },
-    {
-      id: "med-pw-1",
-      title: "Komisi Persekutuan Wanita (P/W)",
-      url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800",
-      category: "ministries",
-      description: "Kegiatan doa dan pembinaan wanita kristiani",
-      uploadedAt: "2025-01-15T10:00:00.000Z",
-      source: "system",
-    },
-    {
-      id: "med-sm-1",
-      title: "Sekolah Minggu Anak (Anak-Anak)",
-      url: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800",
-      category: "ministries",
-      description: "Pendidikan Alkitab dan aktivitas ceria anak-anak",
-      uploadedAt: "2025-01-15T11:00:00.000Z",
-      source: "system",
-    },
-    {
-      id: "med-youth-1",
-      title: "Pemuda & Remaja (Youth Fellowship)",
-      url: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=800",
-      category: "ministries",
-      description: "Generasi muda bertumbuh dalam iman dan persekutuan",
-      uploadedAt: "2025-01-18T14:00:00.000Z",
-      source: "system",
-    },
-    {
-      id: "med-diakonia-1",
-      title: "Aksi Kasih Diakonia Sembako",
-      url: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80",
-      category: "events",
-      description: "Pelayanan kasih bagi masyarakat di kawasan Prigen",
-      uploadedAt: "2025-02-01T08:30:00.000Z",
-      source: "system",
-    },
-    {
-      id: "med-retreat-1",
-      title: "Retret Jemaat di Wisma Tretes",
-      url: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80",
-      category: "events",
-      description: "Kebersamaan dan doa di udara sejuk Tretes",
-      uploadedAt: "2025-02-10T16:00:00.000Z",
-      source: "system",
-    },
-    {
-      id: "med-cross-1",
-      title: "Salib Suci & Fajar Pagi Tretes",
-      url: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=1200&q=80",
-      category: "general",
-      description: "Simbol salib dan pengharapan fajar pagi",
-      uploadedAt: "2025-02-15T06:00:00.000Z",
-      source: "system",
-    },
-  ],
-  gallery: [
-    {
-      id: "gal-1",
-      title: "Ibadah Raya & Perjamuan Kudus",
-      category: "Ibadah",
-      imageUrl: "https://images.unsplash.com/photo-1548625361-19597793d980?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5kYXklMjB3b3JzaGlwJTIwY2h1cmNoJTIwcHJheWVyfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Suasana ibadah minggu yang khidmat dan perjamuan kudus jemaat GEPEKRIS Tretes.",
-      date: "Minggu, 7 September 2025"
-    },
-    {
-      id: "gal-2",
-      title: "Persekutuan Pemuda & Remaja (Youth)",
-      category: "Pemuda",
-      imageUrl: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b3V0aCUyMGZlbGxvd3NoaXAlMjBncm91cCUyMGZyaWVuZHN8ZW58MXx8fHwxNzU2MzYxNjU4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Kebersamaan generasi muda dalam praise & worship serta diskusi firman di Tretes.",
-      date: "Sabtu, 13 September 2025"
-    },
-    {
-      id: "gal-3",
-      title: "Sekolah Minggu Ceria Bersama Anak",
-      category: "Sekolah Minggu",
-      imageUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGlsZHJlbiUyMGJpYmxlJTIwc3R1ZHklMjBzbWlsaW5nfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Aktivitas kreatif dan pujian anak-anak sekolah minggu dalam mengenal kasih Kristus.",
-      date: "Minggu, 14 September 2025"
-    },
-    {
-      id: "gal-4",
-      title: "Aksi Kasih Diakonia & Baksos Warga",
-      category: "Diakonia",
-      imageUrl: "https://images.unsplash.com/photo-1593113598332-cd288d649433?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGFyaXR5JTIwY29tbXVuaXR5JTIwaGVscGluZ3xlbnwxfHx8fDE3NTYzNjE2NTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Penyaluran paket bahan pokok dan pelayanan kasih bagi masyarakat di kawasan Prigen.",
-      date: "Sabtu, 30 Agustus 2025"
-    },
-    {
-      id: "gal-5",
-      title: "Pelayanan Musik & Multimedia",
-      category: "Ibadah",
-      imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjB3b3JzaGlwJTIwbXVzaWMlMjBiYW5kfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Penyembahan dan pelayanan tim musik dalam memimpin jemaat menghadap hadirat Tuhan.",
-      date: "Minggu, 31 Agustus 2025"
-    },
-    {
-      id: "gal-6",
-      title: "Retreat Keluarga & Persekutuan Jemaat",
-      category: "Persekutuan",
-      imageUrl: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjBjb21tdW5pdHklMjBmZWxsb3dzaGlwfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Kebersamaan jemaat dalam retret pembinaan iman dan keakraban keluarga di kawasan Tretes.",
-      date: "Juli 2025"
-    }
-  ],
+  mediaLibrary: [],
+  gallery: [],
   dailyVerse: DEFAULT_DAILY_VERSE,
   additionalMinistries: DEFAULT_ADDITIONAL_MINISTRIES,
   giving: DEFAULT_GIVING_CONTENT,
@@ -727,56 +605,7 @@ export const GEPEKRIS_TRETES_CONTENT: ChurchWebsiteContent = {
       content: `Gereja bukan hanya tempat beribadah di dalam gedung, tetapi juga terang dan garam di tengah masyarakat sekitar. Komisi Diakonia GEPEKRIS Tretes kembali menyelenggarakan 'Aksi Kasih Berbagi Berkat'.\n\nDalam aksi sosial ini, gereja menyalurkan paket bahan pokok (sembako), vitamin, serta pemeriksaan kesehatan dasar gratis bagi warga lansia dan keluarga prasejahtera di sekitar kawasan Prigen dan Tretes.\n\nBagi jemaat yang terbeban untuk mendukung pengadaan paket bahan pokok maupun tenaga sukarelawan medis / logistik, persembahan kasih dan partisipasi dapat dikoordinasikan langsung bersama tim Diakonia. Kiranya kasih Kristus terpancar nyata melalui pelayanan bersama ini.`
     },
   ],
-  gallery: [
-    {
-      id: "gal-1",
-      title: "Ibadah Raya & Perjamuan Kudus",
-      category: "Ibadah",
-      imageUrl: "https://images.unsplash.com/photo-1548625361-19597793d980?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5kYXklMjB3b3JzaGlwJTIwY2h1cmNoJTIwcHJheWVyfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Suasana ibadah minggu yang khidmat dan perjamuan kudus jemaat GEPEKRIS Tretes.",
-      date: "Minggu, 7 September 2025"
-    },
-    {
-      id: "gal-2",
-      title: "Persekutuan Pemuda & Remaja (Youth)",
-      category: "Pemuda",
-      imageUrl: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b3V0aCUyMGZlbGxvd3NoaXAlMjBncm91cCUyMGZyaWVuZHN8ZW58MXx8fHwxNzU2MzYxNjU4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Kebersamaan generasi muda dalam praise & worship serta diskusi firman di Tretes.",
-      date: "Sabtu, 13 September 2025"
-    },
-    {
-      id: "gal-3",
-      title: "Sekolah Minggu Ceria Bersama Anak",
-      category: "Sekolah Minggu",
-      imageUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGlsZHJlbiUyMGJpYmxlJTIwc3R1ZHklMjBzbWlsaW5nfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Aktivitas kreatif dan pujian anak-anak sekolah minggu dalam mengenal kasih Kristus.",
-      date: "Minggu, 14 September 2025"
-    },
-    {
-      id: "gal-4",
-      title: "Aksi Kasih Diakonia & Baksos Warga",
-      category: "Diakonia",
-      imageUrl: "https://images.unsplash.com/photo-1593113598332-cd288d649433?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGFyaXR5JTIwY29tbXVuaXR5JTIwaGVscGluZ3xlbnwxfHx8fDE3NTYzNjE2NTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Penyaluran paket bahan pokok dan pelayanan kasih bagi masyarakat di kawasan Prigen.",
-      date: "Sabtu, 30 Agustus 2025"
-    },
-    {
-      id: "gal-5",
-      title: "Pelayanan Musik & Multimedia",
-      category: "Ibadah",
-      imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjB3b3JzaGlwJTIwbXVzaWMlMjBiYW5kfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Penyembahan dan pelayanan tim musik dalam memimpin jemaat menghadap hadirat Tuhan.",
-      date: "Minggu, 31 Agustus 2025"
-    },
-    {
-      id: "gal-6",
-      title: "Retreat Keluarga & Persekutuan Jemaat",
-      category: "Persekutuan",
-      imageUrl: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjBjb21tdW5pdHklMjBmZWxsb3dzaGlwfGVufDF8fHx8MTc1NjM2MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      description: "Kebersamaan jemaat dalam retret pembinaan iman dan keakraban keluarga di kawasan Tretes.",
-      date: "Juli 2025"
-    }
-  ],
+  gallery: [],
   dailyVerse: DEFAULT_DAILY_VERSE,
   additionalMinistries: DEFAULT_ADDITIONAL_MINISTRIES,
   giving: DEFAULT_GIVING_CONTENT,
@@ -831,6 +660,7 @@ interface ContentContextType {
   addGalleryItem: (item: Omit<ChurchGalleryItem, 'id'>) => void;
   deleteGalleryItem: (id: string) => void;
   updateGalleryItem: (id: string, updated: Partial<ChurchGalleryItem>) => void;
+  clearDefaultImages: () => void;
   updateServiceItem: (id: string, updated: Partial<ChurchServiceItem>) => void;
   addMediaItem: (item: Omit<ChurchMediaItem, 'id' | 'uploadedAt'>) => ChurchMediaItem;
   deleteMediaItem: (id: string) => void;
@@ -964,15 +794,21 @@ export const normalizeChurchContent = (raw: any): ChurchWebsiteContent => {
   };
 
   const gallery = Array.isArray(raw.gallery)
-    ? raw.gallery.map((g: any, idx: number) => ({
-        id: g?.id || `gal-${idx + 1}`,
-        title: g?.title || `Dokumentasi ${idx + 1}`,
-        category: g?.category || 'Kegiatan',
-        imageUrl: g?.imageUrl || g?.image || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&q=80&w=800',
-        description: g?.description || '',
-        date: g?.date || '',
-      }))
-    : (DEFAULT_CHURCH_CONTENT.gallery || []);
+    ? raw.gallery
+        .filter((g: any) => {
+          const url = (g?.imageUrl || g?.image || '').trim();
+          // Filter out default placeholder unspash photos if empty string or legacy sample ids
+          return url !== '';
+        })
+        .map((g: any, idx: number) => ({
+          id: g?.id || `gal-${idx + 1}`,
+          title: g?.title || `Dokumentasi ${idx + 1}`,
+          category: g?.category || 'Kegiatan',
+          imageUrl: g?.imageUrl || g?.image || '',
+          description: g?.description || '',
+          date: g?.date || '',
+        }))
+    : [];
 
   const mediaLibrary = Array.isArray(raw.mediaLibrary)
     ? raw.mediaLibrary.map((m: any, idx: number) => {
@@ -1359,6 +1195,16 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setContent((prev) => ({
       ...prev,
       gallery: (prev.gallery || []).map((g) => (g.id === id ? { ...g, ...updated } : g)),
+      lastUpdated: new Date().toISOString(),
+    }));
+  };
+
+  const clearDefaultImages = () => {
+    markLocalEdits();
+    setContent((prev) => ({
+      ...prev,
+      gallery: [],
+      mediaLibrary: [],
       lastUpdated: new Date().toISOString(),
     }));
   };
@@ -2017,6 +1863,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addGalleryItem,
         deleteGalleryItem,
         updateGalleryItem,
+        clearDefaultImages,
         addMediaItem,
         deleteMediaItem,
         updateMediaItem,

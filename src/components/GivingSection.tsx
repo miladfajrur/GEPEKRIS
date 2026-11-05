@@ -97,13 +97,13 @@ export const GivingSection: React.FC<GivingSectionProps> = ({ language }) => {
             </div>
           )}
 
-          <span className="text-xs font-bold uppercase tracking-widest text-amber-800 bg-amber-100/80 px-3 py-1 rounded-full">
+          <div className="text-xs uppercase tracking-widest font-semibold text-amber-800/90 mb-2">
             Persembahan & Kemurahan Hati
-          </span>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-serif-display font-bold text-stone-900">
+          </div>
+          <h2 className="font-serif-display text-3xl sm:text-4xl md:text-5xl font-medium text-stone-900 tracking-tight mb-3">
             {givingData.heading || 'Memberi dengan Sukacita'}
           </h2>
-          <p className="mt-3 text-stone-600 text-base sm:text-lg">
+          <p className="text-stone-600 text-base sm:text-lg max-w-2xl mx-auto font-light leading-relaxed">
             {givingData.scriptureQuote}
           </p>
         </div>

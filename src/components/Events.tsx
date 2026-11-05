@@ -124,14 +124,13 @@ export function Events({ onReadArticle }: EventsProps) {
         {/* Section Header */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-8 gap-6">
           <div className="text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/80 text-amber-900 font-bold text-xs tracking-wider uppercase mb-3 border border-amber-200/70">
-              <BookOpen className="w-3.5 h-3.5 text-amber-700" />
-              <span>Ruang Warta & Renungan Jemaat</span>
+            <div className="text-xs uppercase tracking-widest font-semibold text-amber-800/90 mb-2">
+              Ruang Warta & Renungan Jemaat
             </div>
-            <h2 className="font-serif-display text-3xl sm:text-4xl md:text-5xl font-bold text-stone-900 tracking-tight">
+            <h2 className="font-serif-display text-3xl sm:text-4xl md:text-5xl font-medium text-stone-900 tracking-tight leading-tight">
               Warta Jemaat & Tulisan Firman Tuhan
             </h2>
-            <p className="text-base text-stone-600 max-w-2xl mt-2.5 leading-relaxed">
+            <p className="text-base text-stone-600 max-w-2xl mt-2.5 leading-relaxed font-light">
               Ikuti warta kegiatan gereja, pengumuman pelayanan, serta tulisan renungan Firman Tuhan yang dapat Anda baca dan bagikan untuk memberkati sesama.
             </p>
           </div>
@@ -141,7 +140,7 @@ export function Events({ onReadArticle }: EventsProps) {
               <Button
                 onClick={() => openAdminAtTab('events')}
                 size="sm"
-                className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-1.5 text-xs shadow-xs"
+                className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer flex items-center gap-1.5 text-xs shadow-xs rounded-xl"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 <span>Tulis Warta / Renungan Baru</span>
@@ -152,7 +151,7 @@ export function Events({ onReadArticle }: EventsProps) {
               <Button
                 variant="outline"
                 onClick={() => onReadArticle(content.events[0].id)}
-                className="cursor-pointer self-start sm:self-auto gap-2 border-amber-800/30 text-stone-900 hover:bg-amber-50 font-semibold"
+                className="cursor-pointer self-start sm:self-auto gap-2 border-stone-300 text-stone-800 hover:bg-stone-50 font-medium rounded-xl text-xs sm:text-sm"
               >
                 <span>Buka Ruang Baca Lengkap</span>
                 <ArrowRight className="w-4 h-4 text-amber-700" />

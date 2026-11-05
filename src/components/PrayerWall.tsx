@@ -139,22 +139,30 @@ export const PrayerWall: React.FC<PrayerWallProps> = ({ language }) => {
     setIsPrivate(false);
   };
 
-  const totalPrayersCount = prayers.reduce((acc, curr) => acc + curr.prayersCount, 120);
+  const totalPrayersCount = prayers.reduce((acc, curr) => acc + curr.prayersCount, 0);
+
+  const categoryLabels: Record<string, string> = {
+    Healing: 'Kesembuhan',
+    Family: 'Keluarga',
+    Guidance: 'Hikmat & Tuntunan',
+    Gratitude: 'Ucapan Syukur',
+    Community: 'Jemaat & Bangsa',
+  };
 
   return (
-    <section id="prayer" className="py-16 md:py-24 bg-stone-100/60 border-b border-stone-200">
+    <section id="prayer" className="py-16 md:py-24 bg-[#FAF8F5] border-b border-stone-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-amber-800 bg-amber-100 px-3 py-1 rounded-full">
-              {language === 'en' ? 'Intercession & Care' : 'Dukungan Doa & Syafaat'}
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-serif-display font-bold text-stone-900">
+            <div className="text-xs uppercase tracking-widest font-semibold text-amber-800/90 mb-2">
+              {language === 'en' ? 'Intercession & Care' : 'Pelayanan Doa & Syafaat'}
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif-display font-medium text-stone-900 tracking-tight">
               {language === 'en' ? 'Community Prayer Wall' : 'Ruang Doa Bersama'}
             </h2>
-            <p className="mt-2 text-stone-600 max-w-xl text-base">
+            <p className="mt-2.5 text-stone-600 max-w-xl text-base font-light leading-relaxed">
               {language === 'en'
                 ? 'Bear one another’s burdens. Stand in the gap for your brothers and sisters, or share your heart so we can pray with you.'
                 : 'Bertolong-tolonganlah menanggung bebanmu. Mari saling mendoakan dan menyerahkan setiap pergumulan kepada Tuhan.'}
@@ -162,15 +170,15 @@ export const PrayerWall: React.FC<PrayerWallProps> = ({ language }) => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-stone-200 text-xs text-stone-600 shadow-xs">
-              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-              <span><strong>{totalPrayersCount}</strong> {language === 'en' ? 'prayers lifted this week' : 'doa dipanjatkan minggu ini'}</span>
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl border border-stone-200/90 text-xs text-stone-700 shadow-2xs">
+              <Heart className="w-4 h-4 text-amber-700" />
+              <span><strong>{totalPrayersCount}</strong> {language === 'en' ? 'prayers lifted' : 'dukungan doa jemaat'}</span>
             </div>
 
             <button
               onClick={() => setIsSubmitModalOpen(true)}
               id="submit-prayer-trigger"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white font-semibold text-sm shadow-sm transition-all cursor-pointer shrink-0"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-200 font-semibold text-sm shadow-xs transition-all cursor-pointer shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>{language === 'en' ? 'Submit Prayer Request' : 'Kirim Pokok Doa'}</span>
@@ -185,45 +193,45 @@ export const PrayerWall: React.FC<PrayerWallProps> = ({ language }) => {
             return (
               <div
                 key={prayer.id}
-                className={`bg-white rounded-2xl border p-6 flex flex-col justify-between transition-all shadow-xs hover:shadow-md relative ${
-                  hasPrayed ? 'border-amber-400/80 ring-1 ring-amber-300/40' : 'border-stone-200'
+                className={`bg-white rounded-2xl border p-6 flex flex-col justify-between transition-all shadow-2xs hover:shadow-md relative ${
+                  hasPrayed ? 'border-amber-500/70 bg-amber-50/10' : 'border-stone-200/90'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-stone-100 text-stone-700">
-                      {prayer.category}
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-amber-800/90">
+                      {language === 'en' ? prayer.category : categoryLabels[prayer.category] || prayer.category}
                     </span>
                     <span className="text-xs text-stone-400">{prayer.date}</span>
                   </div>
 
-                  <p className="text-sm text-stone-800 leading-relaxed italic mb-4 font-serif-display">
-                    "{prayer.request}"
+                  <p className="text-sm sm:text-base text-stone-800 leading-relaxed italic mb-5 font-serif-display">
+                    “{prayer.request}”
                   </p>
                 </div>
 
                 <div className="pt-4 border-t border-stone-100 flex items-center justify-between">
-                  <div className="text-xs font-semibold text-stone-600">
+                  <div className="text-xs font-medium text-stone-600">
                     — {prayer.author}
                   </div>
 
                   <button
                     onClick={() => handlePrayClick(prayer.id)}
                     id={`pray-btn-${prayer.id}`}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       hasPrayed
-                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                        : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200'
+                        ? 'bg-amber-100/80 text-amber-950 border border-amber-300'
+                        : 'bg-[#FAF8F5] hover:bg-stone-100 text-stone-700 border border-stone-200'
                     }`}
                   >
                     <Heart
                       className={`w-3.5 h-3.5 ${
-                        hasPrayed ? 'text-rose-600 fill-rose-600' : 'text-stone-400'
+                        hasPrayed ? 'text-amber-700 fill-amber-700' : 'text-stone-400'
                       }`}
                     />
                     <span>
                       {hasPrayed
-                        ? language === 'en' ? 'Prayed' : 'Didoakan'
+                        ? language === 'en' ? 'Prayed' : 'Amin · Didoakan'
                         : language === 'en' ? 'Pray' : 'Doakan'} ({prayer.prayersCount})
                     </span>
                   </button>

@@ -59,10 +59,10 @@ export function Footer({
   ];
 
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="bg-stone-950 text-stone-100 border-t border-stone-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         {isAdmin && (
-          <div className="mb-6 pb-4 border-b border-gray-800 flex items-center justify-between">
+          <div className="mb-8 pb-4 border-b border-stone-800 flex items-center justify-between">
             <span className="text-xs text-amber-300 font-medium">
               Pintasan Admin: Informasi gereja, kontak & sosial media di bawah ini dapat diedit penuh
             </span>
@@ -79,11 +79,13 @@ export function Footer({
         <div className="grid md:grid-cols-4 gap-8">
           {/* Church Info */}
           <div className="md:col-span-2">
-            <h3 className="text-xl font-bold mb-4 tracking-tight">{content.info.name}</h3>
-            <p className="text-gray-300 mb-4 max-w-md text-sm leading-relaxed">
+            <h3 className="font-serif-display text-2xl font-medium text-white mb-3 tracking-tight">
+              {content.info.name}
+            </h3>
+            <p className="text-stone-300 mb-5 max-w-md text-sm leading-relaxed font-light">
               {content.info.tagline}
             </p>
-            <div className="text-gray-300 space-y-1 text-sm">
+            <div className="text-stone-400 space-y-1.5 text-sm font-light">
               <p>{content.info.address}</p>
               <p>Telp/WA: {content.info.phone}</p>
               <p>Email: {content.info.email}</p>
@@ -92,35 +94,37 @@ export function Footer({
 
           {/* Tautan Cepat */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-200">Tautan Cepat</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="font-semibold mb-4 text-xs uppercase tracking-widest text-amber-400/90">
+              Tautan Cepat
+            </h4>
+            <ul className="space-y-2.5 text-sm">
               <li>
-                <a href="#about" className="text-gray-300 hover:text-white transition-colors">
+                <a href="#about" className="text-stone-300 hover:text-white transition-colors">
                   Tentang Kami
                 </a>
               </li>
               <li>
-                <a href="#services" className="text-gray-300 hover:text-white transition-colors">
+                <a href="#services" className="text-stone-300 hover:text-white transition-colors">
                   Jadwal Ibadah
                 </a>
               </li>
               <li>
-                <a href="#ministries" className="text-gray-300 hover:text-white transition-colors">
+                <a href="#ministries" className="text-stone-300 hover:text-white transition-colors">
                   Komisi & Pelayanan
                 </a>
               </li>
               <li>
-                <a href="#events" className="text-gray-300 hover:text-white transition-colors">
+                <a href="#events" className="text-stone-300 hover:text-white transition-colors">
                   Warta & Berita
                 </a>
               </li>
               <li>
-                <a href="#gallery" className="text-gray-300 hover:text-white transition-colors">
+                <a href="#gallery" className="text-stone-300 hover:text-white transition-colors">
                   Galeri Dokumentasi
                 </a>
               </li>
               <li>
-                <a href="#contact" className="text-gray-300 hover:text-white transition-colors">
+                <a href="#contact" className="text-stone-300 hover:text-white transition-colors">
                   Hubungi Kami
                 </a>
               </li>
@@ -139,13 +143,15 @@ export function Footer({
 
           {/* Layanan Jemaat */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-gray-200">Layanan Jemaat</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="font-semibold mb-4 text-xs uppercase tracking-widest text-amber-400/90">
+              Layanan Jemaat
+            </h4>
+            <ul className="space-y-2.5 text-sm">
               {onOpenSermons && (
                 <li>
                   <button
                     onClick={onOpenSermons}
-                    className="text-gray-300 hover:text-white transition-colors cursor-pointer"
+                    className="text-stone-300 hover:text-white transition-colors cursor-pointer"
                   >
                     Khotbah & Renungan
                   </button>
@@ -155,7 +161,7 @@ export function Footer({
                 <li>
                   <button
                     onClick={onOpenPrayer}
-                    className="text-gray-300 hover:text-white transition-colors cursor-pointer"
+                    className="text-stone-300 hover:text-white transition-colors cursor-pointer"
                   >
                     Pokok Doa Jemaat
                   </button>
@@ -165,19 +171,19 @@ export function Footer({
                 <li>
                   <button
                     onClick={onPlanVisit}
-                    className="text-gray-300 hover:text-white transition-colors cursor-pointer"
+                    className="text-stone-300 hover:text-white transition-colors cursor-pointer"
                   >
                     Rencanakan Kunjungan
                   </button>
                 </li>
               )}
               <li>
-                <a href="#contact" className="text-gray-300 hover:text-white transition-colors">
+                <a href="#contact" className="text-stone-300 hover:text-white transition-colors">
                   Bergabung Melayani
                 </a>
               </li>
               <li>
-                <a href="#about" className="text-gray-300 hover:text-white transition-colors">
+                <a href="#about" className="text-stone-300 hover:text-white transition-colors">
                   Visi & Nilai Gereja
                 </a>
               </li>
@@ -186,10 +192,12 @@ export function Footer({
         </div>
 
         {/* Social Media & Service Times */}
-        <div className="mt-8 pt-8 border-t border-gray-800">
+        <div className="mt-10 pt-8 border-t border-stone-800/80">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-              <h4 className="font-semibold mb-2 text-sm">Ikuti Sosial Media Kami</h4>
+              <h4 className="font-semibold mb-2.5 text-xs uppercase tracking-widest text-stone-400">
+                Sosial Media Resmi
+              </h4>
               <div className="flex space-x-3">
                 {socialLinks.map((social) => {
                   const IconComponent = social.icon;
@@ -199,7 +207,7 @@ export function Footer({
                       href={social.href}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg bg-gray-800 hover:bg-gray-700"
+                      className="text-stone-400 hover:text-white transition-colors p-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800"
                       aria-label={social.name}
                       title={social.name}
                     >
@@ -211,31 +219,33 @@ export function Footer({
             </div>
 
             <div className="text-center md:text-right text-sm">
-              <h4 className="font-semibold mb-1 text-gray-200">Ibadah Raya Minggu</h4>
-              <p className="text-gray-300">{content.hero.sundayNoteTimes}</p>
+              <h4 className="font-serif-display font-medium mb-1 text-white text-base">
+                Ibadah Raya Minggu
+              </h4>
+              <p className="text-stone-300 font-light">{content.hero.sundayNoteTimes}</p>
             </div>
           </div>
         </div>
 
         {/* Copyright & Subtle Small Admin Trigger */}
-        <div className="mt-8 pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <p className="text-gray-400 text-xs flex items-center justify-center sm:justify-start">
+        <div className="mt-8 pt-8 border-t border-stone-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <p className="text-stone-400 text-xs flex items-center justify-center sm:justify-start">
             <span>&copy; {new Date().getFullYear()} {content.info.name}. Hak cipta dilindungi.</span>
-            <Heart className="h-3.5 w-3.5 mx-2 text-red-500 fill-red-500" />
+            <Heart className="h-3.5 w-3.5 mx-2 text-amber-500" />
             <span className="hidden sm:inline">Melayani dengan kasih untuk jemaat</span>
           </p>
 
           <div className="flex items-center gap-3">
-            <p className="text-gray-500 text-[11px] hidden md:inline">
+            <p className="text-stone-500 text-[11px] hidden md:inline">
               Portal Resmi {content.info.name} • Pasuruan, Jawa Timur
             </p>
 
-            <span className="text-gray-700 hidden md:inline">•</span>
+            <span className="text-stone-700 hidden md:inline">•</span>
 
             {/* Small & Subtle Admin Access */}
             {isAdmin ? (
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-stone-900 border border-amber-500/30 text-[11px] text-amber-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <button
                   type="button"
                   onClick={onOpenAdmin}
@@ -268,11 +278,11 @@ export function Footer({
               <button
                 type="button"
                 onClick={onOpenAdminLogin}
-                className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-gray-500 hover:text-gray-300 hover:bg-gray-800/50 transition-colors text-[11px] cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-stone-500 hover:text-stone-300 hover:bg-stone-900 transition-colors text-[11px] cursor-pointer"
                 title="Masuk Mode Admin"
                 aria-label="Masuk Mode Admin"
               >
-                <Lock className="w-3 h-3 text-gray-500" />
+                <Lock className="w-3 h-3 text-stone-500" />
                 <span>Admin</span>
               </button>
             )}

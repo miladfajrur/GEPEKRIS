@@ -78,6 +78,7 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
     addGalleryItem,
     deleteGalleryItem,
     updateGalleryItem,
+    clearDefaultImages,
     updateGiving,
     addBankAccount,
     updateBankAccount,
@@ -2332,9 +2333,26 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
 
                 {/* Daftar Foto yang Ada */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-gray-800">
-                    Foto Dokumentasi Tersimpan ({content.gallery?.length || 0})
-                  </h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-gray-800">
+                      Foto Dokumentasi Tersimpan ({content.gallery?.length || 0})
+                    </h4>
+                    {content.gallery && content.gallery.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          clearDefaultImages();
+                          showToast('Seluruh gambar bawaan galeri dan pustaka media telah dibersihkan!');
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Bersihkan Foto Bawaan</span>
+                      </Button>
+                    )}
+                  </div>
 
                   {(!content.gallery || content.gallery.length === 0) ? (
                     <div className="p-8 text-center bg-gray-50 rounded-xl border border-gray-200">
@@ -2573,8 +2591,33 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                   </div>
                 </div>
 
-                {/* Media Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {/* Media Grid or Clean Empty State */}
+                {getAllIndexedMedia().filter((item) => {
+                  const matchCat =
+                    mediaCategoryFilter === 'all' || item.category === mediaCategoryFilter;
+                  const q = mediaSearchQuery.toLowerCase().trim();
+                  const matchQ =
+                    !q ||
+                    item.title.toLowerCase().includes(q) ||
+                    (item.description && item.description.toLowerCase().includes(q));
+                  return matchCat && matchQ;
+                }).length === 0 ? (
+                  <div className="p-10 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                    <Camera className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                    <h4 className="text-sm font-bold text-gray-800 mb-1">Pustaka Media Bersih & Siap Digunakan</h4>
+                    <p className="text-xs text-gray-500 max-w-sm mx-auto mb-4">
+                      Gambar bawaan telah dibersihkan agar hemat memori. Foto baru yang Anda unggah dari HP/komputer atau link web akan otomatis tersimpan di sini.
+                    </p>
+                    <Button
+                      onClick={() => setIsMediaModalOpen(true)}
+                      size="sm"
+                      className="bg-amber-600 hover:bg-amber-500 text-white text-xs cursor-pointer"
+                    >
+                      Unggah Foto Baru Sekarang
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {getAllIndexedMedia()
                     .filter((item) => {
                       const matchCat =
@@ -2665,7 +2708,8 @@ export const ContentManagerModal: React.FC<ContentManagerModalProps> = ({
                         </div>
                       </div>
                     ))}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 

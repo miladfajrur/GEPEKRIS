@@ -49,23 +49,32 @@ export const SermonHub: React.FC<SermonHubProps> = ({
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
+  const categoryLabels: Record<string, string> = {
+    All: 'Semua Khotbah',
+    Faith: 'Iman',
+    Hope: 'Pengharapan',
+    Family: 'Keluarga',
+    Grace: 'Kasih Karunia',
+    Purpose: 'Tujuan Hidup',
+  };
+
   return (
-    <section id="sermons" className="py-16 md:py-24 bg-[#FAF8F5] border-b border-stone-200">
+    <section id="sermons" className="py-16 md:py-24 bg-[#FAF8F5] border-b border-stone-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-amber-800 bg-amber-100/80 px-3 py-1 rounded-full">
-              {language === 'en' ? 'Biblical Truth for Modern Life' : 'Firman Tuhan yang Relevan'}
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-serif-display font-bold text-stone-900">
+            <div className="text-xs uppercase tracking-widest font-semibold text-amber-800/90 mb-2">
+              {language === 'en' ? 'Biblical Truth for Modern Life' : 'Pustaka Firman & Pengajaran'}
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif-display font-medium text-stone-900 tracking-tight">
               {language === 'en' ? 'Sermons & Media Archive' : 'Koleksi Khotbah & Renungan'}
             </h2>
-            <p className="mt-2 text-stone-600 max-w-xl text-base">
+            <p className="mt-2.5 text-stone-600 max-w-xl text-base font-light leading-relaxed">
               {language === 'en'
                 ? 'Watch, listen, and study life-transforming messages from our pastoral team anytime, anywhere.'
-                : 'Dengarkan dan pelajari firman penguat iman dari para hamba Tuhan di mana pun Anda berada.'}
+                : 'Simak, dengarkan, dan pelajari firman penguat iman dari pelayanan mimbar di mana pun Anda berada.'}
             </p>
           </div>
 
@@ -77,14 +86,14 @@ export const SermonHub: React.FC<SermonHubProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={language === 'en' ? 'Search speaker, passage...' : 'Cari judul, pembicara, ayat...'}
-              className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-700/30 focus:border-amber-700 transition-all"
+              className="w-full pl-10 pr-14 py-2.5 text-sm bg-white border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-700/30 focus:border-amber-700 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-stone-400 hover:text-stone-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-stone-500 hover:text-stone-800 cursor-pointer"
               >
-                Clear
+                Hapus
               </button>
             )}
           </div>
@@ -92,7 +101,7 @@ export const SermonHub: React.FC<SermonHubProps> = ({
 
         {/* Featured Sermon Showcase Banner */}
         {searchQuery === '' && selectedCategory === 'All' && (
-          <div className="mb-14 rounded-2xl overflow-hidden bg-stone-900 text-stone-100 border border-stone-800 shadow-xl grid grid-cols-1 lg:grid-cols-12">
+          <div className="mb-14 rounded-2xl overflow-hidden bg-stone-900 text-stone-100 border border-stone-800 shadow-lg grid grid-cols-1 lg:grid-cols-12">
             <div className="lg:col-span-7 relative group cursor-pointer overflow-hidden" onClick={() => onSelectSermon(featuredSermon)}>
               <img
                 src={featuredSermon.thumbnail}
@@ -102,13 +111,13 @@ export const SermonHub: React.FC<SermonHubProps> = ({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-transparent to-transparent opacity-60" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-amber-500/90 hover:bg-amber-400 text-stone-950 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <div className="w-16 h-16 rounded-full bg-amber-500/95 hover:bg-amber-400 text-stone-950 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
                   <Play className="w-7 h-7 fill-stone-950 ml-1 text-stone-950" />
                 </div>
               </div>
               <div className="absolute top-4 left-4">
-                <span className="px-3 py-1 rounded-full bg-amber-600 text-stone-950 text-xs font-bold uppercase tracking-wider">
-                  {language === 'en' ? 'Latest Sermon' : 'Khotbah Terbaru'}
+                <span className="px-3 py-1 rounded-lg bg-stone-950/80 border border-amber-400/30 text-amber-300 text-xs font-semibold uppercase tracking-widest">
+                  {language === 'en' ? 'Latest Sermon' : 'Khotbah Pilihan'}
                 </span>
               </div>
             </div>
@@ -129,22 +138,22 @@ export const SermonHub: React.FC<SermonHubProps> = ({
                   </span>
                 </div>
 
-                <h3 className="font-serif-display text-2xl sm:text-3xl font-bold text-white leading-tight mb-3">
+                <h3 className="font-serif-display text-2xl sm:text-3xl font-medium text-white leading-tight mb-3">
                   {language === 'en' ? featuredSermon.title : featuredSermon.titleId}
                 </h3>
 
                 <div className="flex items-center gap-2 text-sm text-stone-300 mb-4">
                   <User className="w-4 h-4 text-amber-400" />
-                  <span className="font-semibold text-white">{featuredSermon.speaker}</span>
+                  <span className="font-medium text-white">{featuredSermon.speaker}</span>
                   <span className="text-stone-400 text-xs">({featuredSermon.role})</span>
                 </div>
 
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-stone-800/80 border border-stone-700 text-xs font-medium text-amber-300 mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-stone-800/80 border border-stone-700 text-xs font-medium text-amber-300 mb-4">
                   <BookOpen className="w-3.5 h-3.5" />
                   <span>{featuredSermon.scripture}</span>
                 </div>
 
-                <p className="text-sm text-stone-300 leading-relaxed line-clamp-3">
+                <p className="text-sm text-stone-300 leading-relaxed line-clamp-3 font-light">
                   {language === 'en' ? featuredSermon.summary : featuredSermon.summaryId}
                 </p>
               </div>
@@ -153,15 +162,15 @@ export const SermonHub: React.FC<SermonHubProps> = ({
                 <button
                   onClick={() => onSelectSermon(featuredSermon)}
                   id="featured-sermon-watch-btn"
-                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-sm transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <Play className="w-4 h-4 fill-stone-950" />
-                  <span>{language === 'en' ? 'Watch Full Message' : 'Tonton Khotbah Lengkap'}</span>
+                  <span>{language === 'en' ? 'Watch Full Message' : 'Putar & Baca Catatan'}</span>
                 </button>
                 <button
                   onClick={() => handleShare(featuredSermon)}
                   className="p-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-colors cursor-pointer"
-                  title="Share"
+                  title="Bagikan Tautan Khotbah"
                 >
                   {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
                 </button>
@@ -177,13 +186,17 @@ export const SermonHub: React.FC<SermonHubProps> = ({
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-amber-800 text-white shadow-xs'
+                  ? 'bg-stone-900 text-amber-200 shadow-xs'
                   : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
               }`}
             >
-              {cat === 'All' ? (language === 'en' ? 'All Messages' : 'Semua Khotbah') : cat}
+              {language === 'en'
+                ? cat === 'All'
+                  ? 'All Messages'
+                  : cat
+                : categoryLabels[cat] || cat}
             </button>
           ))}
         </div>
@@ -200,7 +213,7 @@ export const SermonHub: React.FC<SermonHubProps> = ({
             {filteredSermons.map((sermon) => (
               <div
                 key={sermon.id}
-                className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div
@@ -210,19 +223,19 @@ export const SermonHub: React.FC<SermonHubProps> = ({
                     <img
                       src={sermon.thumbnail}
                       alt={sermon.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/35 transition-colors flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-white/90 group-hover:bg-white text-stone-900 flex items-center justify-center shadow-md">
+                    <div className="absolute inset-0 bg-stone-950/25 group-hover:bg-stone-950/40 transition-colors flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/95 group-hover:bg-white text-stone-900 flex items-center justify-center shadow-md">
                         <Play className="w-5 h-5 fill-stone-900 ml-0.5" />
                       </div>
                     </div>
-                    <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/70 text-white text-[11px] font-medium backdrop-blur-xs">
+                    <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-stone-950/80 text-white text-[11px] font-mono">
                       {sermon.duration}
                     </span>
-                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold">
-                      {sermon.category}
+                    <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-stone-950/75 text-amber-200 text-[11px] font-semibold tracking-wide">
+                      {categoryLabels[sermon.category] || sermon.category}
                     </span>
                   </div>
 
